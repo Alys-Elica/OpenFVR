@@ -1,5 +1,5 @@
-#ifndef PAKTOOLS_H
-#define PAKTOOLS_H
+#ifndef CONVERTERPACK_H
+#define CONVERTERPACK_H
 
 #include <string>
 #include <vector>
@@ -10,4 +10,4 @@ namespace ConverterPack
     //bool pack(const std::vector<std::string> &fileNames, const std::string outputName);
 };
 
-#endif // PAKTOOLS_H
+#endif // CONVERTERPACK_H
