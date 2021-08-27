@@ -1,4 +1,4 @@
-# PAK file
+# PAK files
 
 PAK files are just compressed archive.
 Every file is composed as follows (little-endian except when specified) :
