@@ -89,10 +89,10 @@ namespace ConverterPack {
                 std::cerr << "Compression not yet known\n";
                 continue;
             }
-
-            istr.close();
-
-            return true;
         }
+
+        istr.close();
+
+        return true;
     }
 }

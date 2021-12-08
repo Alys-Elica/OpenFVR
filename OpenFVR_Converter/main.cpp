@@ -1,4 +1,5 @@
-﻿#include <iostream>
+﻿#include <cstring>
+#include <iostream>
 
 #include "Converter/converterpak.h"
 
