@@ -14,16 +14,15 @@ Every file is composed as follows (little-endian except when specified) :
 | 0x08    | x\*n bytes   | Set of files present in the archive |
 
 Every file in the archive is stored as follows:
+| Address (add global file offset) | Size (bytes) | Description |
+|----------------------------------|-----------------|-------------------------------------------------------|
+| 0x00 | 16 | Null terminated file name |
+| 0x10 | 4 | Compression level or type (still unclear; only encountered value '3' so far) |
+| 0x14 | 4 | Compressed size (size of data to read in the archive) |
+| 0x18 | 4 | Uncompressed size |
+| 0x1c | Compressed size | Compressed file data |
 
-| Address (add global file offset) | Size (bytes)    | Description                                                                  |
-| -------------------------------- | --------------- | ---------------------------------------------------------------------------- |
-| 0x00                             | 16              | Null terminated file name                                                    |
-| 0x10                             | 4               | Compression level or type (still unclear; only encountered value '3' so far) |
-| 0x14                             | 4               | Compressed size (size of data to read in the archive)                        |
-| 0x18                             | 4               | Uncompressed size                                                            |
-| 0x1c                             | Compressed size | Compressed file data                                                         |
-
-Data decompression makes use of the already decompressed data as it unfolds. It works as follows for compression level/type '3' :
+Data decompression makes use of the already decompressed data as it unfolds (LZ77 ?). It works as follows for compression level/type '3' :
 
 -   Read 1 byte
     -   If the most significant bit (8th) is NOT SET, just read 'byte + 1' bytes as uncompressed data and add it to the output

@@ -28,19 +28,37 @@ The type determines if the VR file is a static 640x480 image (type value == -0x5
 
 ## Image data
 
-Image data is not yet fully understood but DCT might be used to encode the images.
+Image data is not yet fully understood but DCT is used to encode the images.
 
-| Address | Size (bytes) | Description                                              |
-| ------- | ------------ | -------------------------------------------------------- |
-| 0x00    | 4            | Quality ? (only seen a value of 100 so far)              |
-| 0x04    | 4            | Data size                                                |
-| 0x0c    | 4            | Image part 1 size                                        |
-| 0x10    | 4            | Image part 1 uncompressed size ?                         |
-| 0x14    | N1           | Image part 1                                             |
-| 0xXX    | 4            | Image part 2 size                                        |
-| 0xXX    | N2           | Image part 2 (can be empty)                              |
-| 0xXX    | 4            | Image part 3 size                                        |
-| 0xXX    | N3           | Image part 3 (1/8th of the image pixel count \* 3 bytes) |
+| Address | Size (bytes) | Description                      |
+| ------- | ------------ | -------------------------------- |
+| 0x00    | 4            | Quality                          |
+| 0x04    | 4            | Data size                        |
+| 0x0c    | 4            | Image AC codes compressed size   |
+| 0x10    | 4            | Image AC codes uncompressed size |
+| 0x14    | N1           | Image AC codes compressed data   |
+| 0xXX    | 4            | Image AC data size               |
+| 0xXX    | N2           | Image AC data (can be empty)     |
+| 0xXX    | 4            | Image DC data size               |
+| 0xXX    | N3           | Image DC data                    |
+
+### AC code compression
+
+AC codes data is compressed using Huffman algorithm.
+
+The compressed data begins with a compacted header that needs to be unpacked into a 256 element array storing normalized byte frequencies. To unpack the header :
+
+-   Read startOffset (1 byte)
+-   Read endOffset (1 byte)
+-   Read `endOffset - startOffset + 1` bytes and store them in the output array starting from position startOffset
+-   Repeat until startOffset value reads 0
+
+Read frequencies are used to build an Huffman tree wich is used to uncompress the AC code data.
+
+### Image reconstruction
+
+// TODO: document block unpacking  
+// TODO: document block transformation to RGB
 
 ## Additional part data
 
