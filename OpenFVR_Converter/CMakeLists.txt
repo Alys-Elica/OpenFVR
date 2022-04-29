@@ -1,21 +1,11 @@
-﻿cmake_minimum_required (VERSION 3.8)
+cmake_minimum_required(VERSION 3.14)
 
-set(PROJECT_NAME Phoenix_Converter)
+project(OpenFVR_Converter LANGUAGES CXX)
 
-project(${PROJECT_NAME} LANGUAGES CXX VERSION 0.1.0)
+set(EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/build/output/${CMAKE_BUILD_TYPE}/bin)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/build/output/${CMAKE_BUILD_TYPE}/lib)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/build/output/${CMAKE_BUILD_TYPE}/lib)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/build/output/${CMAKE_BUILD_TYPE}/bin)
 
-set(CMAKE_INCLUDE_CURRENT_DIR ON)
-
-set(CMAKE_AUTOUIC ON)
-set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTORCC ON)
-
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
-add_executable(${PROJECT_NAME}
-    Converter/converterpak.cpp
-    main.cpp
-    
-    Converter/converterpak.h
-)
+add_subdirectory(PakConverter)
+add_subdirectory(VrConverter)
