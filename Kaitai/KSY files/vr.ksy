@@ -1,5 +1,5 @@
 meta:
-  id: vr
+  id: fvr
   title: VR file
   file-extension: vr
   endian: le
@@ -17,6 +17,7 @@ seq:
     type: image
   - id: animations
     type: animation
+    if: not _io.eof
 types:
   image:
     seq:
