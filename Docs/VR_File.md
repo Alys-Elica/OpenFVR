@@ -4,6 +4,8 @@ Note: this format is not fully documented yet.
 
 VR files contains images and animations used for static screens and 360 environments.
 
+360 panoramic images contains data for the 6 faces of a cube (512x512 pixels each). Each face is sliced in 4 sub-faces (256x256 pixels each) that are then stacked top to bottom in the main 256x6144 pixel image.
+
 ## File structure (little-endian)
 
 | Address | Size (bytes) | Description                   |
@@ -14,17 +16,17 @@ VR files contains images and animations used for static screens and 360 environm
 | 0x0c    | 4            | Image data size (N1)          |
 | 0x10    | N1           | Image data (documented later) |
 
-After that can follow optional data parts (0 or more). Each additional part consists of a 4 byte header, a 4 byte size N followed by N bytes representing the additional part data (documented later)
+Base image data is followed by optional animation data:
 
-| Address | Size (bytes) | Description                                          |
-| ------- | ------------ | ---------------------------------------------------- |
-| 0x00    | 4            | Part header (only seen a value of 0xa0b1c201 so far) |
-| 0x04    | 4            | Part size                                            |
-| 0x08    | N2           | Part 2 data                                          |
+| Address | Size (bytes) | Description                       |
+| ------- | ------------ | --------------------------------- |
+| 0x00    | 4            | Animation header (0xa0b1c201)     |
+| 0x04    | 4            | Animation data size               |
+| 0x08    | N2           | Animation data (documented later) |
 
 ## Basic informations
 
-The type determines if the VR file is a static 640x480 image (type value == -0x5f4e3c00), a 360 projected 256x6144 image (type value == -0x5f4e3e00). A third type may exist, but is not yet documented
+The type determines if the VR file is a static 640x480 image (type value == -0x5f4e3c00), a 360 projected 256x6144 image (type value == -0x5f4e3e00).
 
 ## Image data
 
@@ -48,38 +50,47 @@ AC codes data is compressed using Huffman algorithm.
 
 The compressed data begins with a compacted header that needs to be unpacked into a 256 element array storing normalized byte frequencies. To unpack the header :
 
--   Read startOffset (1 byte)
--   Read endOffset (1 byte)
--   Read `endOffset - startOffset + 1` bytes and store them in the output array starting from position startOffset
--   Repeat until startOffset value reads 0
+- Read startOffset (1 byte)
+- Read endOffset (1 byte)
+- Read `endOffset - startOffset + 1` bytes and store them in the output array starting from position startOffset
+- Repeat until startOffset value reads 0
 
 Read frequencies are used to build an Huffman tree wich is used to uncompress the AC code data.
 
 ### Image reconstruction
 
-// TODO: document block unpacking  
-// TODO: document block transformation to RGB
+Compression is similar to that of the 4XM video format. Here is the general algorithm:
 
-## Additional part data
+- First, a 8x8 block is unpacked (in YCbCr format)
+- The block is put in it right pixel order (zigzag)
+- Each YCbCr component of the block is multiplied with a luma dequant table (for Y) and a chroma dequant table (for Cb and Cr). Each of these table is precalculated usimg the `quality` of the image
+- Inverse DCT is applied on each 3 component, and clamped to the [-128, 127] range
+- The block is then transformed to RGB
+- Rinse and repeat for each 8x8 block, in left to right then top to bottom order
 
-These parts are (again) not fully documented and are not always present.
+> TODO: document block unpacking
 
-Each part seems to contain a certain number of images (formated like in part 1) with additional information. They are supposed to be one of the following :
+> TODO: document block transformation to RGB
 
--   Animation: like a torch flame
--   Image patch: maybe objects that disapear after being picked or alternate environment parts (open/closed interactive door for example)
+## Optional animation data
+
+There can be one or more animation present in the VR file (torches, fires, objects that can be picked, ...). Each animation has a name and a certain number of frames (using the same DCT compression algorihm as the image).
+
+The structure is as follows:
 
 | Address | Size (bytes) | Description                   |
 | ------- | ------------ | ----------------------------- |
 | 0x00    | 20           | Name ('\0' terminated string) |
-| 0x14    | 4            | Frame count (N)               |
+| 0x14    | 4            | Frame count (`frameCount`)    |
 
-After that follows N parts structured as follows :
+After that follows `frameCount` frames structured as follows :
 
-| Address | Size (bytes) | Description                                             |
-| ------- | ------------ | ------------------------------------------------------- |
-| 0x00    | 4            | Header (only seen a value of 0xa0b1c211 so far)         |
-| 0x04    | 4            | Size (If its value is 8, this sub-part data stops here) |
-| 0x08    | 4            | Sub-count (N)                                           |
-| 0x0c    | 4            | N elements of 4 byte each (still unknown)               |
-| 0xXX    | 4            | Image data (same as previously documented)              |
+| Address | Size (bytes)    | Description                                  |
+| ------- | --------------- | -------------------------------------------- |
+| 0x00    | 4               | Header (0xa0b1c211)                          |
+| 0x04    | 4               | Size (if 8, empty frame -> go to next frame) |
+| 0x08    | 4               | Block count (`blockCount`)                   |
+| 0x0c    | 4 \* blockCount | List of each block `pixelOffset`             |
+| 0xXX    | 4               | Image data (same as previously documented)   |
+
+The image data uses the same DCT compression as above. It stores each `blockCount` 8x8 block that compose the frame. Each block has a corresponding `pixelOffset` that defines where it goes on the image.
