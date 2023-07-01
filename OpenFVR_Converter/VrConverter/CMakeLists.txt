@@ -1,32 +1,56 @@
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.0.0)
 
 set(PROJECT_NAME VrConverter)
 
-project(${PROJECT_NAME} LANGUAGES CXX VERSION 0.1.0)
+project(${PROJECT_NAME} VERSION 0.1.0 LANGUAGES C CXX)
 
-set(CMAKE_INCLUDE_CURRENT_DIR ON)
+set(CMAKE_CXX_STANDARD 20)
 
-set(CMAKE_AUTOUIC ON)
-set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTORCC ON)
+set(EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/build/out/${CMAKE_BUILD_TYPE}/bin)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/build/out/${CMAKE_BUILD_TYPE}/lib)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/build/out/${CMAKE_BUILD_TYPE}/lib)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/build/out/${CMAKE_BUILD_TYPE}/bin)
 
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
-find_package(QT NAMES Qt6 Qt5 COMPONENTS Widgets REQUIRED)
-find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets REQUIRED)
-
-add_executable(${PROJECT_NAME}
-    dct.cpp
-    main.cpp
-    vrfile.cpp
-    vrhuffman.cpp
-
+set(PROJECT_FILE_HEADERS
     dct.h
-    vrfile.h
-    vrhuffman.h
+    file.h
+    filevr.h
+    fnxvr.h
+    frame.h
 )
 
-target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+set(PROJECT_FILE_SOURCES
+    dct.cpp
+    file.cpp
+    filevr.cpp
+    fnxvr.cpp
+    frame.cpp
 
-target_link_libraries(${PROJECT_NAME} PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
+    main.cpp
+)
+
+add_executable(${PROJECT_NAME}
+    ${PROJECT_FILE_HEADERS}
+    ${PROJECT_FILE_SOURCES}
+)
+
+# Boost
+find_package(Boost REQUIRED COMPONENTS program_options)
+target_link_libraries(${PROJECT_NAME} PRIVATE Boost::boost Boost::program_options)
+
+# LibPNG
+find_package(PNG REQUIRED)
+target_link_libraries(${PROJECT_NAME} PRIVATE PNG::PNG)
+
+# LibWebP
+find_package(WebP CONFIG REQUIRED)
+# Basic usage
+target_link_libraries(${PROJECT_NAME} PRIVATE WebP::webp WebP::webpdecoder WebP::webpdemux)
+# For manipulating the WebP graphics format container (port feature libwebpmux)
+target_link_libraries(${PROJECT_NAME} PRIVATE WebP::libwebpmux)
+# For sharp RGB to YUV conversion
+#target_link_libraries(${PROJECT_NAME} PRIVATE WebP::sharpyuv)
+
+# SDL2
+find_package(SDL2 CONFIG REQUIRED)
+target_link_libraries(${PROJECT_NAME} PRIVATE SDL2::SDL2 SDL2::SDL2main)
