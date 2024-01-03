@@ -7,7 +7,7 @@
 #include <webp/encode.h>
 #include <webp/mux.h>
 
-#include "file.h"
+#include "fvr/file.h"
 
 // Frame class
 Frame Frame::rgb565ToFrame(

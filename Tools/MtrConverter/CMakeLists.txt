@@ -6,18 +6,9 @@ project(${PROJECT_NAME} VERSION 0.1.0 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 
-set(PROJECT_FILE_HEADERS
-)
-
-set(PROJECT_FILE_SOURCES
+add_executable(${PROJECT_NAME}
     main.cpp
 )
 
-add_executable(${PROJECT_NAME}
-    ${PROJECT_FILE_HEADERS}
-    ${PROJECT_FILE_SOURCES}
-)
-
-# LibPNG
-find_package(PNG REQUIRED)
-target_link_libraries(${PROJECT_NAME} PRIVATE PNG::PNG)
+# LibFVR
+target_link_libraries(${PROJECT_NAME} PRIVATE LibFVR)

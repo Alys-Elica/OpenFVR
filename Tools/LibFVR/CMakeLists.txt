@@ -9,13 +9,19 @@ set(CMAKE_CXX_STANDARD 20)
 set(PROJECT_FILE_HEADERS
     libfvr_globals.h
 
+    fvr/image.h
+    fvr/file.h
+
     fvr_files/fvr_dat.h
-    file.h
+    fvr_files/fvr_mtr.h
 )
 
 set(PROJECT_FILE_SOURCES
+    fvr/file.cpp
+    fvr/image.cpp
+    
     fvr_files/fvr_dat.cpp
-    file.cpp
+    fvr_files/fvr_mtr.cpp
 )
 
 add_library(${PROJECT_NAME} SHARED
@@ -30,3 +36,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 add_compile_definitions(
     LIBFVR_EXPORTS
 )
+
+# LibPNG
+find_package(PNG REQUIRED)
+target_link_libraries(${PROJECT_NAME} PRIVATE PNG::PNG)
