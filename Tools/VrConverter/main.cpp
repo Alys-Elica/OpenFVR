@@ -2,50 +2,48 @@
 
 #include <boost/program_options.hpp>
 
-#include "filevr.h"
+#include "fvr_files/fvr_vr.h"
+
 #include "fnxvr.h"
 
 int vrConvert(const std::string &vrFileName, const bool toCubemap)
 {
     std::cout << "Converting " << vrFileName << " to PNG" << std::endl;
 
-    FileVr vr;
-    if (!vr.load(vrFileName))
+    FvrVr vr;
+    if (!vr.open(vrFileName))
     {
-        std::cout << "Error loading VR file" << std::endl;
+        std::cerr << "Error loading VR file" << std::endl;
         return 1;
     }
 
-    if (!vr.isValid())
+    if (!vr.isOpen())
     {
-        std::cout << "VR file is not valid" << std::endl;
+        std::cerr << "VR file is not open" << std::endl;
         return 2;
     }
 
-    std::vector<uint8_t> frameData;
-    if (!vr.getRawFrameRgb565(frameData))
+    Image image;
+    bool ret;
+    if (toCubemap && vr.getType() == FvrVr::Type::VR_STATIC_VR)
     {
-        std::cout << "Error unpacking VR frame" << std::endl;
+        ret = vr.getImageCubemap(image);
+    }
+    else
+    {
+        ret = vr.getImage(image);
+    }
+
+    if (!ret || !image.isValid())
+    {
+        std::cerr << "VR image is not valid" << std::endl;
         return 3;
     }
 
-    Frame frame = Frame::rgb565ToFrame(frameData, vr.getFrameWidth(), vr.getFrameHeight());
-    if (!frame.isValid())
-    {
-        std::cout << "Error converting to frame" << std::endl;
-        return 4;
-    }
-
-    if (toCubemap && vr.getType() == FileVr::Type::VR_STATIC_VR)
-    {
-        Frame tmpFrame = frame;
-        Frame::vrToCubicMap(tmpFrame, frame);
-    }
-
     std::string baseFileName = vrFileName.substr(0, vrFileName.length() - 3);
-    if (!frame.saveToPng(baseFileName + ".png"))
+    if (!image.savePng(baseFileName + ".png"))
     {
-        std::cout << "Error saving to image" << std::endl;
+        std::cerr << "Error saving to image" << std::endl;
         return 5;
     }
 
@@ -56,44 +54,7 @@ int vrAnimation(const std::string &vrFileName, const bool toCubemap)
 {
     std::cout << "Exporting " << vrFileName << " animations" << std::endl;
 
-    FileVr vr;
-    if (!vr.load(vrFileName))
-    {
-        std::cout << "Error loading VR file" << std::endl;
-        return 1;
-    }
-
-    if (!vr.isValid())
-    {
-        std::cout << "VR file is not valid" << std::endl;
-        return 2;
-    }
-
-    std::vector<FileVr::Animation> animationList;
-    if (!vr.getRawAnimationsRgba32(animationList))
-    {
-        std::cout << "Error unpacking VR animations" << std::endl;
-        return 3;
-    }
-
-    for (FileVr::Animation &animation : animationList)
-    {
-        if (toCubemap && vr.getType() == FileVr::Type::VR_STATIC_VR)
-        {
-            for (Frame &frame : animation.frameList)
-            {
-                Frame tmpFrame = frame;
-                Frame::vrToCubicMap(tmpFrame, frame);
-            }
-        }
-
-        std::string baseFileName = vrFileName.substr(0, vrFileName.length() - 3);
-        if (!Frame::framesToWebP(animation.frameList, baseFileName + "_" + animation.name + ".webp"))
-        {
-            std::cout << "Error saving to image" << std::endl;
-            return 4;
-        }
-    }
+    // TODO: Export animations
 
     return -1;
 }
@@ -103,19 +64,19 @@ int vrViewer(const std::string &vrFileName)
     FnxVr fnxVr;
     if (!fnxVr.isValid())
     {
-        std::cout << "Failed to initialise FnxVr" << std::endl;
+        std::cerr << "Failed to initialise FnxVr" << std::endl;
         return 1;
     }
 
     if (!fnxVr.loadFile(vrFileName))
     {
-        std::cout << "Failed to load VR file" << std::endl;
+        std::cerr << "Failed to load VR file" << std::endl;
         return 2;
     }
 
     if (!fnxVr.loop())
     {
-        std::cout << "Failed to execute viewer" << std::endl;
+        std::cerr << "Failed to execute viewer" << std::endl;
         return 3;
     }
 
@@ -167,7 +128,7 @@ int main(int argc, char *argv[])
         return vrViewer(vm["vr-viewer"].as<std::string>());
     }
 
-    std::cout << "No valid action specified. Type \"" << argv[0] << " -h\" for help" << std::endl;
+    std::cerr << "No valid action specified. Type \"" << argv[0] << " -h\" for help" << std::endl;
 
     return 1;
 }

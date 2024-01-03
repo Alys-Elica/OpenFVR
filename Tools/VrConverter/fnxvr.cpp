@@ -9,8 +9,7 @@
 
 #include <SDL.h>
 
-#include "file.h"
-#include "filevr.h"
+#include "fvr_files/fvr_vr.h"
 
 // Private implementation
 class FnxVrPrivate
@@ -23,7 +22,7 @@ public:
         libFvr = LoadLibrary(TEXT("Fnx_vr.dll"));
         if (!libFvr)
         {
-            std::cout << "Failed to load Fnx_vr.dll" << std::endl;
+            std::cerr << "Failed to load Fnx_vr.dll" << std::endl;
             return;
         }
 
@@ -32,7 +31,7 @@ public:
         FVR_deinit = (FVR_cdtor)GetProcAddress(libFvr, "??1FNX_VR@@QAE@XZ");
         if (!FVR_init || !FVR_deinit)
         {
-            std::cout << "Failed to get DCT const/dest function pointer" << std::endl;
+            std::cerr << "Failed to get DCT const/dest function pointer" << std::endl;
             clean();
             return;
         }
@@ -42,7 +41,7 @@ public:
         FVR_Init_Resolution = (FVR_Init_Resolution_t)GetProcAddress(libFvr, "?Init_Resolution@FNX_VR@@QAEHMMMMHM@Z");
         if (!FVR_Buffer || !FVR_Draw || !FVR_Init_Resolution)
         {
-            std::cout << "Failed to get function pointer" << std::endl;
+            std::cerr << "Failed to get function pointer" << std::endl;
             clean();
             return;
         }
@@ -108,7 +107,7 @@ private:
 
     uint8_t *m_fvrObj; // FVR object
 
-    FileVr m_vrFile;
+    FvrVr m_vrFile;
 };
 
 // Public implementation
@@ -147,31 +146,39 @@ bool FnxVr::isValid()
 
 bool FnxVr::loadFile(const std::string &vrFileName)
 {
-    if (!d_ptr->m_vrFile.load(vrFileName))
+    if (!d_ptr->m_vrFile.open(vrFileName))
     {
         return false;
     }
-    if (!d_ptr->m_vrFile.isValid())
+    if (!d_ptr->m_vrFile.isOpen())
     {
-        std::cout << "VR file is not valid" << std::endl;
-        return false;
-    }
-
-    if (d_ptr->m_vrFile.getType() != FileVr::Type::VR_STATIC_VR)
-    {
-        std::cout << "VR file is not panoramic" << std::endl;
+        std::cerr << "VR file is not open" << std::endl;
         return false;
     }
 
-    std::vector<uint8_t> frameData;
-    if (!d_ptr->m_vrFile.getRawFrameRgb565(frameData))
+    if (d_ptr->m_vrFile.getType() != FvrVr::Type::VR_STATIC_VR)
     {
-        std::cout << "Error unpacking VR frame" << std::endl;
+        std::cerr << "VR file is not panoramic" << std::endl;
+        return false;
+    }
+
+    Image vrImage;
+    d_ptr->m_vrFile.getImage(vrImage);
+    if (!vrImage.isValid())
+    {
+        std::cerr << "VR image is not valid" << std::endl;
+        return false;
+    }
+
+    std::vector<uint8_t> imageData;
+    if (!vrImage.toRgb565(imageData))
+    {
+        std::cerr << "Failed to convert VR image to RGB565" << std::endl;
         return false;
     }
 
     unsigned short *buffer = d_ptr->FVR_Buffer(d_ptr->m_fvrObj);
-    std::memcpy(buffer, frameData.data(), frameData.size());
+    std::memcpy(buffer, imageData.data(), imageData.size());
 
     return true;
 }
@@ -188,7 +195,7 @@ bool FnxVr::loop()
 
     if (!window)
     {
-        std::cout << "Failed to create SDL window" << std::endl;
+        std::cerr << "Failed to create SDL window" << std::endl;
         return false;
     }
 
@@ -198,7 +205,7 @@ bool FnxVr::loop()
         SDL_RENDERER_ACCELERATED);
     if (!renderer)
     {
-        std::cout << "Failed to create SDL renderer" << std::endl;
+        std::cerr << "Failed to create SDL renderer" << std::endl;
         SDL_DestroyWindow(window);
         SDL_Quit();
         return false;
@@ -212,7 +219,7 @@ bool FnxVr::loop()
         0x0000F800, 0x000007E0, 0x0000001F, 0x00000000);
     if (!surface)
     {
-        std::cout << "Failed to create SDL surface" << std::endl;
+        std::cerr << "Failed to create SDL surface" << std::endl;
         SDL_DestroyRenderer(renderer);
         SDL_DestroyWindow(window);
         SDL_Quit();

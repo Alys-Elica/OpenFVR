@@ -95,6 +95,67 @@ Image::Pixel Image::pixel(int x, int y) const
     return d_ptr->pixels[y * d_ptr->width + x];
 }
 
+bool Image::fromRgb565(const std::vector<uint8_t> &rgb565Data, int width, int height)
+{
+    if (width <= 0 || height <= 0)
+    {
+        std::cerr << "Invalid image size" << std::endl;
+        return false;
+    }
+
+    if (!resize(width, height))
+    {
+        std::cerr << "Failed to resize image" << std::endl;
+        return false;
+    }
+
+    if (rgb565Data.size() != width * height * 2)
+    {
+        std::cerr << "Invalid image data size" << std::endl;
+        return false;
+    }
+
+    for (int i = 0; i < width * height; ++i)
+    {
+        const uint16_t pixel =
+            rgb565Data[i * 2 + 0] |
+            (rgb565Data[i * 2 + 1] << 8);
+
+        Pixel &pix = d_ptr->pixels[i];
+        pix.r = (pixel & 0b1111100000000000) >> 8;
+        pix.g = (pixel & 0b0000011111100000) >> 3;
+        pix.b = (pixel & 0b0000000000011111) << 3;
+        pix.a = 0xFF;
+    }
+
+    return true;
+}
+
+bool Image::toRgb565(std::vector<uint8_t> &rgb565Data) const
+{
+    if (!isValid())
+    {
+        return false;
+    }
+
+    rgb565Data.resize(d_ptr->width * d_ptr->height * 2);
+
+    for (int i = 0; i < d_ptr->width * d_ptr->height; ++i)
+    {
+        const Pixel &pix = d_ptr->pixels[i];
+
+        const uint16_t pixel =
+            ((pix.r & 0b11111000) << 8) |
+            ((pix.g & 0b11111100) << 3) |
+            ((pix.b & 0b11111000) >> 3);
+
+        rgb565Data[i * 2 + 0] = pixel & 0xFF;
+        rgb565Data[i * 2 + 1] = (pixel >> 8) & 0xFF;
+    }
+
+    return true;
+}
+
 bool Image::savePng(const std::string &fileName) const
 {
     std::cout << "Saving " << fileName << std::endl;

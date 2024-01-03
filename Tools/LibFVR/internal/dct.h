@@ -4,8 +4,8 @@
 #include <cstdint>
 #include <vector>
 
-#include "frame.h"
-
+// TODO: this will be replaced with a proper implementation.
+// It currently relies on the DLL from the original FVR engine.
 class DctPrivate;
 class Dct
 {
@@ -20,18 +20,18 @@ public:
     bool isValid();
 
     bool unpackPicture(
-        const ByteArray &imageData,
+        const std::vector<uint8_t> &imageData,
         const int quality,
-        ByteArray &rgb565Data);
+        std::vector<uint8_t> &rgb565Data);
     bool unpackVr(
-        const ByteArray &imageData,
+        const std::vector<uint8_t> &imageData,
         const int quality,
-        ByteArray &rgb565Data);
+        std::vector<uint8_t> &rgb565Data);
     bool unpackBlock(
         const int blockCount,
-        const ByteArray &imageData,
+        const std::vector<uint8_t> &imageData,
         const int quality,
-        ByteArray &outData);
+        std::vector<uint8_t> &outData);
 
 private:
     DctPrivate *d_ptr;

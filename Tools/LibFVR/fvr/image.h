@@ -4,6 +4,7 @@
 #include "libfvr_globals.h"
 
 #include <string>
+#include <vector>
 
 class ImagePrivate;
 class LIBFVR_EXPORT Image
@@ -31,6 +32,9 @@ public:
 
     void setPixel(int x, int y, const Pixel &pixel);
     Pixel pixel(int x, int y) const;
+
+    bool fromRgb565(const std::vector<uint8_t> &rgb565Data, int width, int height);
+    bool toRgb565(std::vector<uint8_t> &rgb565Data) const;
 
     bool savePng(const std::string &fileName) const;
 

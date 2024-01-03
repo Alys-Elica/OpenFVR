@@ -4,7 +4,7 @@
 
 #include <windows.h>
 
-// Private implementation
+/* Private */
 class DctPrivate
 {
     friend class Dct;
@@ -15,7 +15,7 @@ public:
         libDct = LoadLibrary(TEXT("dct.dll"));
         if (!libDct)
         {
-            std::cout << "Failed to load dct.dll" << std::endl;
+            std::cerr << "Failed to load dct.dll" << std::endl;
             return;
         }
 
@@ -24,7 +24,7 @@ public:
         DCT_Unpack_256_6144 = (DCT_Unpack_Image_t)GetProcAddress(libDct, "?Unpack_Picture_Rgb_15_16_256_6144@@YAXPAGPAEHH@Z");
         if (!DCT_Unpack_640_480 || !DCT_Unpack_256_6144)
         {
-            std::cout << "Failed to get function pointer" << std::endl;
+            std::cerr << "Failed to get function pointer" << std::endl;
             clean();
             return;
         }
@@ -33,7 +33,7 @@ public:
         DCT_deinit = (DCT_cdtor)GetProcAddress(libDct, "??1DCT@@QAE@XZ");
         if (!DCT_init || !DCT_deinit)
         {
-            std::cout << "Failed to get DCT const/dest function pointer" << std::endl;
+            std::cerr << "Failed to get DCT const/dest function pointer" << std::endl;
             clean();
             return;
         }
@@ -41,7 +41,7 @@ public:
         DCT_Unpack_Block = (DCT_Unpack_Block_t)GetProcAddress(libDct, "?Unpack_Bloc_Rgb_24@DCT@@QAEXPAEH0HH@Z");
         if (!DCT_Unpack_Block)
         {
-            std::cout << "Failed to get function pointer" << std::endl;
+            std::cerr << "Failed to get function pointer" << std::endl;
             clean();
             return;
         }
@@ -104,7 +104,7 @@ private:
     uint8_t *m_dctObj = NULL;
 };
 
-// Public implementation
+/* Public */
 Dct::Dct()
 {
     d_ptr = new DctPrivate();
@@ -121,13 +121,13 @@ bool Dct::isValid()
 }
 
 bool Dct::unpackPicture(
-    const ByteArray &imageData,
+    const std::vector<uint8_t> &imageData,
     const int quality,
-    ByteArray &rgb565Data)
+    std::vector<uint8_t> &rgb565Data)
 {
     if (!isValid())
     {
-        std::cout << "DCT is invalid" << std::endl;
+        std::cerr << "DCT is invalid" << std::endl;
         return false;
     }
 
@@ -139,13 +139,13 @@ bool Dct::unpackPicture(
 }
 
 bool Dct::unpackVr(
-    const ByteArray &imageData,
+    const std::vector<uint8_t> &imageData,
     const int quality,
-    ByteArray &rgb565Data)
+    std::vector<uint8_t> &rgb565Data)
 {
     if (!isValid())
     {
-        std::cout << "DCT is invalid" << std::endl;
+        std::cerr << "DCT is invalid" << std::endl;
         return false;
     }
 
@@ -158,13 +158,13 @@ bool Dct::unpackVr(
 
 bool Dct::unpackBlock(
     const int blockCount,
-    const ByteArray &imageData,
+    const std::vector<uint8_t> &imageData,
     const int quality,
-    ByteArray &outData)
+    std::vector<uint8_t> &outData)
 {
     if (!isValid())
     {
-        std::cout << "DCT is invalid" << std::endl;
+        std::cerr << "DCT is invalid" << std::endl;
         return false;
     }
 
