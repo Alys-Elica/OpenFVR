@@ -3,8 +3,9 @@
 
 #include <string>
 
+#include <file.h>
+
 #include "dct.h"
-#include "file.h"
 #include "frame.h"
 
 class FileVr

@@ -1,11 +1,13 @@
 #ifndef FILE_H
 #define FILE_H
 
+#include "libfvr_globals.h"
+
 #include <fstream>
 #include <string>
 
 class FilePrivate;
-class File
+class LIBFVR_EXPORT File
 {
 public:
     enum class Endian
