@@ -1,7 +1,7 @@
 #include <fstream>
 #include <iostream>
 
-#include "paktools.h"
+#include <fvr_files/fvr_pak.h>
 
 int main(int argc, char *argv[])
 {
@@ -15,23 +15,27 @@ int main(int argc, char *argv[])
     {
         std::string pakFileName = argv[i];
 
-        std::vector<PakSubFile> listfile;
-        if (PakTools::unpack(pakFileName, listfile))
+        FvrPak pak;
+        if (!pak.open(pakFileName))
         {
-            std::cout << "Unpacked " << listfile.size() << " files from " << pakFileName << std::endl;
-            for (const PakSubFile &subFile : listfile)
+            std::cerr << "Unable to open file " << pakFileName << std::endl;
+            continue;
+        }
+
+        for (int i = 0; i < pak.fileCount(); i++)
+        {
+            std::string fileName = pak.fileName(i);
+            std::vector<uint8_t> fileData = pak.fileData(i);
+
+            if (fileData.size() > 0)
             {
-                std::cout << "  Saving file " << subFile.fileName << std::endl;
                 // Write file
-                std::string outFileName = subFile.fileName;
-                std::ofstream outFile(outFileName, std::ios_base::out | std::ios_base::binary);
-                outFile.write(reinterpret_cast<const char *>(subFile.data.data()), subFile.data.size());
-                outFile.close();
+                std::ofstream file(fileName, std::ios::binary);
+                file.write(reinterpret_cast<const char *>(fileData.data()), fileData.size());
+                file.close();
             }
         }
-        else
-        {
-            std::cerr << "Unable to unpack " << pakFileName << std::endl;
-        }
+
+        pak.close();
     }
 }

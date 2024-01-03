@@ -14,14 +14,16 @@ set(PROJECT_FILE_HEADERS
 
     fvr_files/fvr_dat.h
     fvr_files/fvr_mtr.h
+    fvr_files/fvr_pak.h
 )
 
 set(PROJECT_FILE_SOURCES
     fvr/file.cpp
     fvr/image.cpp
-    
+
     fvr_files/fvr_dat.cpp
     fvr_files/fvr_mtr.cpp
+    fvr_files/fvr_pak.cpp
 )
 
 add_library(${PROJECT_NAME} SHARED

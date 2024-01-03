@@ -10,7 +10,6 @@ class FvrDatPrivate;
 class LIBFVR_EXPORT FvrDat
 {
 public:
-public:
     FvrDat();
     ~FvrDat();
 
