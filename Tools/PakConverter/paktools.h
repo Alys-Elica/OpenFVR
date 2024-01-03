@@ -1,23 +1,22 @@
 #ifndef PAKTOOLS_H
 #define PAKTOOLS_H
 
-#include <QByteArray>
-#include <QString>
+#include <string>
+#include <vector>
 
-struct PakSubFile {
-    QString fileName;
-    QByteArray data;
+struct PakSubFile
+{
+    std::string fileName;
+    std::vector<uint8_t> data;
 };
 
 class PakTools
 {
 public:
-    static QVector<PakSubFile> unpack(const QByteArray &in);
-    static QByteArray pack(const QVector<PakSubFile> &files);
+    static bool unpack(const std::string &fileName, std::vector<PakSubFile> &uncompressedFiles);
 
 private:
-    static QByteArray uncompressPakData3(const QByteArray &in);
-    static QByteArray compressPakData3(const QByteArray &in);
+    static void uncompressPakData3(const std::vector<uint8_t> &dataIn, std::vector<uint8_t> &dataOut);
 };
 
 #endif // PAKTOOLS_H

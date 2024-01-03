@@ -455,7 +455,7 @@ std::streampos File::tell()
 
 bool File::atEnd()
 {
-    return d_ptr->m_file.eof();
+    return d_ptr->m_file.eof() || d_ptr->m_file.peek() == EOF;
 }
 
 // Read functions

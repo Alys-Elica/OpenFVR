@@ -17,5 +17,5 @@ add_subdirectory(LibFVR)
 # Sub-projects
 add_subdirectory(DatExtractor)
 add_subdirectory(MtrConverter)
-#add_subdirectory(PakConverter)
+add_subdirectory(PakConverter)
 add_subdirectory(VrConverter)
