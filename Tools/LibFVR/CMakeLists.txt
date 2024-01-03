@@ -9,10 +9,12 @@ set(CMAKE_CXX_STANDARD 20)
 set(PROJECT_FILE_HEADERS
     libfvr_globals.h
 
+    fvr_files/fvr_dat.h
     file.h
 )
 
 set(PROJECT_FILE_SOURCES
+    fvr_files/fvr_dat.cpp
     file.cpp
 )
 
