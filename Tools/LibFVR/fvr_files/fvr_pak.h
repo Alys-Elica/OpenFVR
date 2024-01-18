@@ -7,11 +7,14 @@
 #include <vector>
 
 class FvrPakPrivate;
-class LIBFVR_EXPORT FvrPak
+class LIBFVR_EXPORT FvrPak final
 {
 public:
     FvrPak();
     ~FvrPak();
+
+    FvrPak(const FvrPak &other) = delete;
+    FvrPak &operator=(const FvrPak &other) = delete;
 
     bool open(const std::string &pakFileName);
     void close();

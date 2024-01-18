@@ -7,11 +7,14 @@
 #include <vector>
 
 class FvrDatPrivate;
-class LIBFVR_EXPORT FvrDat
+class LIBFVR_EXPORT FvrDat final
 {
 public:
     FvrDat();
     ~FvrDat();
+
+    FvrDat(const FvrDat &other) = delete;
+    FvrDat &operator=(const FvrDat &other) = delete;
 
     bool open(const std::string &datFileName);
     void close();

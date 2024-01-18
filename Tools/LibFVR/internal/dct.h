@@ -7,7 +7,7 @@
 // TODO: this will be replaced with a proper implementation.
 // It currently relies on the DLL from the original FVR engine.
 class DctPrivate;
-class Dct
+class Dct final
 {
 
 public:

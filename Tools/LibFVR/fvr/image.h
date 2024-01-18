@@ -7,7 +7,7 @@
 #include <vector>
 
 class ImagePrivate;
-class LIBFVR_EXPORT Image
+class LIBFVR_EXPORT Image final
 {
 public:
     struct Pixel
@@ -21,6 +21,9 @@ public:
 public:
     Image(int width = 0, int height = 0);
     ~Image();
+
+    Image(const Image &other) = delete;
+    Image &operator=(const Image &other) = delete;
 
     bool isValid() const;
 

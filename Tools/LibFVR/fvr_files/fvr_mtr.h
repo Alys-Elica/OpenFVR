@@ -9,11 +9,14 @@
 #include "fvr/image.h"
 
 class FvrMtrPrivate;
-class LIBFVR_EXPORT FvrMtr
+class LIBFVR_EXPORT FvrMtr final
 {
 public:
     FvrMtr();
     ~FvrMtr();
+
+    FvrMtr(const FvrMtr &other) = delete;
+    FvrMtr &operator=(const FvrMtr &other) = delete;
 
     bool open(const std::string &mtrFileName);
     void close();

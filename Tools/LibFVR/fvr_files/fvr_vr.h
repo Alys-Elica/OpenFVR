@@ -8,7 +8,7 @@
 #include "fvr/image.h"
 
 class FvrVrPrivate;
-class LIBFVR_EXPORT FvrVr
+class LIBFVR_EXPORT FvrVr final
 {
 public:
     enum class Type
@@ -21,6 +21,9 @@ public:
 public:
     FvrVr();
     ~FvrVr();
+
+    FvrVr(const FvrVr &other) = delete;
+    FvrVr &operator=(const FvrVr &other) = delete;
 
     bool open(const std::string &vrFileName);
     void close();

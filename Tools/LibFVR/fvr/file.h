@@ -7,7 +7,7 @@
 #include <string>
 
 class FilePrivate;
-class LIBFVR_EXPORT File
+class LIBFVR_EXPORT File final
 {
 public:
     enum class Endian
@@ -19,6 +19,9 @@ public:
 public:
     File();
     ~File();
+
+    File(const File &other) = delete;
+    File &operator=(const File &other) = delete;
 
     // Base file functions
     bool open(const std::string &file, const std::ios_base::openmode &mode);
