@@ -8,24 +8,15 @@ Project is currently focused on documenting the interpreter engine (file formats
 
 ### File formats
 
-| File                              | Description                                                                      | Status                                            |
-| --------------------------------- | -------------------------------------------------------------------------------- | ------------------------------------------------- |
-| [ARN/VIT](Doc/Formats/ARN_VIT.md) | Archive format - VIT contains the index - ARN contains the files data            | Partial - Some fields are still unknown           |
-| DAT                               | Archive format                                                                   | No doc done yet - Tool exists                     |
-| LST                               | Custom game scripts                                                              | No doc done yet - Tool exists                     |
-| MTR                               | Bitmap format                                                                    | No doc done yet - Tool exists                     |
-| [PAK](Doc/Formats/PAK.md)         | Compressed archive format - Mainly used for storing script files                 | Partial - Other compression level/types may exist |
-| [TST](Doc/Formats/TST.md)         | Used in conjunction with most VR files - Suspected of containing clickable zones | Content still unknown                             |
-| [VR](Doc/Formats/VR.md)           | Game images - These can be static 640\*480 images or 256\*6144 panoramic images  | Partial - DCT not fully documented                |
-
-### Tools
-
-| Tool                                | Description                          |
-| ----------------------------------- | ------------------------------------ |
-| [DatExtractor](Tools/DatExtractor/) | Extracts files from DAT files        |
-| [MtrComverter](Tools/MtrConverter/) | Converts MTR images to PNG           |
-| [PakConverter](Tools/PakConverter/) | Extracts content from PAK files      |
-| [VrConverter](Tools/VrConverter/)   | Converts and displays VR image files |
+| File                              | Description        | Status  | Tool                                |
+| --------------------------------- | ------------------ | ------- | ----------------------------------- |
+| [ARN/VIT](Doc/Formats/ARN_VIT.md) | Archive            | Partial | None                                |
+| DAT                               | Archive            | Partial | [DatExtractor](Tools/DatExtractor/) |
+| LST                               | Game script        | Unknown | None                                |
+| MTR                               | Bitmap image       | Partial | [MtrComverter](Tools/MtrConverter/) |
+| [PAK](Doc/Formats/PAK.md)         | Compressed archive | Partial | [PakConverter](Tools/PakConverter/) |
+| [TST](Doc/Formats/TST.md)         | Clickable zones ?  | Unknown | None                                |
+| [VR](Doc/Formats/VR.md)           | Game images        | Partial | [VrConverter](Tools/VrConverter/)   |
 
 ### Kaitai files
 
