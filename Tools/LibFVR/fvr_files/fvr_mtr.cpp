@@ -168,6 +168,10 @@ bool FvrMtrPrivate::readData()
 
             return true;
         }
+        else
+        {
+            return false;
+        }
     }
     else
     {
@@ -183,6 +187,10 @@ bool FvrMtrPrivate::readData()
             { // MST FC 00xP
                 // TODO: implement
                 std::cerr << "NOT IMPLEMENTED" << std::endl;
+                return false;
+            }
+            else
+            {
                 return false;
             }
         }
@@ -253,6 +261,8 @@ bool FvrMtr::open(const std::string &mtrFileName)
         std::cerr << "Invalid data" << std::endl;
         return false;
     }
+
+    return true;
 }
 
 void FvrMtr::close()

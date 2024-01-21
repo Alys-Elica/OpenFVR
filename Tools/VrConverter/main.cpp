@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include <boost/program_options.hpp>
+#include <SDL.h>
 
 #include "fvr_files/fvr_vr.h"
 

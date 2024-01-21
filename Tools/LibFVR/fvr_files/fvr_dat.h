@@ -5,6 +5,7 @@
 
 #include <string>
 #include <vector>
+#include <cstdint>
 
 class FvrDatPrivate;
 class LIBFVR_EXPORT FvrDat final
