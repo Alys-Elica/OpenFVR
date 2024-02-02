@@ -4,6 +4,14 @@ set(PROJECT_NAME LibFVR)
 
 project(${PROJECT_NAME} VERSION 0.1.0 LANGUAGES C CXX)
 
+option (USE_DCT_DLL "Uses dct.dll for VR file decompression" OFF)
+
+if (USE_DCT_DLL)
+    set(DCT_SOURCE internal/dct_dll.cpp)
+else()
+    set(DCT_SOURCE internal/dct.cpp)
+endif()
+
 set(CMAKE_CXX_STANDARD 20)
 
 set(PROJECT_FILE_HEADERS
@@ -17,7 +25,7 @@ set(PROJECT_FILE_HEADERS
     fvr_files/fvr_pak.h
     fvr_files/fvr_vr.h
 
-    internal/dct.h
+    ${DCT_SOURCE}
 )
 
 set(PROJECT_FILE_SOURCES
@@ -29,7 +37,7 @@ set(PROJECT_FILE_SOURCES
     fvr_files/fvr_pak.cpp
     fvr_files/fvr_vr.cpp
 
-    internal/dct.cpp
+    ${DCT_SOURCE}
 )
 
 add_library(${PROJECT_NAME} SHARED
