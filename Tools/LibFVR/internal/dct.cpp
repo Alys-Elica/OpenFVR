@@ -362,7 +362,7 @@ public:
             this->y_quants[i] = (this->y_quants[i] * AAN_scales[i]) >> 13;
 
             this->c_quants[i] = std::clamp((C_Q[i] * this->quality + 50) / 100, 8, 255);
-            this->c_quants[i] = (this->y_quants[i] * AAN_scales[i]) >> 13;
+            this->c_quants[i] = (this->c_quants[i] * AAN_scales[i]) >> 13;
         }
     }
 
