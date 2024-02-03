@@ -14,7 +14,7 @@ check_include_files ("windows.h" HAS_WINDOWS_H)
 if (${HAS_WINDOWS_H})
     option (USE_DCT_DLL "Uses dct.dll for VR file decompression" OFF)
 
-    if (USE_DCT_DLL)
+    if (${USE_DCT_DLL})
         set(DCT_SOURCE internal/dct_dll.cpp)
     else()
         set(DCT_SOURCE internal/dct.cpp)

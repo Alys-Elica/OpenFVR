@@ -5,7 +5,7 @@
 
 #include <png.h>
 
-#if defined(__GNUC__) || !defined(__STDC_WANT_LIB_EXT1__)
+#if !defined(_WIN32) && !defined(__STDC_WANT_LIB_EXT1__)
 #include <assert.h>
 
 typedef int errno_t;
