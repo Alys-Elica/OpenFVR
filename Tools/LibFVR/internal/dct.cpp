@@ -214,7 +214,7 @@ public:
            then continues with where the block ends. Subtract the starting offset from
            the end and we get the length - this is how many bytes follows. */
 
-        int buffer[513 * 3] = { 0 };
+        int buffer[513 * 3 + 1] = { 0 };
 
         int block_start,
             block_end,
