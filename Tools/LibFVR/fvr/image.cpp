@@ -5,6 +5,23 @@
 
 #include <png.h>
 
+#if defined(__GNUC__) || !defined(__STDC_WANT_LIB_EXT1__)
+#include <assert.h>
+
+typedef int errno_t;
+
+errno_t fopen_s(FILE **f, const char *name, const char *mode) {
+    errno_t ret = 0;
+    assert(f);
+    *f = fopen(name, mode);
+    /* Can't be sure about 1-to-1 mapping of errno and MS' errno_t */
+    if (!*f)
+        ret = errno;
+    return ret;
+}
+#endif
+
+
 /* Private */
 class ImagePrivate
 {

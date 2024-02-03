@@ -5,7 +5,42 @@
 
 #include "fvr_files/fvr_vr.h"
 
+#if defined(HAS_FNXVR)
+
 #include "fnxvr.h"
+
+int vrViewer(const std::string &vrFileName)
+{
+    FnxVr fnxVr;
+    if (!fnxVr.isValid())
+    {
+        std::cerr << "Failed to initialise FnxVr" << std::endl;
+        return 1;
+    }
+
+    if (!fnxVr.loadFile(vrFileName))
+    {
+        std::cerr << "Failed to load VR file" << std::endl;
+        return 2;
+    }
+
+    if (!fnxVr.loop())
+    {
+        std::cerr << "Failed to execute viewer" << std::endl;
+        return 3;
+    }
+
+    return 0;
+}
+#else
+
+int vrViewer(const std::string &vrFileName)
+{
+    std::cerr << "This tool was compiled without VR viewer support" << std::endl;
+    return 1;
+}
+
+#endif
 
 int vrConvert(const std::string &vrFileName, const bool toCubemap)
 {
@@ -60,30 +95,6 @@ int vrAnimation(const std::string &vrFileName, const bool toCubemap)
     return -1;
 }
 
-int vrViewer(const std::string &vrFileName)
-{
-    FnxVr fnxVr;
-    if (!fnxVr.isValid())
-    {
-        std::cerr << "Failed to initialise FnxVr" << std::endl;
-        return 1;
-    }
-
-    if (!fnxVr.loadFile(vrFileName))
-    {
-        std::cerr << "Failed to load VR file" << std::endl;
-        return 2;
-    }
-
-    if (!fnxVr.loop())
-    {
-        std::cerr << "Failed to execute viewer" << std::endl;
-        return 3;
-    }
-
-    return 0;
-}
-
 int main(int argc, char *argv[])
 {
     boost::program_options::options_description optGeneric("Program options");
@@ -93,7 +104,7 @@ int main(int argc, char *argv[])
     optGeneric.add_options()("vr-animation", boost::program_options::value<std::string>(), "converts the given VR file animations to a WebP animated image");
     optGeneric.add_options()("vr-animation-cubemap", boost::program_options::value<std::string>(), "converts the given VR file to a cubemap WebP animated image");
     optGeneric.add_options()("vr-viewer", boost::program_options::value<std::string>(), "view the given VR file");
-
+    
     boost::program_options::variables_map vm;
     boost::program_options::store(boost::program_options::command_line_parser(argc, argv).options(optGeneric).run(), vm);
     boost::program_options::notify(vm);

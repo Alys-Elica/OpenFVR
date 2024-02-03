@@ -6,14 +6,17 @@ project(${PROJECT_NAME} VERSION 0.1.0 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 
-set(PROJECT_FILE_HEADERS
-    fnxvr.h
-)
+set(PROJECT_FILE_HEADERS)
 
 set(PROJECT_FILE_SOURCES
-    fnxvr.cpp
     main.cpp
 )
+
+if (${HAVE_WINDOWS_H})
+    set (PROJECT_FILE_HEADERS ${PROJECT_FILE_HEADERS} fnxvr.h)
+    set (PROJECT_FILE_SOURCES ${PROJECT_FILE_SOURCES} fnxvr.cpp)
+    add_definitions(-DHAS_FNXVR)
+endif ()
 
 add_executable(${PROJECT_NAME}
     ${PROJECT_FILE_HEADERS}
