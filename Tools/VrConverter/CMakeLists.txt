@@ -12,7 +12,6 @@ set(PROJECT_FILE_HEADERS
 
 set(PROJECT_FILE_SOURCES
     fnxvr.cpp
-
     main.cpp
 )
 
@@ -29,5 +28,7 @@ find_package(Boost REQUIRED COMPONENTS program_options)
 target_link_libraries(${PROJECT_NAME} PRIVATE Boost::boost Boost::program_options)
 
 # SDL2
-find_package(SDL2 CONFIG REQUIRED)
-target_link_libraries(${PROJECT_NAME} PRIVATE SDL2::SDL2 SDL2::SDL2main)
+find_package(SDL2 REQUIRED)
+include_directories(${SDL2_INCLUDE_DIRS})
+target_link_libraries(${PROJECT_NAME} PRIVATE ${SDL2_LIBRARIES})
+

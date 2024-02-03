@@ -1,3 +1,6 @@
 out/
 .vs/
 .vscode/
+build/
+CMakeFiles
+cmake_install.cmake

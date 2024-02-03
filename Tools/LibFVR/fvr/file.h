@@ -5,6 +5,7 @@
 
 #include <fstream>
 #include <string>
+#include <cstdint>
 
 class FilePrivate;
 class LIBFVR_EXPORT File final

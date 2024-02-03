@@ -5,6 +5,7 @@
 
 #include <string>
 #include <vector>
+#include <cstdint>
 
 class ImagePrivate;
 class LIBFVR_EXPORT Image final

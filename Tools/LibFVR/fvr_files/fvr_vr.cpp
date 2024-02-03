@@ -1,6 +1,7 @@
 #include "fvr_vr.h"
 
 #include <iostream>
+#include <cstring>
 
 #include "fvr/file.h"
 #include "internal/dct.h"
@@ -156,6 +157,8 @@ bool FvrVr::open(const std::string &vrFileName)
     {
         d_ptr->type = Type::VR_UNKNOWN;
     }
+
+    return true;
 }
 
 void FvrVr::close()
