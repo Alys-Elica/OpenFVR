@@ -3,6 +3,7 @@
 #include <iostream>
 #include <cstring>
 #include <cmath>
+#include <algorithm>
 
 const int AAN_scales[64] = {
     16384, 22725, 21407, 19266, 16384, 12873,  8867, 4520,
@@ -46,18 +47,6 @@ const int ZIGZAG[64] = {
     29, 22, 15, 23, 30, 37, 44, 51,
     58, 59, 52, 45, 38, 31, 39, 46,
     53, 60, 61, 54, 47, 55, 62, 63
-};
-
-int clamp(int value, int min, int max)
-{
-    return value < min ? min : value > max ? max : value;
-};
-
-int descale(int value)
-{
-    int descaled = value / 16;
-
-    return clamp(value / 16, -128, 128);
 };
 
 int VEC_COL[64] = {
@@ -140,9 +129,10 @@ void idct(int mcu[64])
     idct_vector_transform(mcu, VEC_COL);
     idct_vector_transform(mcu, VEC_ROW);
 
+    // Performs descaling from previous upscaling, see AA&N scales.
     for (int i = 0; i < 64; i++)
     {
-        mcu[i] = descale(mcu[i]);
+        mcu[i] = std::clamp(mcu[i] / 16, -128, 128);
     }
 }
 
@@ -355,7 +345,7 @@ private:
 public:
     void setQuality(int quality)
     {
-        quality = clamp(quality, 1, 100);
+        quality = std::clamp(quality, 1, 100);
 
         if (quality >= 50)
         {
@@ -368,10 +358,10 @@ public:
 
         for (int i = 0; i < 64; ++i)
         {
-            this->y_quants[i] = clamp((Y_Q[i] * this->quality + 50) / 100, 8, 255);
+            this->y_quants[i] = std::clamp((Y_Q[i] * this->quality + 50) / 100, 8, 255);
             this->y_quants[i] = (this->y_quants[i] * AAN_scales[i]) >> 13;
 
-            this->c_quants[i] = clamp((C_Q[i] * this->quality + 50) / 100, 8, 255);
+            this->c_quants[i] = std::clamp((C_Q[i] * this->quality + 50) / 100, 8, 255);
             this->c_quants[i] = (this->y_quants[i] * AAN_scales[i]) >> 13;
         }
     }
@@ -452,8 +442,19 @@ public:
         {
             lum = (y[i] + 128) << 16;
             
+            /*
+             MCU's are unpacked as an 8x8 matrix from left -> right, top -> bottom.
+             Until this point we have been working on a vector representation,
+             this index tells us where in the image this pixel should be unpacked.
+
+             If this is the first pixel, the index would be 0. If it's the 8th pixel it
+             would be the first pixel on the next line, (i.e 640 if the picture is 640 pixels wide).
+            */
             index = std::floor(i / 8) * width + i % 8;
 
+            // TODO: This seems to be a source for cross-platform differences since different compilers
+            // approach float to integer conversion differently. Should this be a proper ASM or some other mean
+            // of rounding?
             r[index] = lum + cr[i] * 91881.47199999999;
             g[index] = lum + (cr[i] * -46801.87904) + (cb[i] * -22553.55904);
             b[index] = lum + cb[i] * 116129.792;
@@ -472,9 +473,9 @@ public:
 
         for (int i = 0; i < width * 8; i++)
         {
-            r_val = clamp(r[i], 0, 0xff0000);
-            g_val = clamp(g[i], 0, 0xff0000);
-            b_val = clamp(b[i], 0, 0xff0000);
+            r_val = std::clamp(r[i], 0, 0xff0000);
+            g_val = std::clamp(g[i], 0, 0xff0000);
+            b_val = std::clamp(b[i], 0, 0xff0000);
 
             buffer[i] = (
                 ((r_val >> 8) & 0xF800) +
@@ -545,13 +546,13 @@ public:
            we'll keep an extra width size for the overflowing bits which
            will pass on to the next iteration. */
         
-        int *r = (int *)malloc(sizeof(int[width * 9])),
-            *g = (int *)malloc(sizeof(int[width * 9])),
-            *b = (int *)malloc(sizeof(int[width * 9]));
+        int *r = (int *)malloc(sizeof(int) * width * 9),
+            *g = (int *)malloc(sizeof(int) * width * 9),
+            *b = (int *)malloc(sizeof(int) * width * 9);
         
-        memset(r + width * 8 * sizeof(int), 0, width * sizeof(int));
-        memset(g + width * 8 * sizeof(int), 0, width * sizeof(int));
-        memset(b + width * 8 * sizeof(int), 0, width * sizeof(int));
+        memset(r + width * 8, 0, sizeof(int) * width);
+        memset(g + width * 8, 0, sizeof(int) * width);
+        memset(b + width * 8, 0, sizeof(int) * width);
 
         for (int y = 0; y < height; y += 8)
         {
@@ -592,6 +593,15 @@ public:
             
             buffer += 8 * width * 2;
         }
+
+        // Cleanup
+        free(r);
+        free(g);
+        free(b);
+
+        delete this->ac_code;
+        delete this->dc;
+        delete this->ac;
     }
 };
 
