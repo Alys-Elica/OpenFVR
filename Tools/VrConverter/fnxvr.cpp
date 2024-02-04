@@ -1,14 +1,17 @@
 #include "fnxvr.h"
 
 #include <algorithm>
+#include <cmath>
 #include <cstdint>
+#include <cstring>
 #include <iostream>
 #include <vector>
-#include <cstring>
 
+#define NOMINMAX
 #include <windows.h>
 
 #include <SDL.h>
+#include <fvr/file.h>
 
 #include "fvr_files/fvr_vr.h"
 
@@ -16,6 +19,16 @@
 class FnxVrPrivate
 {
     friend class FnxVr;
+
+public:
+    struct Zone
+    {
+        uint32_t index;
+        float x1;
+        float x2;
+        float y1;
+        float y2;
+    };
 
 public:
     FnxVrPrivate()
@@ -77,6 +90,34 @@ public:
         FVR_deinit = NULL;
     }
 
+    static bool checkZone(const Zone &zone, const float yaw, const float pitch)
+    {
+        float minX = std::min(zone.x1, zone.x2);
+        float maxX = std::max(zone.x1, zone.x2);
+        if (3.141593f < maxX - minX)
+        {
+            float tmpX = maxX;
+            maxX = minX + 6.283185f;
+            minX = tmpX;
+        }
+
+        float minY = std::min(zone.y1, zone.y2);
+        float maxY = std::max(zone.y1, zone.y2);
+        if (3.141593f < maxY - minY)
+        {
+            float tmpY = maxY;
+            maxY = minY + 6.283185f;
+            minY = tmpY;
+        }
+
+        bool inX1 = (minX <= yaw) && (yaw <= maxX);
+        bool inX2 = (minX <= yaw + 6.283185f) && (yaw + 6.283185f <= maxX);
+        bool inY1 = (minY <= pitch) && (pitch <= maxY);
+        bool inY2 = (minY <= pitch + 6.283185f) && (pitch + 6.283185f <= maxY);
+
+        return (inX1 || inX2) && (inY1 || inY2);
+    }
+
 private:
     typedef void(__thiscall *FVR_cdtor)(void *thisptr);
     typedef unsigned short *(__thiscall *FVR_Buffer_t)(void *thisptr);
@@ -109,6 +150,7 @@ private:
     uint8_t *m_fvrObj; // FVR object
 
     FvrVr m_vrFile;
+    std::vector<Zone> m_listZone;
 };
 
 // Public implementation
@@ -180,6 +222,43 @@ bool FnxVr::loadFile(const std::string &vrFileName)
 
     unsigned short *buffer = d_ptr->FVR_Buffer(d_ptr->m_fvrObj);
     std::memcpy(buffer, imageData.data(), imageData.size());
+
+    return true;
+}
+
+bool FnxVr::loadTstFile(const std::string &tstFileName)
+{
+    if (!isValid())
+    {
+        std::cerr << "FnxVr is not valid. A VR file must be loaded before the TST file" << std::endl;
+        return false;
+    }
+
+    File tstFile;
+    tstFile.setEndian(File::Endian::LittleEndian);
+    if (!tstFile.open(tstFileName, std::ios::binary | std::ios::in))
+    {
+        std::cerr << "Failed to open TST file" << std::endl;
+        return false;
+    }
+
+    uint32_t zoneCount = 0;
+    tstFile >> zoneCount;
+
+    for (uint32_t i = 0; i < zoneCount; i++)
+    {
+        // TODO: some checks
+        FnxVrPrivate::Zone zone;
+
+        zone.index = i;
+
+        tstFile >> zone.x1;
+        tstFile >> zone.x2;
+        tstFile >> zone.y1;
+        tstFile >> zone.y2;
+
+        d_ptr->m_listZone.push_back(zone);
+    }
 
     return true;
 }
@@ -288,22 +367,44 @@ bool FnxVr::loop()
         ticksA = ticksB;
 
         // Render
+        float yawRad = yawDeg * 0.0174532925f;     // Convert to radians
+        float pitchRad = pitchDeg * 0.0174532925f; // Convert to radians
+        float rollRad = rollDeg * 0.0174532925f;   // Convert to radiansyawRad,
+
         // Draw to surface
         SDL_LockSurface(surface);
         d_ptr->FVR_Draw(
             d_ptr->m_fvrObj,
             (unsigned short *)surface->pixels,
-            yawDeg * 0.0174532925f,   // Convert to radians
-            pitchDeg * 0.0174532925f, // Convert to radians
-            rollDeg * 0.0174532925f,  // Convert to radians
+            yawRad,
+            pitchRad,
+            rollRad,
             FNXVR_WINDOW_FOV);
+
         SDL_UnlockSurface(surface);
 
         // Draw to renderer
         SDL_RenderClear(renderer);
+
+        // Render the scene
         SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, surface);
         SDL_RenderCopy(renderer, texture, NULL, NULL);
         SDL_DestroyTexture(texture);
+
+        // Draw cursor
+        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+        for (const FnxVrPrivate::Zone &zone : d_ptr->m_listZone)
+        {
+            if (FnxVrPrivate::checkZone(zone, yawRad, pitchRad))
+            {
+                SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+                break;
+            }
+        }
+
+        SDL_RenderDrawLine(renderer, FNXVR_WINDOW_WIDTH / 2 - 10, FNXVR_WINDOW_HEIGHT / 2, FNXVR_WINDOW_WIDTH / 2 + 10, FNXVR_WINDOW_HEIGHT / 2);
+        SDL_RenderDrawLine(renderer, FNXVR_WINDOW_WIDTH / 2, FNXVR_WINDOW_HEIGHT / 2 - 10, FNXVR_WINDOW_WIDTH / 2, FNXVR_WINDOW_HEIGHT / 2 + 10);
+
         SDL_RenderPresent(renderer);
     }
 

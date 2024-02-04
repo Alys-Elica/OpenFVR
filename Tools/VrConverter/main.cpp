@@ -1,3 +1,4 @@
+#include <filesystem>
 #include <iostream>
 
 #include <boost/program_options.hpp>
@@ -73,6 +74,21 @@ int vrViewer(const std::string &vrFileName)
     {
         std::cerr << "Failed to load VR file" << std::endl;
         return 2;
+    }
+
+    // Get VR base name
+    std::string baseFileName = vrFileName.substr(0, vrFileName.length() - 3);
+    // Check if equivalent TST file exists
+    std::string tstFileName = baseFileName + ".tst";
+    std::cout << "Checking for TST file: " << tstFileName << std::endl;
+    if (std::filesystem::exists(tstFileName))
+    {
+        std::cout << "Loading corresponding TST file" << std::endl;
+        if (!fnxVr.loadTstFile(tstFileName))
+        {
+            std::cerr << "Failed to load TST file" << std::endl;
+            return 3;
+        }
     }
 
     if (!fnxVr.loop())
