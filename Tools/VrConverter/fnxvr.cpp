@@ -385,7 +385,7 @@ bool FnxVr::loop()
         d_ptr->FVR_Draw(
             d_ptr->m_fvrObj,
             (unsigned short *)surface->pixels,
-            yawRad,
+            yawRad - 1.570795f, // Rotate 90 degrees
             pitchRad,
             rollRad,
             FNXVR_WINDOW_FOV);
