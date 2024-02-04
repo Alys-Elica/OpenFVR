@@ -348,6 +348,15 @@ bool FnxVr::loop()
                 {
                     yawDeg = 360.0f;
                 }
+                else if (yawDeg > 360.0f)
+                {
+                    yawDeg = 0.0f;
+                }
+
+                if (pitchDeg < 0.0f)
+                {
+                    pitchDeg = 0.0f;
+                }
                 else if (pitchDeg > 360.0f)
                 {
                     pitchDeg = 0.0f;
