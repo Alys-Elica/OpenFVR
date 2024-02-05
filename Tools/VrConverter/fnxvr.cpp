@@ -7,11 +7,9 @@
 #include <iostream>
 #include <vector>
 
-#define NOMINMAX
-#include <windows.h>
-
 #include <SDL.h>
 #include <fvr/file.h>
+#include <fvrrenderer.h>
 
 #include "fvr_files/fvr_vr.h"
 
@@ -31,65 +29,6 @@ public:
     };
 
 public:
-    FnxVrPrivate()
-    {
-        libFvr = LoadLibrary(TEXT("Fnx_vr.dll"));
-        if (!libFvr)
-        {
-            std::cerr << "Failed to load Fnx_vr.dll" << std::endl;
-            return;
-        }
-
-        // Unpack image functions
-        FVR_init = (FVR_cdtor)GetProcAddress(libFvr, "??0FNX_VR@@QAE@XZ");
-        FVR_deinit = (FVR_cdtor)GetProcAddress(libFvr, "??1FNX_VR@@QAE@XZ");
-        if (!FVR_init || !FVR_deinit)
-        {
-            std::cerr << "Failed to get DCT const/dest function pointer" << std::endl;
-            clean();
-            return;
-        }
-
-        FVR_Buffer = (FVR_Buffer_t)GetProcAddress(libFvr, "?Buffer@FNX_VR@@QAEPAGXZ");
-        FVR_Draw = (FVR_Draw_t)GetProcAddress(libFvr, "?Draw@FNX_VR@@QAEXPAGMMMM@Z");
-        FVR_Init_Resolution = (FVR_Init_Resolution_t)GetProcAddress(libFvr, "?Init_Resolution@FNX_VR@@QAEHMMMMHM@Z");
-        if (!FVR_Buffer || !FVR_Draw || !FVR_Init_Resolution)
-        {
-            std::cerr << "Failed to get function pointer" << std::endl;
-            clean();
-            return;
-        }
-
-        // DCT object size
-        m_fvrObj = static_cast<uint8_t *>(malloc(1212));
-
-        FVR_init(m_fvrObj);
-    };
-    ~FnxVrPrivate()
-    {
-        delete[] m_fvrObj;
-    };
-
-    void clean()
-    {
-        if (m_fvrObj)
-        {
-            if (FVR_deinit)
-            {
-                FVR_deinit(m_fvrObj);
-            }
-            free(m_fvrObj);
-        }
-
-        m_fvrObj = NULL;
-
-        FreeLibrary(libFvr);
-        libFvr = NULL;
-
-        FVR_init = NULL;
-        FVR_deinit = NULL;
-    }
-
     static bool checkZone(const Zone &zone, const float yaw, const float pitch)
     {
         float minX = std::min(zone.x1, zone.x2);
@@ -119,37 +58,8 @@ public:
     }
 
 private:
-    typedef void(__thiscall *FVR_cdtor)(void *thisptr);
-    typedef unsigned short *(__thiscall *FVR_Buffer_t)(void *thisptr);
-    typedef void(__thiscall *FVR_Draw_t)(
-        void *thisptr,
-        unsigned short *outputBuffer, // 16bit RGB565 buffer
-        float yaw,                    // VR projection yaw (left/right) in radians
-        float pitch,                  // VR projection pitch (up/down) in radians
-        float roll,                   // VR projection roll (tilt) in radians
-        float fov);
-    typedef int(__thiscall *FVR_Init_Resolution_t)(
-        void *thisptr,
-        float xOffset, // VR projection x offset
-        float yOffset, // VR projection y offset
-        float width,   // VR projection width
-        float height,  // VR projection height
-        int stride,    // VR projection stride
-        float param_6);
-
-private:
-    HINSTANCE libFvr = NULL;
-
-    // Function pointers
-    FVR_cdtor FVR_init = NULL;                        // FVR constructor
-    FVR_cdtor FVR_deinit = NULL;                      // FVR destructor
-    FVR_Buffer_t FVR_Buffer = NULL;                   // Returns the 16bit RGB565 VR image data buffer
-    FVR_Draw_t FVR_Draw = NULL;                       // Draws VR projection to the given 16bit RGB565 buffer
-    FVR_Init_Resolution_t FVR_Init_Resolution = NULL; // Initializes the VR projection resolution
-
-    uint8_t *m_fvrObj; // FVR object
-
     FvrVr m_vrFile;
+    FvrRenderer m_renderer;
     std::vector<Zone> m_listZone;
 };
 
@@ -170,11 +80,7 @@ FnxVr::FnxVr()
         return;
     }
 
-    d_ptr->FVR_Init_Resolution(
-        d_ptr->m_fvrObj,
-        0.0f, 0.0f,
-        FNXVR_WINDOW_WIDTH, FNXVR_WINDOW_HEIGHT,
-        FNXVR_WINDOW_WIDTH, 1.0f);
+    d_ptr->m_renderer.setResolution(FNXVR_WINDOW_WIDTH, FNXVR_WINDOW_HEIGHT);
 }
 
 FnxVr::~FnxVr()
@@ -184,7 +90,7 @@ FnxVr::~FnxVr()
 
 bool FnxVr::isValid()
 {
-    return d_ptr->libFvr != NULL;
+    return true;
 }
 
 bool FnxVr::loadFile(const std::string &vrFileName)
@@ -220,7 +126,7 @@ bool FnxVr::loadFile(const std::string &vrFileName)
         return false;
     }
 
-    unsigned short *buffer = d_ptr->FVR_Buffer(d_ptr->m_fvrObj);
+    unsigned short *buffer = d_ptr->m_renderer.cubemapBuffer();
     std::memcpy(buffer, imageData.data(), imageData.size());
 
     return true;
@@ -382,8 +288,7 @@ bool FnxVr::loop()
 
         // Draw to surface
         SDL_LockSurface(surface);
-        d_ptr->FVR_Draw(
-            d_ptr->m_fvrObj,
+        d_ptr->m_renderer.render(
             (unsigned short *)surface->pixels,
             yawRad - 1.570795f, // Rotate 90 degrees
             pitchRad,
