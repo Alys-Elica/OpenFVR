@@ -68,8 +68,8 @@ private:
 #define FNXVR_WINDOW_WIDTH 1024
 #define FNXVR_WINDOW_HEIGHT 768
 #define FNXVR_WINDOW_FOV 1.0f
-#define FNXVR_FPS 60.0
-#define FNXVR_MOUSE_SENSITIVITY 1.5f
+#define FNXVR_FPS 60.0f
+#define FNXVR_MOUSE_SENSITIVITY 0.1f
 
 FnxVr::FnxVr()
 {
@@ -216,20 +216,16 @@ bool FnxVr::loop()
     SDL_SetRelativeMouseMode(SDL_TRUE);
 
     // Main loop
-    uint64_t ticksA = SDL_GetTicks64();
+    uint64_t tickBegin = SDL_GetTicks64();
     bool isRunning = true;
 
     float yawDeg = 270.0f;  // Horizontal (left/right)
     float pitchDeg = 90.0f; // Vertical (up/down) - 0.0f: down, 1.5: straight, 3.0f: up
     float rollDeg = 0.0f;   // Tilt (left/right)
+    float fov = FNXVR_WINDOW_FOV;
 
     while (isRunning)
     {
-        // Delta thingy
-        uint64_t ticksB = SDL_GetTicks64();
-        uint64_t deltaMs = ticksB - ticksA;
-        float delta = deltaMs / 1000.0f;
-
         // Handle events
         SDL_Event event;
         while (SDL_PollEvent(&event))
@@ -247,8 +243,8 @@ bool FnxVr::loop()
             }
             else if (event.type == SDL_MOUSEMOTION)
             {
-                yawDeg += event.motion.xrel * FNXVR_MOUSE_SENSITIVITY * delta;
-                pitchDeg -= event.motion.yrel * FNXVR_MOUSE_SENSITIVITY * delta;
+                yawDeg += event.motion.xrel * FNXVR_MOUSE_SENSITIVITY;
+                pitchDeg -= event.motion.yrel * FNXVR_MOUSE_SENSITIVITY;
 
                 if (yawDeg < 0.0f)
                 {
@@ -270,16 +266,12 @@ bool FnxVr::loop()
 
                 pitchDeg = std::clamp(pitchDeg, 0.0f, 180.0f);
             }
+            else if (event.type == SDL_MOUSEWHEEL)
+            {
+                fov -= event.wheel.y * 0.1f;
+                fov = std::clamp(fov, 0.5f, 2.0f);
+            }
         }
-
-        // FPS limit
-        if (deltaMs < 1000.0 / FNXVR_FPS)
-        {
-            SDL_Delay(10);
-            continue;
-        }
-
-        ticksA = ticksB;
 
         // Render
         float yawRad = yawDeg * 0.0174532925f;     // Convert to radians
@@ -293,7 +285,7 @@ bool FnxVr::loop()
             yawRad - 1.570795f, // Rotate 90 degrees
             pitchRad,
             rollRad,
-            FNXVR_WINDOW_FOV);
+            fov);
 
         SDL_UnlockSurface(surface);
 
