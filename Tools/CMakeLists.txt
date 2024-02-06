@@ -13,6 +13,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/build/out/${CMAKE_BUILD_T
 
 # Libraries
 add_subdirectory(LibFVR)
+add_subdirectory(FvrRenderer)
 
 # Sub-projects
 add_subdirectory(DatExtractor)

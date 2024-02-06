@@ -13,6 +13,7 @@ public:
     bool isValid();
 
     bool loadFile(const std::string &vrFileName);
+    bool loadTstFile(const std::string &tstFileName);
     bool loop();
 
 private:

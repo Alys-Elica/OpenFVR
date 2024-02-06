@@ -12,7 +12,7 @@ Project is currently focused on documenting the interpreter engine (file formats
 | --------------------------------- | ------------------ | ------- | ----------------------------------- |
 | [ARN/VIT](Doc/Formats/ARN_VIT.md) | Archive            | Partial | None                                |
 | DAT                               | Archive            | Partial | [DatExtractor](Tools/DatExtractor/) |
-| LST                               | Game script        | Unknown | None                                |
+| [LST](Doc/Formats/LST.md)         | Game script        | Unknown | None                                |
 | MTR                               | Bitmap image       | Partial | [MtrComverter](Tools/MtrConverter/) |
 | [PAK](Doc/Formats/PAK.md)         | Compressed archive | Partial | [PakConverter](Tools/PakConverter/) |
 | [TST](Doc/Formats/TST.md)         | Clickable zones ?  | Unknown | None                                |

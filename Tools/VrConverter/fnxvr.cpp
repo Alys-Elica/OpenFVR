@@ -1,14 +1,15 @@
 #include "fnxvr.h"
 
 #include <algorithm>
+#include <cmath>
 #include <cstdint>
+#include <cstring>
 #include <iostream>
 #include <vector>
-#include <cstring>
-
-#include <windows.h>
 
 #include <SDL.h>
+#include <fvr/file.h>
+#include <fvrrenderer.h>
 
 #include "fvr_files/fvr_vr.h"
 
@@ -18,97 +19,48 @@ class FnxVrPrivate
     friend class FnxVr;
 
 public:
-    FnxVrPrivate()
+    struct Zone
     {
-        libFvr = LoadLibrary(TEXT("Fnx_vr.dll"));
-        if (!libFvr)
-        {
-            std::cerr << "Failed to load Fnx_vr.dll" << std::endl;
-            return;
-        }
-
-        // Unpack image functions
-        FVR_init = (FVR_cdtor)GetProcAddress(libFvr, "??0FNX_VR@@QAE@XZ");
-        FVR_deinit = (FVR_cdtor)GetProcAddress(libFvr, "??1FNX_VR@@QAE@XZ");
-        if (!FVR_init || !FVR_deinit)
-        {
-            std::cerr << "Failed to get DCT const/dest function pointer" << std::endl;
-            clean();
-            return;
-        }
-
-        FVR_Buffer = (FVR_Buffer_t)GetProcAddress(libFvr, "?Buffer@FNX_VR@@QAEPAGXZ");
-        FVR_Draw = (FVR_Draw_t)GetProcAddress(libFvr, "?Draw@FNX_VR@@QAEXPAGMMMM@Z");
-        FVR_Init_Resolution = (FVR_Init_Resolution_t)GetProcAddress(libFvr, "?Init_Resolution@FNX_VR@@QAEHMMMMHM@Z");
-        if (!FVR_Buffer || !FVR_Draw || !FVR_Init_Resolution)
-        {
-            std::cerr << "Failed to get function pointer" << std::endl;
-            clean();
-            return;
-        }
-
-        // DCT object size
-        m_fvrObj = static_cast<uint8_t *>(malloc(1212));
-
-        FVR_init(m_fvrObj);
-    };
-    ~FnxVrPrivate()
-    {
-        delete[] m_fvrObj;
+        uint32_t index;
+        float x1;
+        float x2;
+        float y1;
+        float y2;
     };
 
-    void clean()
+public:
+    static bool checkZone(const Zone &zone, const float yaw, const float pitch)
     {
-        if (m_fvrObj)
+        float minX = std::min(zone.x1, zone.x2);
+        float maxX = std::max(zone.x1, zone.x2);
+        if (3.141593f < maxX - minX)
         {
-            if (FVR_deinit)
-            {
-                FVR_deinit(m_fvrObj);
-            }
-            free(m_fvrObj);
+            float tmpX = maxX;
+            maxX = minX + 6.283185f;
+            minX = tmpX;
         }
 
-        m_fvrObj = NULL;
+        float minY = std::min(zone.y1, zone.y2);
+        float maxY = std::max(zone.y1, zone.y2);
+        if (3.141593f < maxY - minY)
+        {
+            float tmpY = maxY;
+            maxY = minY + 6.283185f;
+            minY = tmpY;
+        }
 
-        FreeLibrary(libFvr);
-        libFvr = NULL;
+        bool inX1 = (minX <= yaw) && (yaw <= maxX);
+        bool inX2 = (minX <= yaw + 6.283185f) && (yaw + 6.283185f <= maxX);
+        bool inY1 = (minY <= pitch) && (pitch <= maxY);
+        bool inY2 = (minY <= pitch + 6.283185f) && (pitch + 6.283185f <= maxY);
 
-        FVR_init = NULL;
-        FVR_deinit = NULL;
+        return (inX1 || inX2) && (inY1 || inY2);
     }
 
 private:
-    typedef void(__thiscall *FVR_cdtor)(void *thisptr);
-    typedef unsigned short *(__thiscall *FVR_Buffer_t)(void *thisptr);
-    typedef void(__thiscall *FVR_Draw_t)(
-        void *thisptr,
-        unsigned short *outputBuffer, // 16bit RGB565 buffer
-        float yaw,                    // VR projection yaw (left/right) in radians
-        float pitch,                  // VR projection pitch (up/down) in radians
-        float roll,                   // VR projection roll (tilt) in radians
-        float fov);
-    typedef int(__thiscall *FVR_Init_Resolution_t)(
-        void *thisptr,
-        float xOffset, // VR projection x offset
-        float yOffset, // VR projection y offset
-        float width,   // VR projection width
-        float height,  // VR projection height
-        int stride,    // VR projection stride
-        float param_6);
-
-private:
-    HINSTANCE libFvr = NULL;
-
-    // Function pointers
-    FVR_cdtor FVR_init = NULL;                        // FVR constructor
-    FVR_cdtor FVR_deinit = NULL;                      // FVR destructor
-    FVR_Buffer_t FVR_Buffer = NULL;                   // Returns the 16bit RGB565 VR image data buffer
-    FVR_Draw_t FVR_Draw = NULL;                       // Draws VR projection to the given 16bit RGB565 buffer
-    FVR_Init_Resolution_t FVR_Init_Resolution = NULL; // Initializes the VR projection resolution
-
-    uint8_t *m_fvrObj; // FVR object
-
     FvrVr m_vrFile;
+    FvrRenderer m_renderer;
+    std::vector<Zone> m_listZone;
 };
 
 // Public implementation
@@ -116,8 +68,8 @@ private:
 #define FNXVR_WINDOW_WIDTH 1024
 #define FNXVR_WINDOW_HEIGHT 768
 #define FNXVR_WINDOW_FOV 1.0f
-#define FNXVR_FPS 60.0
-#define FNXVR_MOUSE_SENSITIVITY 1.5f
+#define FNXVR_FPS 60.0f
+#define FNXVR_MOUSE_SENSITIVITY 0.1f
 
 FnxVr::FnxVr()
 {
@@ -128,11 +80,7 @@ FnxVr::FnxVr()
         return;
     }
 
-    d_ptr->FVR_Init_Resolution(
-        d_ptr->m_fvrObj,
-        0.0f, 0.0f,
-        FNXVR_WINDOW_WIDTH, FNXVR_WINDOW_HEIGHT,
-        FNXVR_WINDOW_WIDTH, 1.0f);
+    d_ptr->m_renderer.setResolution(FNXVR_WINDOW_WIDTH, FNXVR_WINDOW_HEIGHT);
 }
 
 FnxVr::~FnxVr()
@@ -142,7 +90,7 @@ FnxVr::~FnxVr()
 
 bool FnxVr::isValid()
 {
-    return d_ptr->libFvr != NULL;
+    return true;
 }
 
 bool FnxVr::loadFile(const std::string &vrFileName)
@@ -178,8 +126,45 @@ bool FnxVr::loadFile(const std::string &vrFileName)
         return false;
     }
 
-    unsigned short *buffer = d_ptr->FVR_Buffer(d_ptr->m_fvrObj);
+    unsigned short *buffer = d_ptr->m_renderer.cubemapBuffer();
     std::memcpy(buffer, imageData.data(), imageData.size());
+
+    return true;
+}
+
+bool FnxVr::loadTstFile(const std::string &tstFileName)
+{
+    if (!isValid())
+    {
+        std::cerr << "FnxVr is not valid. A VR file must be loaded before the TST file" << std::endl;
+        return false;
+    }
+
+    File tstFile;
+    tstFile.setEndian(File::Endian::LittleEndian);
+    if (!tstFile.open(tstFileName, std::ios::binary | std::ios::in))
+    {
+        std::cerr << "Failed to open TST file" << std::endl;
+        return false;
+    }
+
+    uint32_t zoneCount = 0;
+    tstFile >> zoneCount;
+
+    for (uint32_t i = 0; i < zoneCount; i++)
+    {
+        // TODO: some checks
+        FnxVrPrivate::Zone zone;
+
+        zone.index = i;
+
+        tstFile >> zone.x1;
+        tstFile >> zone.x2;
+        tstFile >> zone.y1;
+        tstFile >> zone.y2;
+
+        d_ptr->m_listZone.push_back(zone);
+    }
 
     return true;
 }
@@ -231,20 +216,16 @@ bool FnxVr::loop()
     SDL_SetRelativeMouseMode(SDL_TRUE);
 
     // Main loop
-    uint64_t ticksA = SDL_GetTicks64();
+    uint64_t tickBegin = SDL_GetTicks64();
     bool isRunning = true;
 
     float yawDeg = 270.0f;  // Horizontal (left/right)
     float pitchDeg = 90.0f; // Vertical (up/down) - 0.0f: down, 1.5: straight, 3.0f: up
     float rollDeg = 0.0f;   // Tilt (left/right)
+    float fov = FNXVR_WINDOW_FOV;
 
     while (isRunning)
     {
-        // Delta thingy
-        uint64_t ticksB = SDL_GetTicks64();
-        uint64_t deltaMs = ticksB - ticksA;
-        float delta = deltaMs / 1000.0f;
-
         // Handle events
         SDL_Event event;
         while (SDL_PollEvent(&event))
@@ -262,12 +243,21 @@ bool FnxVr::loop()
             }
             else if (event.type == SDL_MOUSEMOTION)
             {
-                yawDeg += event.motion.xrel * FNXVR_MOUSE_SENSITIVITY * delta;
-                pitchDeg -= event.motion.yrel * FNXVR_MOUSE_SENSITIVITY * delta;
+                yawDeg += event.motion.xrel * FNXVR_MOUSE_SENSITIVITY;
+                pitchDeg -= event.motion.yrel * FNXVR_MOUSE_SENSITIVITY;
 
                 if (yawDeg < 0.0f)
                 {
                     yawDeg = 360.0f;
+                }
+                else if (yawDeg > 360.0f)
+                {
+                    yawDeg = 0.0f;
+                }
+
+                if (pitchDeg < 0.0f)
+                {
+                    pitchDeg = 0.0f;
                 }
                 else if (pitchDeg > 360.0f)
                 {
@@ -276,34 +266,51 @@ bool FnxVr::loop()
 
                 pitchDeg = std::clamp(pitchDeg, 0.0f, 180.0f);
             }
+            else if (event.type == SDL_MOUSEWHEEL)
+            {
+                fov -= event.wheel.y * 0.1f;
+                fov = std::clamp(fov, 0.5f, 2.0f);
+            }
         }
-
-        // FPS limit
-        if (deltaMs < 1000.0 / FNXVR_FPS)
-        {
-            SDL_Delay(10);
-            continue;
-        }
-
-        ticksA = ticksB;
 
         // Render
+        float yawRad = yawDeg * 0.0174532925f;     // Convert to radians
+        float pitchRad = pitchDeg * 0.0174532925f; // Convert to radians
+        float rollRad = rollDeg * 0.0174532925f;   // Convert to radiansyawRad,
+
         // Draw to surface
         SDL_LockSurface(surface);
-        d_ptr->FVR_Draw(
-            d_ptr->m_fvrObj,
+        d_ptr->m_renderer.render(
             (unsigned short *)surface->pixels,
-            yawDeg * 0.0174532925f,   // Convert to radians
-            pitchDeg * 0.0174532925f, // Convert to radians
-            rollDeg * 0.0174532925f,  // Convert to radians
-            FNXVR_WINDOW_FOV);
+            yawRad - 1.570795f, // Rotate 90 degrees
+            pitchRad,
+            rollRad,
+            fov);
+
         SDL_UnlockSurface(surface);
 
         // Draw to renderer
         SDL_RenderClear(renderer);
+
+        // Render the scene
         SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, surface);
         SDL_RenderCopy(renderer, texture, NULL, NULL);
         SDL_DestroyTexture(texture);
+
+        // Draw cursor
+        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+        for (const FnxVrPrivate::Zone &zone : d_ptr->m_listZone)
+        {
+            if (FnxVrPrivate::checkZone(zone, yawRad, pitchRad))
+            {
+                SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+                break;
+            }
+        }
+
+        SDL_RenderDrawLine(renderer, FNXVR_WINDOW_WIDTH / 2 - 10, FNXVR_WINDOW_HEIGHT / 2, FNXVR_WINDOW_WIDTH / 2 + 10, FNXVR_WINDOW_HEIGHT / 2);
+        SDL_RenderDrawLine(renderer, FNXVR_WINDOW_WIDTH / 2, FNXVR_WINDOW_HEIGHT / 2 - 10, FNXVR_WINDOW_WIDTH / 2, FNXVR_WINDOW_HEIGHT / 2 + 10);
+
         SDL_RenderPresent(renderer);
     }
 

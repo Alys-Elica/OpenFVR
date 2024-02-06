@@ -26,6 +26,9 @@ add_executable(${PROJECT_NAME}
 # LibFVR
 target_link_libraries(${PROJECT_NAME} PRIVATE LibFVR)
 
+# FvrRenderer
+target_link_libraries(${PROJECT_NAME} PRIVATE FvrRenderer)
+
 # Boost
 find_package(Boost REQUIRED COMPONENTS program_options)
 target_link_libraries(${PROJECT_NAME} PRIVATE Boost::boost Boost::program_options)
