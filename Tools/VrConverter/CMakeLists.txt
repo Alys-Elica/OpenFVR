@@ -12,12 +12,6 @@ set(PROJECT_FILE_SOURCES
     main.cpp
 )
 
-if (${HAS_WINDOWS_H})
-    set (PROJECT_FILE_HEADERS ${PROJECT_FILE_HEADERS} fnxvr.h)
-    set (PROJECT_FILE_SOURCES ${PROJECT_FILE_SOURCES} fnxvr.cpp)
-    add_definitions(-DHAS_FNXVR)
-endif ()
-
 add_executable(${PROJECT_NAME}
     ${PROJECT_FILE_HEADERS}
     ${PROJECT_FILE_SOURCES}
