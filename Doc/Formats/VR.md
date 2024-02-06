@@ -4,7 +4,8 @@ Note: this format is not fully documented yet.
 
 VR files contains images and animations used for static screens and 360 environments.
 
-360 panoramic images contains data for the 6 faces of a cube (512x512 pixels each). Each face is sliced in 4 sub-faces (256x256 pixels each) that are then stacked top to bottom in the main 256x6144 pixel image.
+360 panoramic images contains data for the 6 faces of a cube (512\*512 pixels each).
+Each face is sliced in 4 sub-faces (256\*256 pixels each) that are then stacked top to bottom in the main 256\*6144 pixel image.
 
 ## File structure (little-endian)
 
@@ -26,11 +27,35 @@ Base image data is followed by optional animation data:
 
 ## Basic informations
 
-The type determines if the VR file is a static 640x480 image (type value == -0x5f4e3c00), a 360 projected 256x6144 image (type value == -0x5f4e3e00).
+The type determines if the VR file is a static 640\*480 image (type value == -0x5f4e3c00) or a panoramic 256\*6144 image (type value == -0x5f4e3e00).
+
+### Static images
+
+These images are basic 640\*480 fixed images.
+
+### Panoramic images
+
+Cubemap images (256\*6144) used for panoramic 360 projection.
+
+All 6 faces of the cubemap are 512\*512 pixels stored top to bottom in the following order:
+
+-   Down face
+-   Left face
+-   Up face
+-   Right face
+-   Front face
+-   Back face
+
+In addition, each face is divided in four 256\*256 chunks, stored in this order:
+
+-   Face top-left
+-   Face top-right
+-   Face bottom-right
+-   Face bottom-left
 
 ## Image data
 
-Image data is not yet fully understood but DCT is used to encode the images.
+Image data is not yet fully documented but DCT is used to encode the images.
 
 | Address | Size (bytes) | Description                      |
 | ------- | ------------ | -------------------------------- |
@@ -50,10 +75,10 @@ AC codes data is compressed using Huffman algorithm.
 
 The compressed data begins with a compacted header that needs to be unpacked into a 256 element array storing normalized byte frequencies. To unpack the header :
 
-- Read startOffset (1 byte)
-- Read endOffset (1 byte)
-- Read `endOffset - startOffset + 1` bytes and store them in the output array starting from position startOffset
-- Repeat until startOffset value reads 0
+-   Read startOffset (1 byte)
+-   Read endOffset (1 byte)
+-   Read `endOffset - startOffset + 1` bytes and store them in the output array starting from position startOffset
+-   Repeat until startOffset value reads 0
 
 Read frequencies are used to build an Huffman tree wich is used to uncompress the AC code data.
 
@@ -61,12 +86,12 @@ Read frequencies are used to build an Huffman tree wich is used to uncompress th
 
 Compression is similar to that of the 4XM video format. Here is the general algorithm:
 
-- First, a 8x8 block is unpacked (in YCbCr format)
-- The block is put in it right pixel order (zigzag)
-- Each YCbCr component of the block is multiplied with a luma dequant table (for Y) and a chroma dequant table (for Cb and Cr). Each of these table is precalculated usimg the `quality` of the image
-- Inverse DCT is applied on each 3 component, and clamped to the [-128, 127] range
-- The block is then transformed to RGB
-- Rinse and repeat for each 8x8 block, in left to right then top to bottom order
+-   First, a 8x8 block is unpacked (in YCbCr format)
+-   The block is put in it right pixel order (zigzag)
+-   Each YCbCr component of the block is multiplied with a luma dequant table (for Y) and a chroma dequant table (for Cb and Cr). Each of these table is precalculated usimg the `quality` of the image
+-   Inverse DCT is applied on each 3 component, and clamped to the [-128, 127] range
+-   The block is then transformed to RGB
+-   Rinse and repeat for each 8x8 block, in left to right then top to bottom order
 
 > TODO: document block unpacking
 
