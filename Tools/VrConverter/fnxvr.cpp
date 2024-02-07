@@ -12,55 +12,18 @@
 #include <fvrrenderer.h>
 
 #include "fvr_files/fvr_vr.h"
+#include "fvr_files/fvr_tst.h"
 
 // Private implementation
 class FnxVrPrivate
 {
     friend class FnxVr;
 
-public:
-    struct Zone
-    {
-        uint32_t index;
-        float x1;
-        float x2;
-        float y1;
-        float y2;
-    };
-
-public:
-    static bool checkZone(const Zone &zone, const float yaw, const float pitch)
-    {
-        float minX = std::min(zone.x1, zone.x2);
-        float maxX = std::max(zone.x1, zone.x2);
-        if (3.141593f < maxX - minX)
-        {
-            float tmpX = maxX;
-            maxX = minX + 6.283185f;
-            minX = tmpX;
-        }
-
-        float minY = std::min(zone.y1, zone.y2);
-        float maxY = std::max(zone.y1, zone.y2);
-        if (3.141593f < maxY - minY)
-        {
-            float tmpY = maxY;
-            maxY = minY + 6.283185f;
-            minY = tmpY;
-        }
-
-        bool inX1 = (minX <= yaw) && (yaw <= maxX);
-        bool inX2 = (minX <= yaw + 6.283185f) && (yaw + 6.283185f <= maxX);
-        bool inY1 = (minY <= pitch) && (pitch <= maxY);
-        bool inY2 = (minY <= pitch + 6.283185f) && (pitch + 6.283185f <= maxY);
-
-        return (inX1 || inX2) && (inY1 || inY2);
-    }
-
 private:
     FvrVr m_vrFile;
+    FvrTst m_tstFile;
+
     FvrRenderer m_renderer;
-    std::vector<Zone> m_listZone;
 };
 
 // Public implementation
@@ -134,39 +97,7 @@ bool FnxVr::loadFile(const std::string &vrFileName)
 
 bool FnxVr::loadTstFile(const std::string &tstFileName)
 {
-    if (!isValid())
-    {
-        std::cerr << "FnxVr is not valid. A VR file must be loaded before the TST file" << std::endl;
-        return false;
-    }
-
-    File tstFile;
-    tstFile.setEndian(File::Endian::LittleEndian);
-    if (!tstFile.open(tstFileName, std::ios::binary | std::ios::in))
-    {
-        std::cerr << "Failed to open TST file" << std::endl;
-        return false;
-    }
-
-    uint32_t zoneCount = 0;
-    tstFile >> zoneCount;
-
-    for (uint32_t i = 0; i < zoneCount; i++)
-    {
-        // TODO: some checks
-        FnxVrPrivate::Zone zone;
-
-        zone.index = i;
-
-        tstFile >> zone.x1;
-        tstFile >> zone.x2;
-        tstFile >> zone.y1;
-        tstFile >> zone.y2;
-
-        d_ptr->m_listZone.push_back(zone);
-    }
-
-    return true;
+    return d_ptr->m_tstFile.loadFile(tstFileName);
 }
 
 bool FnxVr::loop()
@@ -298,14 +229,13 @@ bool FnxVr::loop()
         SDL_DestroyTexture(texture);
 
         // Draw cursor
-        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-        for (const FnxVrPrivate::Zone &zone : d_ptr->m_listZone)
+        if (d_ptr->m_tstFile.checkAngleZone(yawRad, pitchRad) != -1)
         {
-            if (FnxVrPrivate::checkZone(zone, yawRad, pitchRad))
-            {
-                SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
-                break;
-            }
+            SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+        }
+        else
+        {
+            SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
         }
 
         SDL_RenderDrawLine(renderer, FNXVR_WINDOW_WIDTH / 2 - 10, FNXVR_WINDOW_HEIGHT / 2, FNXVR_WINDOW_WIDTH / 2 + 10, FNXVR_WINDOW_HEIGHT / 2);
