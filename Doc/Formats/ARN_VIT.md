@@ -2,13 +2,21 @@
 
 Note: these formats are not fully documented yet. Some assumptions are made that can be incomplete/incorrect.
 
-These files are used as (only image ?) archives and work in tandem: VIT files ("header" files) stores file informations and ARN files ("data" files) stores files content.
+These files are used as image archives and work in tandem: VIT files act as header and ARN files store raw file content.
 
 ## File structure (little-endian)
 
 ### VIT
 
-Any VIT file contains a 4 byte N file count, 4 bytes of unknown value followed by N 60 byte blocks, each storing information for one file of the archive. Each block has is structured as follows:
+Any VIT file contains the following:
+
+| Address | Size (bytes) | Description           |
+| ------- | ------------ | --------------------- |
+| 0x00    | 4            | File count (N)        |
+| 0x04    | 4            | Unknown               |
+| 0x08    | N\*60        | N 60 byte file blocks |
+
+Each file block stores information for one file of the archive and is structured as follows:
 
 | Address | Size (bytes) | Description                                |
 | ------- | ------------ | ------------------------------------------ |
@@ -25,4 +33,4 @@ Any VIT file contains a 4 byte N file count, 4 bytes of unknown value followed b
 
 ARN files are much more simple. They are just composed of the archived files content concatenated together in order of their appearance in the VIT file. Simply read the N bytes (archived file size) read in the VIT file.
 
-One particular thing to note is the need to manage BMP row pixel padding in case the image width isn't a multiple of 4. In that case add the 2 byte values 0x00 and 0xFF at the end of each line data.
+Images are formated as RGB565 (16 bits per pixel) and are not compressed.

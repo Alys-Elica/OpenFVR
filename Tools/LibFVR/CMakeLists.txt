@@ -12,6 +12,7 @@ set(PROJECT_FILE_HEADERS
     fvr/image.h
     fvr/file.h
 
+    fvr_files/fvr_arnvit.h
     fvr_files/fvr_dat.h
     fvr_files/fvr_mtr.h
     fvr_files/fvr_pak.h
@@ -25,6 +26,7 @@ set(PROJECT_FILE_SOURCES
     fvr/file.cpp
     fvr/image.cpp
 
+    fvr_files/fvr_arnvit.cpp
     fvr_files/fvr_dat.cpp
     fvr_files/fvr_mtr.cpp
     fvr_files/fvr_pak.cpp
