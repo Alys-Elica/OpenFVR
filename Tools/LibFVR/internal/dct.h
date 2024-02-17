@@ -5,7 +5,6 @@
 #include <vector>
 
 class DctPrivate;
-
 class Dct final
 {
 
