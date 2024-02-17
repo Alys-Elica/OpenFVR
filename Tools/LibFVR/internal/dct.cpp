@@ -426,8 +426,6 @@ bool Dct::unpackBlock(
     const int quality,
     std::vector<uint8_t> &outData)
 {
-    outData.resize(64 * 3 * blockCount);
-    d_ptr->setQuality(quality);
-
-    return true;
+    // 8*8 blocks are placed in top to bottom order
+    return unpack(imageData, quality, 8, blockCount * 8, outData);
 }
