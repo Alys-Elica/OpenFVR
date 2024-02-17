@@ -6,12 +6,9 @@ project(${PROJECT_NAME} VERSION 0.1.0 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 
-set(PROJECT_FILE_HEADERS
-    fnxvr.h
-)
+set(PROJECT_FILE_HEADERS)
 
 set(PROJECT_FILE_SOURCES
-    fnxvr.cpp
     main.cpp
 )
 

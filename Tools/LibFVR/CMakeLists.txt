@@ -1,10 +1,28 @@
 cmake_minimum_required(VERSION 3.14.0)
+include(CheckIncludeFiles)
+include(CheckFunctionExists)
 
 set(PROJECT_NAME LibFVR)
 
 project(${PROJECT_NAME} VERSION 0.1.0 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 20)
+
+check_include_files ("windows.h" HAS_WINDOWS_H)
+
+# Could check for LoadLibrary instead
+if (${HAS_WINDOWS_H})
+    option (USE_DCT_DLL "Uses dct.dll for VR file decompression" OFF)
+
+    if (${USE_DCT_DLL})
+        set(DCT_SOURCE internal/dct_dll.cpp)
+    else()
+        set(DCT_SOURCE internal/dct.cpp)
+    endif()
+else ()
+    set (DCT_SOURCE internal/dct.cpp)
+endif()
+
 
 set(PROJECT_FILE_HEADERS
     libfvr_globals.h
@@ -32,9 +50,10 @@ set(PROJECT_FILE_SOURCES
     fvr_files/fvr_pak.cpp
     fvr_files/fvr_tst.cpp
     fvr_files/fvr_vr.cpp
-
-    internal/dct.cpp
+    
+    ${DCT_SOURCE}
 )
+
 
 add_library(${PROJECT_NAME} SHARED
     ${PROJECT_FILE_HEADERS}
