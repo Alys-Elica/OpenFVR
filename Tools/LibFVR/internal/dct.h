@@ -15,15 +15,11 @@ public:
     Dct(const Dct &) = delete;
     Dct &operator=(const Dct &) = delete;
 
-    bool isValid();
-
-    bool unpackPicture(
+    bool unpack(
         const std::vector<uint8_t> &imageData,
         const int quality,
-        std::vector<uint8_t> &rgb565Data);
-    bool unpackVr(
-        const std::vector<uint8_t> &imageData,
-        const int quality,
+        const int width,
+        const int height,
         std::vector<uint8_t> &rgb565Data);
     bool unpackBlock(
         const int blockCount,

@@ -8,27 +8,14 @@ project(${PROJECT_NAME} VERSION 0.1.0 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 
-check_include_files ("windows.h" HAS_WINDOWS_H)
-
-# Could check for LoadLibrary instead
-if (${HAS_WINDOWS_H})
-    option (USE_DCT_DLL "Uses dct.dll for VR file decompression" OFF)
-
-    if (${USE_DCT_DLL})
-        set(DCT_SOURCE internal/dct_dll.cpp)
-    else()
-        set(DCT_SOURCE internal/dct.cpp)
-    endif()
-else ()
-    set (DCT_SOURCE internal/dct.cpp)
-endif()
-
-
 set(PROJECT_FILE_HEADERS
     libfvr_globals.h
 
-    fvr/image.h
+    fvr/datastream.h
     fvr/file.h
+    fvr/huffmantable.h
+    fvr/image.h
+    fvr/inversebitstream.h
 
     fvr_files/fvr_arnvit.h
     fvr_files/fvr_dat.h
@@ -41,8 +28,11 @@ set(PROJECT_FILE_HEADERS
 )
 
 set(PROJECT_FILE_SOURCES
+    fvr/datastream.cpp
     fvr/file.cpp
+    fvr/huffmantable.cpp
     fvr/image.cpp
+    fvr/inversebitstream.cpp
 
     fvr_files/fvr_arnvit.cpp
     fvr_files/fvr_dat.cpp
@@ -51,7 +41,7 @@ set(PROJECT_FILE_SOURCES
     fvr_files/fvr_tst.cpp
     fvr_files/fvr_vr.cpp
     
-    ${DCT_SOURCE}
+    internal/dct.cpp
 )
 
 

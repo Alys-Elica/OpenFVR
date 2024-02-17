@@ -5,6 +5,10 @@
 #include <cmath>
 #include <algorithm>
 
+#include "fvr/datastream.h"
+#include "fvr/huffmantable.h"
+#include "fvr/inversebitstream.h"
+
 const int AAN_scales[64] = {
     16384, 22725, 21407, 19266, 16384, 12873, 8867, 4520,
     22725, 31521, 29692, 26722, 22725, 17855, 12299, 6270,
@@ -65,7 +69,7 @@ int VEC_ROW[64] = {
     48, 49, 50, 51, 52, 53, 54, 55,
     56, 57, 58, 59, 60, 61, 62, 63};
 
-void idct_vector_transform(int mcu[64], int *vec_lookup)
+void idctVectorTransform(int mcu[64], int *vec_lookup)
 {
     int add_0_4, sub_0_4,
         add_1_7, sub_1_7,
@@ -120,8 +124,8 @@ void idct_vector_transform(int mcu[64], int *vec_lookup)
 
 void idct(int mcu[64])
 {
-    idct_vector_transform(mcu, VEC_COL);
-    idct_vector_transform(mcu, VEC_ROW);
+    idctVectorTransform(mcu, VEC_COL);
+    idctVectorTransform(mcu, VEC_ROW);
 
     // Performs descaling from previous upscaling, see AA&N scales.
     for (int i = 0; i < 64; i++)
@@ -129,196 +133,6 @@ void idct(int mcu[64])
         mcu[i] = std::clamp(mcu[i] / 16, -128, 128);
     }
 }
-
-class InverseBitstream
-{
-private:
-    int length;
-    const uint8_t *data;
-
-    off_t offset = 0;
-    int bitmask = 128;
-
-public:
-    InverseBitstream(int length, const uint8_t *data)
-    {
-        this->length = length;
-        this->data = data;
-    }
-
-    int8_t next(uint8_t bits)
-    {
-        int inverse = 1;
-        int8_t value = 0;
-
-        for (int i = 0; i < bits; i++)
-        {
-            if (this->offset >= this->length)
-            {
-                break;
-            }
-
-            if (this->bitmask & this->data[this->offset])
-            {
-                value = value | inverse;
-            }
-
-            this->bitmask >>= 1;
-            inverse <<= 1;
-
-            if (this->bitmask == 0)
-            {
-                this->bitmask = 128;
-                this->offset += 1;
-            }
-        }
-
-        return value;
-    }
-};
-
-class HuffmanTable
-{
-private:
-    int size;
-    uint8_t *table;
-    off_t read_offset = 0;
-
-public:
-    HuffmanTable(const int size)
-    {
-        this->size = size;
-        this->table = (uint8_t *)malloc(size);
-    }
-
-    ~HuffmanTable()
-    {
-        free(this->table);
-    }
-
-    void decompress(const uint8_t *data, const int size)
-    {
-        /* This method unpacks the frequencies from the file and then sorts them
-           by their value in descending order. Each node occupies three bytes;
-           the frequency, the left leaf and the right leaf. */
-
-        /* The ac_code part begins with a null-terminated section containing the
-           Huffman frequencies. The frequencies are compacted into blocks in order
-           to avoid redundant zeros. Each block begins with the block starting offset,
-           then continues with where the block ends. Subtract the starting offset from
-           the end and we get the length - this is how many bytes follows. */
-
-        int buffer[513 * 3 + 1] = {0};
-
-        int block_start,
-            block_end,
-            block_len;
-
-        off_t data_offset = 0;
-        while (data_offset < 256)
-        {
-            block_start = data[data_offset++];
-
-            /* The compacted frequencies are null-terminated.
-               However, the first block commonly starts with zero as well. */
-            if (data_offset > 1 && block_start == 0)
-            {
-                break;
-            }
-
-            block_end = data[data_offset++];
-            block_len = block_end - block_start;
-
-            for (int i = 0; i <= block_len; i++)
-            {
-                buffer[(block_start + i) * 3] = data[data_offset++];
-            }
-        }
-
-        buffer[513 * 3] = 0x7fffffff;
-
-        off_t left, right;
-        size_t len = 256;
-
-        buffer[len * 3] = 1;
-
-        while (len < 513)
-        {
-            left = right = 513;
-
-            for (off_t index = 0; index <= len; index++)
-            {
-                if (buffer[index * 3] == 0)
-                {
-                    continue;
-                }
-                else if (buffer[index * 3] < buffer[left * 3])
-                {
-                    right = left;
-                    left = index;
-                }
-                else if (buffer[index * 3] < buffer[right * 3])
-                {
-                    right = index;
-                }
-            }
-
-            if (right == 513)
-            {
-                break;
-            }
-
-            len++;
-
-            buffer[len * 3] = buffer[left * 3] + buffer[right * 3];
-            buffer[len * 3 + 1] = left;
-            buffer[len * 3 + 2] = right;
-
-            buffer[left * 3] = buffer[right * 3] = 0;
-        }
-
-        uint8_t bitmask = 128;
-
-        int index;
-
-        for (int i = 0; i < this->size; i++)
-        {
-            index = len;
-
-            while (index > 256)
-            {
-                if (bitmask & data[data_offset])
-                {
-                    index = buffer[index * 3 + 2];
-                }
-                else
-                {
-                    index = buffer[index * 3 + 1];
-                }
-
-                bitmask >>= 1;
-
-                if (bitmask == 0)
-                {
-                    data_offset++;
-                    bitmask = 128;
-                }
-            }
-
-            if (index == 256)
-            {
-                break;
-            }
-
-            this->table[i] = index;
-        }
-    }
-
-    uint8_t next()
-    {
-        return this->table[this->read_offset++];
-    }
-};
 
 /* Private */
 class DctPrivate
@@ -331,9 +145,6 @@ private:
     int quality;
     int y_quants[64];
     int c_quants[64];
-    HuffmanTable *ac_code;
-    InverseBitstream *ac;
-    InverseBitstream *dc;
 
 public:
     void setQuality(int quality)
@@ -359,48 +170,40 @@ public:
         }
     }
 
-    void unpack_mcu(int mcu[64], int quants[64])
+    void unpackMcu(InverseBitstream &ac, InverseBitstream &dc, DataStream &dsAcCode, int mcu[64], int quants[64])
     {
-        uint8_t ac_code,
-            ac_bits,
-            ac_padd;
-
-        int ac_data;
-
         off_t index = 0;
-        int zz_index = ZIGZAG[index];
-
-        mcu[zz_index] = this->dc->next(8) * quants[zz_index];
+        mcu[ZIGZAG[index]] = dc.next(8) * quants[ZIGZAG[index]];
 
         while (++index < 64)
         {
-            ac_code = this->ac_code->next();
+            uint8_t acCode;
+            dsAcCode >> acCode;
 
-            if (ac_code == 0)
+            if (acCode == 0)
             {
                 while (index < 64)
                 {
-                    zz_index = ZIGZAG[index++];
-                    mcu[zz_index] = 0;
+                    mcu[ZIGZAG[index++]] = 0;
                 }
 
                 break;
             }
 
             // Most significant nibble is number of null-bytes padding
-            ac_padd = ac_code >> 4;
+            uint8_t ac_padd = acCode >> 4;
             for (int i = 0; i < ac_padd; i++)
             {
-                zz_index = ZIGZAG[index++];
-                mcu[zz_index] = 0;
+                mcu[ZIGZAG[index++]] = 0;
             }
 
             // Least significant is number of bits to read from AC.
-            ac_bits = ac_code & 0xf;
+            uint8_t ac_bits = acCode & 0xf;
 
+            int ac_data;
             if (ac_bits > 0)
             {
-                ac_data = this->ac->next(ac_bits);
+                ac_data = ac.next(ac_bits);
 
                 if (((1 << (ac_bits - 1)) & ac_data) == 0)
                 {
@@ -412,8 +215,7 @@ public:
                 ac_data = 0;
             }
 
-            zz_index = ZIGZAG[index];
-            mcu[zz_index] = quants[zz_index] * ac_data;
+            mcu[ZIGZAG[index]] = quants[ZIGZAG[index]] * ac_data;
         }
 
         idct(mcu);
@@ -454,7 +256,7 @@ public:
         }
     }
 
-    void put_block(uint16_t *buffer, int width, int *r, int *g, int *b)
+    void putBlock(uint16_t *buffer, int width, int *r, int *g, int *b)
     {
         int r_overflow = 0,
             g_overflow = 0,
@@ -490,106 +292,6 @@ public:
             }
         }
     }
-
-    void unpack(
-        uint8_t *buffer,
-        const uint8_t *data,
-        size_t size,
-        int width,
-        int height)
-    {
-        this->width = width;
-        this->height = height;
-
-        int32_t ac_code_compressed_size = *(int32_t *)data;
-        int ac_code_uncompressed_size = *(int *)(data + 4);
-
-        const uint8_t *ac_code_data = data + 8;
-
-        const int ac_size = *(const int *)(ac_code_data + ac_code_compressed_size);
-        const uint8_t *ac_data = ac_code_data + ac_code_compressed_size + 4;
-
-        const int dc_size = *(const int *)(ac_data + ac_size);
-        const uint8_t *dc_data = ac_data + ac_size + 4;
-
-        this->ac_code = new HuffmanTable(ac_code_uncompressed_size);
-        this->ac_code->decompress(ac_code_data, ac_code_compressed_size);
-
-        this->ac = new InverseBitstream(
-            ac_size,
-            ac_data);
-
-        this->dc = new InverseBitstream(
-            dc_size,
-            dc_data);
-
-        int y_mcu[64],
-            cb_mcu[64],
-            cr_mcu[64];
-
-        /* When packing RGB565 into our data we're left with some
-           overflowing bits. These are contributed back into the next pixel.
-
-           The algorithm unpacks a total of width * 8 per iteration, so
-           we'll keep an extra width size for the overflowing bits which
-           will pass on to the next iteration. */
-
-        int *r = (int *)malloc(sizeof(int) * width * 9),
-            *g = (int *)malloc(sizeof(int) * width * 9),
-            *b = (int *)malloc(sizeof(int) * width * 9);
-
-        memset(r + width * 8, 0, sizeof(int) * width);
-        memset(g + width * 8, 0, sizeof(int) * width);
-        memset(b + width * 8, 0, sizeof(int) * width);
-
-        for (int y = 0; y < height; y += 8)
-        {
-            memset(r, 0, width * 8 * sizeof(int));
-            memset(g, 0, width * 8 * sizeof(int));
-            memset(b, 0, width * 8 * sizeof(int));
-
-            for (int x = 0; x < width; x += 8)
-            {
-                this->unpack_mcu(y_mcu, this->y_quants);
-                this->unpack_mcu(cb_mcu, this->c_quants);
-                this->unpack_mcu(cr_mcu, this->c_quants);
-
-                this->ycrcb_to_rgb(
-                    width,
-                    y_mcu,
-                    cb_mcu,
-                    cr_mcu,
-                    r + x,
-                    g + x,
-                    b + x);
-            }
-
-            /* Contribute overflowing bits from previous iteration. */
-            for (int i = 0, ii = width * 8; i < width; i++, ii++)
-            {
-                r[i] += r[ii];
-                g[i] += g[ii];
-                b[i] += b[ii];
-
-                r[ii] = 0;
-                g[ii] = 0;
-                b[ii] = 0;
-            }
-
-            this->put_block((uint16_t *)buffer, width, r, g, b);
-
-            buffer += 8 * width * 2;
-        }
-
-        // Cleanup
-        free(r);
-        free(g);
-        free(b);
-
-        delete this->ac_code;
-        delete this->dc;
-        delete this->ac;
-    }
 };
 
 /* Public */
@@ -603,45 +305,117 @@ Dct::~Dct()
     delete d_ptr;
 }
 
-bool Dct::isValid()
-{
-    return true;
-}
-
-bool Dct::unpackPicture(
+bool Dct::unpack(
     const std::vector<uint8_t> &imageData,
     const int quality,
+    const int width,
+    const int height,
     std::vector<uint8_t> &rgb565Data)
 {
-    if (!isValid())
-    {
-        std::cerr << "DCT is invalid" << std::endl;
-        return false;
-    }
-
-    rgb565Data.resize(640 * 480 * 2);
+    rgb565Data.resize(width * height * 2);
 
     d_ptr->setQuality(quality);
-    d_ptr->unpack(rgb565Data.data(), imageData.data(), imageData.size(), 640, 480);
 
-    return true;
-}
+    // Unpack
+    d_ptr->width = width;
+    d_ptr->height = height;
 
-bool Dct::unpackVr(
-    const std::vector<uint8_t> &imageData,
-    const int quality,
-    std::vector<uint8_t> &rgb565Data)
-{
-    if (!isValid())
+    DataStream ds;
+    ds.setData(imageData);
+    ds.setEndian(std::endian::little);
+
+    // AC code data
+    uint32_t acCodeCompSize;
+    uint32_t acCodeUncompSize;
+
+    ds >> acCodeCompSize;
+    ds >> acCodeUncompSize;
+
+    std::vector<uint8_t> dataAcCodeComp;
+    std::vector<uint8_t> dataAcCode;
+    ds.read(dataAcCodeComp, acCodeCompSize);
+
+    HuffmanTable::decompress(dataAcCodeComp, dataAcCode, acCodeUncompSize);
+
+    // AC data
+    uint32_t acSize;
+    ds >> acSize;
+
+    std::vector<uint8_t> dataAc;
+    ds.read(dataAc, acSize);
+
+    // DC data
+    uint32_t dcSize;
+    ds >> dcSize;
+
+    std::vector<uint8_t> dataDc;
+    ds.read(dataDc, dcSize);
+
+    // Unpack
+    InverseBitstream ac;
+    ac.setData(dataAc);
+
+    InverseBitstream dc;
+    dc.setData(dataDc);
+
+    DataStream dsAcCode;
+    dsAcCode.setData(dataAcCode);
+
+    int mcuY[64];
+    int mcuCb[64];
+    int mcuCr[64];
+
+    /* When packing RGB565 into our data we're left with some
+       overflowing bits. These are contributed back into the next pixel.
+
+       The algorithm unpacks a total of width * 8 per iteration, so
+       we'll keep an extra width size for the overflowing bits which
+       will pass on to the next iteration. */
+
+    std::vector<int> r(width * 9, 0);
+    std::vector<int> g(width * 9, 0);
+    std::vector<int> b(width * 9, 0);
+
+    uint8_t *buffer = rgb565Data.data();
+    for (int y = 0; y < height; y += 8)
     {
-        std::cerr << "DCT is invalid" << std::endl;
-        return false;
+        for (int x = 0; x < width; x += 8)
+        {
+            d_ptr->unpackMcu(ac, dc, dsAcCode, mcuY, d_ptr->y_quants);
+            d_ptr->unpackMcu(ac, dc, dsAcCode, mcuCb, d_ptr->c_quants);
+            d_ptr->unpackMcu(ac, dc, dsAcCode, mcuCr, d_ptr->c_quants);
+
+            d_ptr->ycrcb_to_rgb(
+                width,
+                mcuY,
+                mcuCb,
+                mcuCr,
+                r.data() + x,
+                g.data() + x,
+                b.data() + x);
+        }
+
+        /* Contribute overflowing bits from previous iteration. */
+        for (int i = 0, ii = width * 8; i < width; i++, ii++)
+        {
+            r[i] += r[ii];
+            g[i] += g[ii];
+            b[i] += b[ii];
+
+            r[ii] = 0;
+            g[ii] = 0;
+            b[ii] = 0;
+        }
+
+        d_ptr->putBlock(
+            (uint16_t *)buffer,
+            width,
+            r.data(),
+            g.data(),
+            b.data());
+
+        buffer += 8 * width * 2;
     }
-
-    rgb565Data.resize(256 * 6144 * 2);
-
-    d_ptr->setQuality(quality);
-    d_ptr->unpack(rgb565Data.data(), imageData.data(), imageData.size(), 256, 6144);
 
     return true;
 }
@@ -652,12 +426,6 @@ bool Dct::unpackBlock(
     const int quality,
     std::vector<uint8_t> &outData)
 {
-    if (!isValid())
-    {
-        std::cerr << "DCT is invalid" << std::endl;
-        return false;
-    }
-
     outData.resize(64 * 3 * blockCount);
     d_ptr->setQuality(quality);
 

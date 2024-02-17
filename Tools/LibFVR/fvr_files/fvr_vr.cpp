@@ -28,13 +28,6 @@ bool FvrVrPrivate::getRgb565Data(std::vector<uint8_t> &rgb565Data)
         return false;
     }
 
-    Dct dct;
-    if (!dct.isValid())
-    {
-        std::cerr << "DCT is not valid" << std::endl;
-        return false;
-    }
-
     fileVr.seek(12);
 
     uint32_t imageSize;
@@ -50,14 +43,15 @@ bool FvrVrPrivate::getRgb565Data(std::vector<uint8_t> &rgb565Data)
     fileVr.read((char *)rawData.data(), dataSize);
 
     // Unpack image
+    Dct dct;
     bool ret = false;
     if (type == FvrVr::Type::VR_STATIC_VR)
     {
-        ret = dct.unpackVr(rawData, quality, rgb565Data);
+        ret = dct.unpack(rawData, quality, 256, 6144, rgb565Data);
     }
     else if (type == FvrVr::Type::VR_STATIC_PIC)
     {
-        ret = dct.unpackPicture(rawData, quality, rgb565Data);
+        ret = dct.unpack(rawData, quality, 640, 480, rgb565Data);
     }
 
     if (!ret)
