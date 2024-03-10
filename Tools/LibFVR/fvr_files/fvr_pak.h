@@ -3,11 +3,10 @@
 
 #include "libfvr_globals.h"
 
+#include <cstdint>
 #include <string>
 #include <vector>
-#include <cstdint>
 
-class FvrPakPrivate;
 class LIBFVR_EXPORT FvrPak final
 {
 public:
@@ -26,6 +25,7 @@ public:
     std::vector<uint8_t> fileData(int index) const;
 
 private:
+    class FvrPakPrivate;
     FvrPakPrivate *d_ptr;
 };
 

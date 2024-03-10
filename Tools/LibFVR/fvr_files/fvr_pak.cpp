@@ -1,7 +1,7 @@
 #include "fvr_pak.h"
 
-#include <fstream>
 #include <bitset>
+#include <fstream>
 #include <iostream>
 #include <vector>
 
@@ -18,7 +18,7 @@ struct PakFile
     std::vector<uint8_t> compressedData;
 };
 
-class FvrPakPrivate
+class FvrPak::FvrPakPrivate
 {
     friend class FvrPak;
 
@@ -30,7 +30,7 @@ private:
     std::vector<PakFile> listFile;
 };
 
-void FvrPakPrivate::uncompressPakData3(const std::vector<uint8_t> &dataIn, std::vector<uint8_t> &dataOut)
+void FvrPak::FvrPakPrivate::uncompressPakData3(const std::vector<uint8_t> &dataIn, std::vector<uint8_t> &dataOut)
 {
     size_t idxIn = 0;
     while (idxIn < dataIn.size())

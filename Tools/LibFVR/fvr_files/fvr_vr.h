@@ -7,7 +7,6 @@
 
 #include "fvr/image.h"
 
-class FvrVrPrivate;
 class LIBFVR_EXPORT FvrVr final
 {
 public:
@@ -37,6 +36,7 @@ public:
     bool getImageCubemap(Image &image) const;
 
 private:
+    class FvrVrPrivate;
     FvrVrPrivate *d_ptr;
 };
 

@@ -6,13 +6,12 @@
 #include <vector>
 
 /* Private */
-class FvrMtrPrivate
+class FvrMtr::FvrMtrPrivate
 {
     friend class FvrMtr;
 
 public:
     FvrMtrPrivate();
-    ~FvrMtrPrivate();
 
     static void rleDecompress(const std::vector<uint8_t> &data, std::vector<uint8_t> &dest);
 
@@ -32,16 +31,12 @@ private:
     Image image;
 };
 
-FvrMtrPrivate::FvrMtrPrivate()
+FvrMtr::FvrMtrPrivate::FvrMtrPrivate()
 {
     type.resize(2);
 }
 
-FvrMtrPrivate::~FvrMtrPrivate()
-{
-}
-
-void FvrMtrPrivate::rleDecompress(const std::vector<uint8_t> &data, std::vector<uint8_t> &dest)
+void FvrMtr::FvrMtrPrivate::rleDecompress(const std::vector<uint8_t> &data, std::vector<uint8_t> &dest)
 {
     size_t i = 0;
     while (i < data.size())
@@ -67,7 +62,7 @@ void FvrMtrPrivate::rleDecompress(const std::vector<uint8_t> &data, std::vector<
     }
 }
 
-bool FvrMtrPrivate::checkMagic()
+bool FvrMtr::FvrMtrPrivate::checkMagic()
 {
     fileMtr.seekg(0);
     std::string magic(5, '\0');
@@ -75,14 +70,14 @@ bool FvrMtrPrivate::checkMagic()
     return magic == "MDRAW";
 }
 
-bool FvrMtrPrivate::checkType()
+bool FvrMtr::FvrMtrPrivate::checkType()
 {
     fileMtr.seekg(0x15);
     fileMtr.read(type.data(), 2);
     return type == "NC" || type == "FC";
 }
 
-bool FvrMtrPrivate::readSize()
+bool FvrMtr::FvrMtrPrivate::readSize()
 {
     // Read width
     fileMtr.seekg(0x06);
@@ -103,7 +98,7 @@ bool FvrMtrPrivate::readSize()
     return width > 0 && height > 0 && width <= 1023 && height <= 1023;
 }
 
-bool FvrMtrPrivate::checkFileSize()
+bool FvrMtr::FvrMtrPrivate::checkFileSize()
 {
     fileMtr.seekg(0x18);
     std::string strSize(8, '\0');
@@ -116,7 +111,7 @@ bool FvrMtrPrivate::checkFileSize()
     return size == fileMtr.tellg();
 }
 
-bool FvrMtrPrivate::readData()
+bool FvrMtr::FvrMtrPrivate::readData()
 {
     fileMtr.seekg(0x10);
     std::string tmp(4, '\0');

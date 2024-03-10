@@ -14,7 +14,7 @@ struct DatFile
     uint32_t offset;
 };
 
-class FvrDatPrivate
+class FvrDat::FvrDatPrivate
 {
     friend class FvrDat;
 

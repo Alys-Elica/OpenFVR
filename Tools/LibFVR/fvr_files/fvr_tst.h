@@ -5,7 +5,6 @@
 
 #include <string>
 
-class FvrTstPrivate;
 class LIBFVR_EXPORT FvrTst
 {
 public:
@@ -18,6 +17,7 @@ public:
     int checkAngleZone(float yaw, float pitch);
 
 private:
+    class FvrTstPrivate;
     FvrTstPrivate *d_ptr;
 };
 

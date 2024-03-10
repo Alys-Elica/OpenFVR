@@ -5,7 +5,7 @@
 #include "fvr/file.h"
 
 /* Private */
-class FvrArnVitPrivate
+class FvrArnVit::FvrArnVitPrivate
 {
     friend class FvrArnVit;
 

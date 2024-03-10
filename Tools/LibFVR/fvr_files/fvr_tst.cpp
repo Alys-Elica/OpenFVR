@@ -6,7 +6,7 @@
 #include <fvr/file.h>
 
 /* Private */
-class FvrTstPrivate
+class FvrTst::FvrTstPrivate
 {
     friend class FvrTst;
 

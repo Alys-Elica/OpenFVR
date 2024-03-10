@@ -4,10 +4,8 @@
 #include <cstdint>
 #include <vector>
 
-class DctPrivate;
 class Dct final
 {
-
 public:
     Dct();
     ~Dct();
@@ -28,6 +26,7 @@ public:
         std::vector<uint8_t> &outData);
 
 private:
+    class DctPrivate;
     DctPrivate *d_ptr;
 };
 

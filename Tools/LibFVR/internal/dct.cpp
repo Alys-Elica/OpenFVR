@@ -1,9 +1,9 @@
 #include "dct.h"
 
-#include <iostream>
-#include <cstring>
-#include <cmath>
 #include <algorithm>
+#include <cmath>
+#include <cstring>
+#include <iostream>
 
 #include "fvr/datastream.h"
 #include "fvr/huffmantable.h"
@@ -135,7 +135,7 @@ void idct(int mcu[64])
 }
 
 /* Private */
-class DctPrivate
+class Dct::DctPrivate
 {
     friend class Dct;
 

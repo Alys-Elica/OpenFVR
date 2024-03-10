@@ -8,7 +8,6 @@
 
 #include "fvr/image.h"
 
-class FvrMtrPrivate;
 class LIBFVR_EXPORT FvrMtr final
 {
 public:
@@ -27,6 +26,7 @@ public:
     Image const &image() const;
 
 private:
+    class FvrMtrPrivate;
     FvrMtrPrivate *d_ptr;
 };
 

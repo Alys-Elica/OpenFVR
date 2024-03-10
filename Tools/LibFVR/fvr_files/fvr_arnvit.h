@@ -7,7 +7,6 @@
 #include <string>
 #include <vector>
 
-class FvrArnVitPrivate;
 class LIBFVR_EXPORT FvrArnVit final
 {
 public:
@@ -43,6 +42,7 @@ public:
     bool writeToBmp(const int index, const std::string &outputDirectory) const;
 
 private:
+    class FvrArnVitPrivate;
     FvrArnVitPrivate *d_ptr;
 };
 

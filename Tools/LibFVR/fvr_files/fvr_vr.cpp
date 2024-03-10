@@ -1,13 +1,13 @@
 #include "fvr_vr.h"
 
-#include <iostream>
 #include <cstring>
+#include <iostream>
 
 #include "fvr/file.h"
 #include "internal/dct.h"
 
 /* Private */
-class FvrVrPrivate
+class FvrVr::FvrVrPrivate
 {
     friend class FvrVr;
 
@@ -20,7 +20,7 @@ private:
     FvrVr::Type type;
 };
 
-bool FvrVrPrivate::getRgb565Data(std::vector<uint8_t> &rgb565Data)
+bool FvrVr::FvrVrPrivate::getRgb565Data(std::vector<uint8_t> &rgb565Data)
 {
     if (!fileVr.isOpen())
     {
@@ -63,7 +63,7 @@ bool FvrVrPrivate::getRgb565Data(std::vector<uint8_t> &rgb565Data)
     return true;
 }
 
-bool FvrVrPrivate::rgb565DataToCubemap(const std::vector<uint8_t> &rgb565Data, std::vector<uint8_t> &cubemapRgb565Data)
+bool FvrVr::FvrVrPrivate::rgb565DataToCubemap(const std::vector<uint8_t> &rgb565Data, std::vector<uint8_t> &cubemapRgb565Data)
 {
     if (rgb565Data.size() != 256 * 6144 * 2)
     {
