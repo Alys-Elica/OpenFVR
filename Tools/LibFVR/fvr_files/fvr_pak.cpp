@@ -94,7 +94,7 @@ FvrPak::~FvrPak()
 
 bool FvrPak::open(const std::string &pakFileName)
 {
-    d_ptr->filePak.setEndian(File::Endian::LittleEndian);
+    d_ptr->filePak.setEndian(std::endian::little);
 
     if (!d_ptr->filePak.open(pakFileName, std::ios_base::in | std::ios_base::binary))
     {

@@ -3,20 +3,14 @@
 
 #include "libfvr_globals.h"
 
+#include <bit>
+#include <cstdint>
 #include <fstream>
 #include <string>
-#include <cstdint>
 
 class FilePrivate;
 class LIBFVR_EXPORT File final
 {
-public:
-    enum class Endian
-    {
-        BigEndian,
-        LittleEndian
-    };
-
 public:
     File();
     ~File();
@@ -29,8 +23,8 @@ public:
     void close();
     bool isOpen();
 
-    void setEndian(const Endian &endian);
-    Endian getEndian();
+    void setEndian(const std::endian &endian);
+    std::endian getEndian();
 
     void seek(const std::streampos &pos);
     std::streampos tell();

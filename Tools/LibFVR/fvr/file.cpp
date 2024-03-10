@@ -65,7 +65,7 @@ public:
 
 private:
     std::fstream m_file;
-    File::Endian m_endian;
+    std::endian m_endian;
 };
 
 // Base file functions
@@ -110,7 +110,7 @@ float FilePrivate::readFloat()
 {
     uint32_t value;
 
-    if (m_endian == File::Endian::BigEndian)
+    if (m_endian == std::endian::big)
     {
         value = readUInt32BE();
     }
@@ -126,7 +126,7 @@ double FilePrivate::readDouble()
 {
     uint64_t value;
 
-    if (m_endian == File::Endian::BigEndian)
+    if (m_endian == std::endian::big)
     {
         value = readUInt64BE();
     }
@@ -143,7 +143,7 @@ std::string FilePrivate::readString()
     std::string value;
 
     uint64_t size;
-    if (m_endian == File::Endian::BigEndian)
+    if (m_endian == std::endian::big)
     {
         size = readUInt64BE();
     }
@@ -288,7 +288,7 @@ void FilePrivate::writeFloat(const float &value)
 {
     float tmpFloat = value;
     uint32_t tmp = *reinterpret_cast<uint32_t *>(&tmpFloat);
-    if (m_endian == File::Endian::BigEndian)
+    if (m_endian == std::endian::big)
     {
         writeUInt32BE(tmp);
     }
@@ -302,7 +302,7 @@ void FilePrivate::writeDouble(const double &value)
 {
     double tmpFloat = value;
     uint64_t tmp = *reinterpret_cast<uint64_t *>(&tmpFloat);
-    if (m_endian == File::Endian::BigEndian)
+    if (m_endian == std::endian::big)
     {
         writeUInt64BE(tmp);
     }
@@ -314,7 +314,7 @@ void FilePrivate::writeDouble(const double &value)
 
 void FilePrivate::writeString(const std::string &value)
 {
-    if (m_endian == File::Endian::BigEndian)
+    if (m_endian == std::endian::big)
     {
         writeUInt64BE(value.size());
     }
@@ -404,7 +404,7 @@ File::File()
 {
     d_ptr = new FilePrivate();
 
-    d_ptr->m_endian = File::Endian::BigEndian;
+    d_ptr->m_endian = std::endian::native;
 }
 
 File::~File()
@@ -433,12 +433,12 @@ bool File::isOpen()
     return d_ptr->isOpen();
 }
 
-void File::setEndian(const Endian &endian)
+void File::setEndian(const std::endian &endian)
 {
     d_ptr->m_endian = endian;
 }
 
-File::Endian File::getEndian()
+std::endian File::getEndian()
 {
     return d_ptr->m_endian;
 }
@@ -476,7 +476,7 @@ void File::read(void *buffer, const std::streamsize &size)
 
 uint16_t File::readUInt16()
 {
-    if (d_ptr->m_endian == Endian::BigEndian)
+    if (d_ptr->m_endian == std::endian::big)
     {
         return d_ptr->readUInt16BE();
     }
@@ -488,7 +488,7 @@ uint16_t File::readUInt16()
 
 uint32_t File::readUInt32()
 {
-    if (d_ptr->m_endian == Endian::BigEndian)
+    if (d_ptr->m_endian == std::endian::big)
     {
         return d_ptr->readUInt32BE();
     }
@@ -500,7 +500,7 @@ uint32_t File::readUInt32()
 
 uint64_t File::readUInt64()
 {
-    if (d_ptr->m_endian == Endian::BigEndian)
+    if (d_ptr->m_endian == std::endian::big)
     {
         return d_ptr->readUInt64BE();
     }
@@ -512,7 +512,7 @@ uint64_t File::readUInt64()
 
 int16_t File::readInt16()
 {
-    if (d_ptr->m_endian == Endian::BigEndian)
+    if (d_ptr->m_endian == std::endian::big)
     {
         return d_ptr->readInt16BE();
     }
@@ -524,7 +524,7 @@ int16_t File::readInt16()
 
 int32_t File::readInt32()
 {
-    if (d_ptr->m_endian == Endian::BigEndian)
+    if (d_ptr->m_endian == std::endian::big)
     {
         return d_ptr->readInt32BE();
     }
@@ -536,7 +536,7 @@ int32_t File::readInt32()
 
 int64_t File::readInt64()
 {
-    if (d_ptr->m_endian == Endian::BigEndian)
+    if (d_ptr->m_endian == std::endian::big)
     {
         return d_ptr->readInt64BE();
     }
@@ -579,7 +579,7 @@ void File::write(const void *buffer, const std::streamsize &size)
 
 void File::writeUInt16(const uint16_t &value)
 {
-    if (d_ptr->m_endian == Endian::BigEndian)
+    if (d_ptr->m_endian == std::endian::big)
     {
         d_ptr->writeUInt16BE(value);
     }
@@ -591,7 +591,7 @@ void File::writeUInt16(const uint16_t &value)
 
 void File::writeUInt32(const uint32_t &value)
 {
-    if (d_ptr->m_endian == Endian::BigEndian)
+    if (d_ptr->m_endian == std::endian::big)
     {
         d_ptr->writeUInt32BE(value);
     }
@@ -603,7 +603,7 @@ void File::writeUInt32(const uint32_t &value)
 
 void File::writeUInt64(const uint64_t &value)
 {
-    if (d_ptr->m_endian == Endian::BigEndian)
+    if (d_ptr->m_endian == std::endian::big)
     {
         d_ptr->writeUInt64BE(value);
     }
@@ -615,7 +615,7 @@ void File::writeUInt64(const uint64_t &value)
 
 void File::writeInt16(const int16_t &value)
 {
-    if (d_ptr->m_endian == Endian::BigEndian)
+    if (d_ptr->m_endian == std::endian::big)
     {
         d_ptr->writeInt16BE(value);
     }
@@ -627,7 +627,7 @@ void File::writeInt16(const int16_t &value)
 
 void File::writeInt32(const int32_t &value)
 {
-    if (d_ptr->m_endian == Endian::BigEndian)
+    if (d_ptr->m_endian == std::endian::big)
     {
         d_ptr->writeInt32BE(value);
     }
@@ -639,7 +639,7 @@ void File::writeInt32(const int32_t &value)
 
 void File::writeInt64(const int64_t &value)
 {
-    if (d_ptr->m_endian == Endian::BigEndian)
+    if (d_ptr->m_endian == std::endian::big)
     {
         d_ptr->writeInt64BE(value);
     }

@@ -114,7 +114,7 @@ FvrVr::FvrVr()
 {
     d_ptr = new FvrVrPrivate;
 
-    d_ptr->fileVr.setEndian(File::Endian::LittleEndian);
+    d_ptr->fileVr.setEndian(std::endian::little);
     d_ptr->type = FvrVr::Type::VR_UNKNOWN;
 }
 

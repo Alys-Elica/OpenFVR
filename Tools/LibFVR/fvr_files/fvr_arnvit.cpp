@@ -44,7 +44,7 @@ bool FvrArnVit::open(const std::string &vitFileName, const std::string &arnFileN
     d_ptr->fileList.clear();
 
     // Parse VIT header file
-    d_ptr->fileVit.setEndian(File::Endian::LittleEndian);
+    d_ptr->fileVit.setEndian(std::endian::little);
 
     uint32_t fileCount;
     d_ptr->fileVit >> fileCount;
@@ -117,7 +117,7 @@ bool FvrArnVit::writeToBmp(const int index, const std::string &outputDirectory) 
 
     std::string bmpFile = outputDirectory + file.fileName;
     File fileBmp;
-    fileBmp.setEndian(File::Endian::LittleEndian);
+    fileBmp.setEndian(std::endian::little);
     if (!fileBmp.open(bmpFile, std::ios::binary | std::ios::out))
     {
         std::cerr << "Unable to open BMP file " << bmpFile << std::endl;

@@ -29,7 +29,7 @@ FvrDat::FvrDat()
 {
     d_ptr = new FvrDatPrivate();
 
-    d_ptr->fileDat.setEndian(File::Endian::LittleEndian);
+    d_ptr->fileDat.setEndian(std::endian::little);
 }
 
 FvrDat::~FvrDat()

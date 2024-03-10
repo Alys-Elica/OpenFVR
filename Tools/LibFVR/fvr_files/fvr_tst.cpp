@@ -40,7 +40,7 @@ bool FvrTst::loadFile(const std::string &fileName)
     d_ptr->m_listZone.clear();
 
     File tstFile;
-    tstFile.setEndian(File::Endian::LittleEndian);
+    tstFile.setEndian(std::endian::little);
     if (!tstFile.open(fileName, std::ios::binary | std::ios::in))
     {
         std::cerr << "Failed to open TST file" << std::endl;
