@@ -3,6 +3,7 @@
 
 #include "libfvr_globals.h"
 
+#include <cstdint>
 #include <string>
 #include <vector>
 
