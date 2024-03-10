@@ -10,7 +10,8 @@
 
 typedef int errno_t;
 
-errno_t fopen_s(FILE **f, const char *name, const char *mode) {
+errno_t fopen_s(FILE **f, const char *name, const char *mode)
+{
     errno_t ret = 0;
     assert(f);
     *f = fopen(name, mode);
@@ -21,9 +22,8 @@ errno_t fopen_s(FILE **f, const char *name, const char *mode) {
 }
 #endif
 
-
 /* Private */
-class ImagePrivate
+class Image::ImagePrivate
 {
     friend class Image;
 

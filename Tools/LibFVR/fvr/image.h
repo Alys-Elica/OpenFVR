@@ -7,7 +7,6 @@
 #include <vector>
 #include <cstdint>
 
-class ImagePrivate;
 class LIBFVR_EXPORT Image final
 {
 public:
@@ -43,6 +42,7 @@ public:
     bool savePng(const std::string &fileName) const;
 
 private:
+    class ImagePrivate;
     ImagePrivate *d_ptr;
 };
 
