@@ -14,9 +14,11 @@ Classes follow the [opaque pointer](https://en.wikipedia.org/wiki/Opaque_pointer
 
 ## Currently supported file formats
 
-| File | Description        | Class name | Class header          |
-| ---- | ------------------ | ---------- | --------------------- |
-| DAT  | Archive            | `FvrDat`   | `fvr_files/fvr_dat.h` |
-| MTR  | Bitmap image       | `FvrMtr`   | `fvr_files/fvr_mtr.h` |
-| PAK  | Compressed archive | `FvrPak`   | `fvr_files/fvr_pak.h` |
-| VR   | Game images        | `FvrVr`    | `fvr_files/fvr_vr.h`  |
+| File    | Description        | Class name  | Class header             |
+| ------- | ------------------ | ----------- | ------------------------ |
+| ARN/VIT | Image archive      | `FvrArnVit` | `fvr_files/fvr_arnvit.h` |
+| DAT     | Archive            | `FvrDat`    | `fvr_files/fvr_dat.h`    |
+| MTR     | Bitmap image       | `FvrMtr`    | `fvr_files/fvr_mtr.h`    |
+| PAK     | Compressed archive | `FvrPak`    | `fvr_files/fvr_pak.h`    |
+| TST     | Click zones list   | `FvrTst`    | `fvr_files/fvr_tst.h`    |
+| VR      | Game images        | `FvrVr`     | `fvr_files/fvr_vr.h`     |
