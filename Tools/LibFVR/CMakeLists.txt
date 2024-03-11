@@ -44,7 +44,6 @@ set(PROJECT_FILE_SOURCES
     internal/dct.cpp
 )
 
-
 add_library(${PROJECT_NAME} SHARED
     ${PROJECT_FILE_HEADERS}
     ${PROJECT_FILE_SOURCES}

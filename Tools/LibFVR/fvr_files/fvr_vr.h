@@ -17,6 +17,23 @@ public:
         VR_UNKNOWN,
     };
 
+    struct AnimationBlock
+    {
+        uint32_t offset;
+    };
+
+    struct AnimationFrame
+    {
+        std::vector<uint32_t> offsetList;
+        std::vector<uint8_t> data;
+    };
+
+    struct Animation
+    {
+        std::string name;
+        std::vector<FvrVr::AnimationFrame> frames;
+    };
+
 public:
     FvrVr();
     ~FvrVr();
@@ -34,6 +51,12 @@ public:
 
     bool getImage(Image &image) const;
     bool getImageCubemap(Image &image) const;
+
+    const std::vector<uint8_t> &getData() const;
+
+    // Animation data
+    std::vector<std::string> getAnimationList() const;
+    bool getAnimation(const std::string &animName, Animation &animation) const;
 
 private:
     class FvrVrPrivate;
