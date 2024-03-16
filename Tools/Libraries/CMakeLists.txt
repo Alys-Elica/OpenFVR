@@ -11,5 +11,6 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/build/out/${CMAKE_BUILD_T
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/build/out/${CMAKE_BUILD_TYPE}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/build/out/${CMAKE_BUILD_TYPE}/bin)
 
-add_subdirectory(Applications)
-add_subdirectory(Libraries)
+add_subdirectory(LibFVR)
+add_subdirectory(LstParser)
+add_subdirectory(FvrRenderer)
