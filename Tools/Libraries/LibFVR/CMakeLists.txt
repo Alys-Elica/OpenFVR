@@ -21,23 +21,25 @@ set(PROJECT_FILE_HEADERS
     fvr_files/fvr_dat.h
     fvr_files/fvr_mtr.h
     fvr_files/fvr_pak.h
+    fvr_files/fvr_script.h
     fvr_files/fvr_tst.h
     fvr_files/fvr_vr.h
 
     internal/dct.h
 )
-
+    
 set(PROJECT_FILE_SOURCES
     fvr/datastream.cpp
     fvr/file.cpp
     fvr/huffmantable.cpp
     fvr/image.cpp
     fvr/inversebitstream.cpp
-
+    
     fvr_files/fvr_arnvit.cpp
     fvr_files/fvr_dat.cpp
     fvr_files/fvr_mtr.cpp
     fvr_files/fvr_pak.cpp
+    fvr_files/fvr_script.cpp
     fvr_files/fvr_tst.cpp
     fvr_files/fvr_vr.cpp
     

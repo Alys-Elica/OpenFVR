@@ -1,13 +1,13 @@
-#ifndef LSTSCRIPT_H
-#define LSTSCRIPT_H
+#ifndef FVR_SCRIPT_H
+#define FVR_SCRIPT_H
 
-#include "liblstparser_globals.h"
+#include "libfvr_globals.h"
 
 #include <string>
 #include <variant>
 #include <vector>
 
-class LIBLSTPARSER_EXPORT LstScript {
+class LIBFVR_EXPORT FvrScript final {
 public:
     using InstructionParam = std::variant<int, double, std::string>;
     struct Instruction {
@@ -18,23 +18,17 @@ public:
     using InstructionBlock = std::vector<Instruction>;
 
 public:
-    LstScript();
-    ~LstScript();
+    FvrScript();
+    ~FvrScript();
 
-    bool addVariable(const std::string& name);
-    bool addInstruction(const std::string& warpName, const int& testId, const Instruction& instruction);
-    bool addSubroutine(const Instruction& instruction);
-
-    void optimize();
+    bool parseLst(const std::string& fileName);
 
     InstructionBlock& getInitBlock(const std::string& warpName);
     InstructionBlock& getTestBlock(const std::string& warpName, const int& testId);
 
-    bool saveText(const std::string& fileOut);
-
 private:
-    class LstScriptPrivate;
-    LstScriptPrivate* d_ptr;
+    class FvrScriptPrivate;
+    FvrScriptPrivate* d_ptr;
 };
 
-#endif // LSTSCRIPT_H
+#endif // FVR_SCRIPT_H

@@ -1,16 +1,13 @@
-#include "lstparser.h"
+#include "fvr_script.h"
 
 #include <algorithm>
-#include <cctype>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <map>
 #include <set>
-#include <sstream>
-#include <string>
-#include <variant>
-#include <vector>
 
+/* Helper functions */
 inline void trim(std::string& s)
 {
     s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](unsigned char ch) { return !std::isspace(ch); }));
@@ -33,8 +30,15 @@ std::vector<std::string> split(const std::string& s, char delimiter)
 }
 
 /* Private */
-class LstParser::LstParserPrivate {
-    friend class LstParser;
+class FvrScript::FvrScriptPrivate {
+    friend class FvrScript;
+
+public:
+    struct Warp {
+        std::string name;
+        InstructionBlock initBlock;
+        std::map<uint32_t, InstructionBlock> testBlockList;
+    };
 
 public:
     bool nextLine(std::string& line);
@@ -42,18 +46,31 @@ public:
     bool parseVariable(const std::string& line, std::string& varaiableName);
     bool parseWarp(const std::string& line, std::string& warpName);
     bool parseTest(const std::string& line, int& test);
-    bool parsePlugin(const std::string& line, LstScript::Instruction& instruction);
-    bool parseSubroutine(const std::string& line, LstScript::Instruction& instruction);
+    bool parsePlugin(const std::string& line, FvrScript::Instruction& instruction);
+    bool parseSubroutine(const std::string& line, FvrScript::Instruction& instruction);
 
-    bool parseInstruction(const std::string& line, LstScript::Instruction& instruction);
-    bool parsePluginInstruction(const std::string& line, LstScript::Instruction& instruction);
+    bool parseInstruction(const std::string& line, FvrScript::Instruction& instruction);
+    bool parsePluginInstruction(const std::string& line, FvrScript::Instruction& instruction);
+
+    bool addVariable(const std::string& name);
+    bool addInstruction(const std::string& warpName, const int& testId, const Instruction& instruction);
+
+    void optimize();
 
 private:
+    // Parsing data
     std::ifstream m_file;
     int m_currentLine = 0;
+
+    // Final data
+    std::set<std::string> m_listVariables;
+    std::map<std::string, Warp> m_listWarps;
+    std::map<std::string, Instruction> m_listSubroutines;
+
+    std::string m_initWarp;
 };
 
-bool LstParser::LstParserPrivate::nextLine(std::string& line)
+bool FvrScript::FvrScriptPrivate::nextLine(std::string& line)
 {
     if (!std::getline(m_file, line)) {
         return false;
@@ -78,7 +95,7 @@ bool LstParser::LstParserPrivate::nextLine(std::string& line)
     return true;
 }
 
-bool LstParser::LstParserPrivate::parseVariable(const std::string& line, std::string& varaiableName)
+bool FvrScript::FvrScriptPrivate::parseVariable(const std::string& line, std::string& varaiableName)
 {
     if (line.find("[bool]") != std::string::npos) {
         varaiableName = line.substr(line.find('=') + 1);
@@ -90,7 +107,7 @@ bool LstParser::LstParserPrivate::parseVariable(const std::string& line, std::st
     return false;
 }
 
-bool LstParser::LstParserPrivate::parseWarp(const std::string& line, std::string& warpName)
+bool FvrScript::FvrScriptPrivate::parseWarp(const std::string& line, std::string& warpName)
 {
     if (line.find("[warp]") != std::string::npos) {
         warpName = line.substr(line.find('=') + 1, line.find(',') - line.find('=') - 1);
@@ -107,7 +124,7 @@ bool LstParser::LstParserPrivate::parseWarp(const std::string& line, std::string
     return false;
 }
 
-bool LstParser::LstParserPrivate::parseTest(const std::string& line, int& test)
+bool FvrScript::FvrScriptPrivate::parseTest(const std::string& line, int& test)
 {
     if (line.find("[test]") != std::string::npos) {
         std::string testStr = line.substr(line.find('=') + 1);
@@ -127,7 +144,7 @@ bool LstParser::LstParserPrivate::parseTest(const std::string& line, int& test)
     return false;
 }
 
-bool LstParser::LstParserPrivate::parsePlugin(const std::string& line, LstScript::Instruction& instruction)
+bool FvrScript::FvrScriptPrivate::parsePlugin(const std::string& line, FvrScript::Instruction& instruction)
 {
     if (line == "plugin") {
         instruction.name = "plugin";
@@ -140,7 +157,7 @@ bool LstParser::LstParserPrivate::parsePlugin(const std::string& line, LstScript
                 break;
             }
 
-            LstScript::Instruction subInstruction;
+            FvrScript::Instruction subInstruction;
             if (parsePluginInstruction(line, subInstruction)) {
                 instruction.subInstructions.push_back(subInstruction);
                 continue;
@@ -157,7 +174,7 @@ bool LstParser::LstParserPrivate::parsePlugin(const std::string& line, LstScript
     return false;
 }
 
-bool LstParser::LstParserPrivate::parseSubroutine(const std::string& line, LstScript::Instruction& instruction)
+bool FvrScript::FvrScriptPrivate::parseSubroutine(const std::string& line, FvrScript::Instruction& instruction)
 {
     if (line.find("label") != std::string::npos) {
         std::string labelName = line.substr(line.find(' ') + 1);
@@ -172,13 +189,13 @@ bool LstParser::LstParserPrivate::parseSubroutine(const std::string& line, LstSc
                 break;
             }
 
-            LstScript::Instruction subInstructionPlugin;
+            FvrScript::Instruction subInstructionPlugin;
             if (parsePlugin(line, subInstructionPlugin)) {
                 instruction.subInstructions.push_back(subInstructionPlugin);
                 continue;
             }
 
-            LstScript::Instruction subInstruction;
+            FvrScript::Instruction subInstruction;
             if (parseInstruction(line, subInstruction)) {
                 instruction.subInstructions.push_back(subInstruction);
                 continue;
@@ -195,7 +212,7 @@ bool LstParser::LstParserPrivate::parseSubroutine(const std::string& line, LstSc
     return false;
 }
 
-bool LstParser::LstParserPrivate::parseInstruction(const std::string& line, LstScript::Instruction& instruction)
+bool FvrScript::FvrScriptPrivate::parseInstruction(const std::string& line, FvrScript::Instruction& instruction)
 {
     std::string instructionName = line.substr(0, line.find_first_of(" ="));
     trim(instructionName);
@@ -248,7 +265,7 @@ bool LstParser::LstParserPrivate::parseInstruction(const std::string& line, LstS
             return false;
         }
 
-        LstScript::Instruction subInstruction;
+        FvrScript::Instruction subInstruction;
         if (parsePlugin(line, subInstruction))
             ;
         else if (parseInstruction(line, subInstruction))
@@ -308,7 +325,7 @@ bool LstParser::LstParserPrivate::parseInstruction(const std::string& line, LstS
     return true;
 }
 
-bool LstParser::LstParserPrivate::parsePluginInstruction(const std::string& line, LstScript::Instruction& instruction)
+bool FvrScript::FvrScriptPrivate::parsePluginInstruction(const std::string& line, FvrScript::Instruction& instruction)
 {
     // Line format: funName(var1, var2, var3, ...)
 
@@ -353,23 +370,96 @@ bool LstParser::LstParserPrivate::parsePluginInstruction(const std::string& line
     return true;
 }
 
+bool FvrScript::FvrScriptPrivate::addVariable(const std::string& name)
+{
+    m_listVariables.insert(name);
+
+    return true;
+}
+
+bool FvrScript::FvrScriptPrivate::addInstruction(
+    const std::string& warpName, const int& testId,
+    const Instruction& instruction)
+{
+    // Register warp
+    if (m_listWarps.empty()) {
+        m_initWarp = warpName;
+    }
+
+    if (m_listWarps.find(warpName) == m_listWarps.end()) {
+        FvrScriptPrivate::Warp warp;
+        warp.name = warpName;
+        m_listWarps[warpName] = warp;
+    }
+
+    // Add instruction
+    if (testId == -1) {
+        m_listWarps[warpName].initBlock.push_back(instruction);
+        return true;
+    }
+
+    // Register test
+    if (m_listWarps[warpName].testBlockList.empty()) {
+        m_listWarps[warpName].testBlockList[testId] = InstructionBlock();
+    }
+
+    if (testId < 0) {
+        return false;
+    }
+
+    m_listWarps[warpName].testBlockList[testId].push_back(instruction);
+
+    return true;
+}
+
+void optimizeInstructionBlock(FvrScript::InstructionBlock& block)
+{
+    for (auto it = block.begin(); it != block.end();) {
+        // Combine identical ifand/ifor blocks
+        if (it->name == "ifand" || it->name == "ifor") {
+            if (it != block.end() - 1) {
+                if ((it + 1)->name == it->name && (it + 1)->params == it->params) {
+                    it->subInstructions.insert(
+                        it->subInstructions.end(),
+                        (it + 1)->subInstructions.begin(),
+                        (it + 1)->subInstructions.end());
+                    block.erase(it + 1);
+                    continue;
+                }
+            }
+        }
+        ++it;
+    }
+}
+
+void FvrScript::FvrScriptPrivate::optimize()
+{
+    for (auto& warp : m_listWarps) {
+        for (auto& test : warp.second.testBlockList) {
+            optimizeInstructionBlock(test.second);
+        }
+    }
+
+    for (auto& subroutine : m_listSubroutines) {
+        optimizeInstructionBlock(subroutine.second.subInstructions);
+    }
+
+    for (auto& warp : m_listWarps) {
+        optimizeInstructionBlock(warp.second.initBlock);
+    }
+}
+
 /* Public */
-LstParser::LstParser()
-{
-    d_ptr = new LstParserPrivate();
-}
+FvrScript::FvrScript() { d_ptr = new FvrScriptPrivate; }
 
-LstParser::~LstParser()
-{
-    delete d_ptr;
-}
+FvrScript::~FvrScript() { delete d_ptr; }
 
-bool LstParser::parse(const std::string& filename, LstScript& lstScript)
+bool FvrScript::parseLst(const std::string& fileName)
 {
-    d_ptr->m_file.open(filename);
+    d_ptr->m_file.open(fileName);
     if (!d_ptr->m_file) {
-        std::cerr << "Could not open file: " << filename << "" << std::endl;
-        return 1;
+        std::cerr << "Could not open file: " << fileName << std::endl;
+        return false;
     }
 
     std::string currentWarp;
@@ -380,7 +470,7 @@ bool LstParser::parse(const std::string& filename, LstScript& lstScript)
     while (d_ptr->nextLine(line)) {
         std::string var;
         if (d_ptr->parseVariable(line, var)) {
-            lstScript.addVariable(var);
+            d_ptr->addVariable(var);
             continue;
         }
 
@@ -397,31 +487,31 @@ bool LstParser::parse(const std::string& filename, LstScript& lstScript)
             continue;
         }
 
-        LstScript::Instruction instructionPlugin;
+        FvrScript::Instruction instructionPlugin;
         if (d_ptr->parsePlugin(line, instructionPlugin)) {
             if (currentWarp.empty()) {
                 std::cerr << d_ptr->m_currentLine << " Error: plugin found before [warp]" << std::endl;
                 return false;
             }
 
-            lstScript.addInstruction(currentWarp, currentTest, instructionPlugin);
+            d_ptr->addInstruction(currentWarp, currentTest, instructionPlugin);
             continue;
         }
 
-        LstScript::Instruction instructionSubroutine;
+        FvrScript::Instruction instructionSubroutine;
         if (d_ptr->parseSubroutine(line, instructionSubroutine)) {
-            lstScript.addSubroutine(instructionSubroutine);
+            d_ptr->m_listSubroutines[instructionSubroutine.name] = instructionSubroutine;
             continue;
         }
 
-        LstScript::Instruction instruction;
+        FvrScript::Instruction instruction;
         if (d_ptr->parseInstruction(line, instruction)) {
             if (currentWarp.empty()) {
                 std::cerr << d_ptr->m_currentLine << " Error: instruction found before [warp]" << std::endl;
                 return false;
             }
 
-            lstScript.addInstruction(currentWarp, currentTest, instruction);
+            d_ptr->addInstruction(currentWarp, currentTest, instruction);
             continue;
         }
 
@@ -431,7 +521,18 @@ bool LstParser::parse(const std::string& filename, LstScript& lstScript)
     }
     d_ptr->m_file.close();
 
-    lstScript.optimize();
+    d_ptr->optimize();
 
     return true;
+}
+
+FvrScript::InstructionBlock& FvrScript::getInitBlock(const std::string& warpName)
+{
+    return d_ptr->m_listWarps[warpName].initBlock;
+}
+
+FvrScript::InstructionBlock& FvrScript::getTestBlock(
+    const std::string& warpName, const int& testId)
+{
+    return d_ptr->m_listWarps[warpName].testBlockList[testId];
 }
