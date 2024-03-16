@@ -116,6 +116,17 @@ void LstScript::optimize()
     }
 }
 
+LstScript::InstructionBlock& LstScript::getInitBlock(const std::string& warpName)
+{
+    return d_ptr->m_listWarps[warpName].initBlock;
+}
+
+LstScript::InstructionBlock& LstScript::getTestBlock(
+    const std::string& warpName, const int& testId)
+{
+    return d_ptr->m_listWarps[warpName].testBlockList[testId];
+}
+
 void instructionToText(std::ofstream& output,
     const LstScript::Instruction& instruction, int level)
 {
