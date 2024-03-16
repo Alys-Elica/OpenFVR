@@ -4,10 +4,9 @@
 
 #include <fvr_files/fvr_arnvit.h>
 
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
-    if (argc < 3)
-    {
+    if (argc < 3) {
         std::cerr << "Usage: " << argv[0] << " <vit file> <arn file>" << std::endl;
         return false;
     }
@@ -16,8 +15,7 @@ int main(int argc, char *argv[])
     std::string arnFileName = argv[2];
 
     FvrArnVit arnVit;
-    if (!arnVit.open(vitFileName, arnFileName))
-    {
+    if (!arnVit.open(vitFileName, arnFileName)) {
         std::cerr << "Unable to open ARN/VIT files" << std::endl;
         return false;
     }
@@ -26,8 +24,7 @@ int main(int argc, char *argv[])
     const std::string outputDir = "extracted_files/";
     std::filesystem::create_directory(outputDir);
     int fileCount = arnVit.fileCount();
-    for (int i = 0; i < fileCount; i++)
-    {
+    for (int i = 0; i < fileCount; i++) {
         arnVit.writeToBmp(i, outputDir);
     }
 

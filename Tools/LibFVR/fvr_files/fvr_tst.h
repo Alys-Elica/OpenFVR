@@ -5,20 +5,19 @@
 
 #include <string>
 
-class LIBFVR_EXPORT FvrTst
-{
+class LIBFVR_EXPORT FvrTst {
 public:
     FvrTst();
     ~FvrTst();
 
-    bool loadFile(const std::string &fileName);
+    bool loadFile(const std::string& fileName);
 
     int checkStaticZone(float x, float y);
     int checkAngleZone(float yaw, float pitch);
 
 private:
     class FvrTstPrivate;
-    FvrTstPrivate *d_ptr;
+    FvrTstPrivate* d_ptr;
 };
 
 #endif // FVR_TST_H

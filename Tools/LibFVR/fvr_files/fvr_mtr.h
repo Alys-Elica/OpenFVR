@@ -8,26 +8,25 @@
 
 #include "fvr/image.h"
 
-class LIBFVR_EXPORT FvrMtr final
-{
+class LIBFVR_EXPORT FvrMtr final {
 public:
     FvrMtr();
     ~FvrMtr();
 
-    FvrMtr(const FvrMtr &other) = delete;
-    FvrMtr &operator=(const FvrMtr &other) = delete;
+    FvrMtr(const FvrMtr& other) = delete;
+    FvrMtr& operator=(const FvrMtr& other) = delete;
 
-    bool open(const std::string &mtrFileName);
+    bool open(const std::string& mtrFileName);
     void close();
     bool isOpen() const;
 
     uint32_t width() const;
     uint32_t height() const;
-    Image const &image() const;
+    Image const& image() const;
 
 private:
     class FvrMtrPrivate;
-    FvrMtrPrivate *d_ptr;
+    FvrMtrPrivate* d_ptr;
 };
 
 #endif // FVR_MTR_H

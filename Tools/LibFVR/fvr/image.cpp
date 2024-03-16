@@ -10,7 +10,7 @@
 
 typedef int errno_t;
 
-errno_t fopen_s(FILE **f, const char *name, const char *mode)
+errno_t fopen_s(FILE** f, const char* name, const char* mode)
 {
     errno_t ret = 0;
     assert(f);
@@ -23,8 +23,7 @@ errno_t fopen_s(FILE **f, const char *name, const char *mode)
 #endif
 
 /* Private */
-class Image::ImagePrivate
-{
+class Image::ImagePrivate {
     friend class Image;
 
 private:
@@ -63,8 +62,7 @@ int Image::height() const
 
 bool Image::resize(int width, int height)
 {
-    if (width <= 0 || height <= 0)
-    {
+    if (width <= 0 || height <= 0) {
         return false;
     }
 
@@ -82,15 +80,13 @@ void Image::clear()
     d_ptr->pixels.clear();
 }
 
-void Image::setPixel(int x, int y, const Pixel &pixel)
+void Image::setPixel(int x, int y, const Pixel& pixel)
 {
-    if (!isValid())
-    {
+    if (!isValid()) {
         return;
     }
 
-    if (x < 0 || x >= d_ptr->width || y < 0 || y >= d_ptr->height)
-    {
+    if (x < 0 || x >= d_ptr->width || y < 0 || y >= d_ptr->height) {
         return;
     }
 
@@ -99,46 +95,38 @@ void Image::setPixel(int x, int y, const Pixel &pixel)
 
 Image::Pixel Image::pixel(int x, int y) const
 {
-    if (!isValid())
-    {
+    if (!isValid()) {
         return {};
     }
 
-    if (x < 0 || x >= d_ptr->width || y < 0 || y >= d_ptr->height)
-    {
+    if (x < 0 || x >= d_ptr->width || y < 0 || y >= d_ptr->height) {
         return {};
     }
 
     return d_ptr->pixels[y * d_ptr->width + x];
 }
 
-bool Image::fromRgb565(const std::vector<uint8_t> &rgb565Data, int width, int height)
+bool Image::fromRgb565(const std::vector<uint8_t>& rgb565Data, int width, int height)
 {
-    if (width <= 0 || height <= 0)
-    {
+    if (width <= 0 || height <= 0) {
         std::cerr << "Invalid image size" << std::endl;
         return false;
     }
 
-    if (!resize(width, height))
-    {
+    if (!resize(width, height)) {
         std::cerr << "Failed to resize image" << std::endl;
         return false;
     }
 
-    if (rgb565Data.size() != width * height * 2)
-    {
+    if (rgb565Data.size() != width * height * 2) {
         std::cerr << "Invalid image data size" << std::endl;
         return false;
     }
 
-    for (int i = 0; i < width * height; ++i)
-    {
-        const uint16_t pixel =
-            rgb565Data[i * 2 + 0] |
-            (rgb565Data[i * 2 + 1] << 8);
+    for (int i = 0; i < width * height; ++i) {
+        const uint16_t pixel = rgb565Data[i * 2 + 0] | (rgb565Data[i * 2 + 1] << 8);
 
-        Pixel &pix = d_ptr->pixels[i];
+        Pixel& pix = d_ptr->pixels[i];
         pix.r = (pixel & 0b1111100000000000) >> 8;
         pix.g = (pixel & 0b0000011111100000) >> 3;
         pix.b = (pixel & 0b0000000000011111) << 3;
@@ -148,23 +136,18 @@ bool Image::fromRgb565(const std::vector<uint8_t> &rgb565Data, int width, int he
     return true;
 }
 
-bool Image::toRgb565(std::vector<uint8_t> &rgb565Data) const
+bool Image::toRgb565(std::vector<uint8_t>& rgb565Data) const
 {
-    if (!isValid())
-    {
+    if (!isValid()) {
         return false;
     }
 
     rgb565Data.resize(d_ptr->width * d_ptr->height * 2);
 
-    for (int i = 0; i < d_ptr->width * d_ptr->height; ++i)
-    {
-        const Pixel &pix = d_ptr->pixels[i];
+    for (int i = 0; i < d_ptr->width * d_ptr->height; ++i) {
+        const Pixel& pix = d_ptr->pixels[i];
 
-        const uint16_t pixel =
-            ((pix.r & 0b11111000) << 8) |
-            ((pix.g & 0b11111100) << 3) |
-            ((pix.b & 0b11111000) >> 3);
+        const uint16_t pixel = ((pix.r & 0b11111000) << 8) | ((pix.g & 0b11111100) << 3) | ((pix.b & 0b11111000) >> 3);
 
         rgb565Data[i * 2 + 0] = pixel & 0xFF;
         rgb565Data[i * 2 + 1] = (pixel >> 8) & 0xFF;
@@ -173,22 +156,20 @@ bool Image::toRgb565(std::vector<uint8_t> &rgb565Data) const
     return true;
 }
 
-bool Image::savePng(const std::string &fileName) const
+bool Image::savePng(const std::string& fileName) const
 {
     std::cout << "Saving " << fileName << std::endl;
 
-    FILE *file = NULL;
+    FILE* file = NULL;
     fopen_s(&file, fileName.c_str(), "wb");
 
-    if (!file)
-    {
+    if (!file) {
         std::cerr << "Failed to open " << fileName << std::endl;
         return false;
     }
 
     png_structp png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
-    if (!png_ptr)
-    {
+    if (!png_ptr) {
         std::cerr << "Failed to create PNG write struct" << std::endl;
 
         fclose(file);
@@ -197,8 +178,7 @@ bool Image::savePng(const std::string &fileName) const
     }
 
     png_infop info_ptr = png_create_info_struct(png_ptr);
-    if (!info_ptr)
-    {
+    if (!info_ptr) {
         std::cerr << "Failed to create PNG info struct" << std::endl;
 
         png_destroy_write_struct(&png_ptr, nullptr);
@@ -207,8 +187,7 @@ bool Image::savePng(const std::string &fileName) const
         return false;
     }
 
-    if (setjmp(png_jmpbuf(png_ptr)))
-    {
+    if (setjmp(png_jmpbuf(png_ptr))) {
         std::cerr << "Failed to set PNG jump buffer" << std::endl;
 
         png_destroy_write_struct(&png_ptr, &info_ptr);
@@ -223,12 +202,10 @@ bool Image::savePng(const std::string &fileName) const
 
     png_write_info(png_ptr, info_ptr);
 
-    png_bytep *row_pointers = new png_bytep[d_ptr->height];
-    for (unsigned int y = 0; y < d_ptr->height; y++)
-    {
+    png_bytep* row_pointers = new png_bytep[d_ptr->height];
+    for (unsigned int y = 0; y < d_ptr->height; y++) {
         row_pointers[y] = new png_byte[d_ptr->width * 4];
-        for (unsigned int x = 0; x < d_ptr->width; x++)
-        {
+        for (unsigned int x = 0; x < d_ptr->width; x++) {
             const Pixel pix = pixel(x, y);
 
             row_pointers[y][x * 4 + 0] = pix.r;
@@ -243,8 +220,7 @@ bool Image::savePng(const std::string &fileName) const
 
     // Cleanup
     fclose(file);
-    for (unsigned int y = 0; y < d_ptr->height; y++)
-    {
+    for (unsigned int y = 0; y < d_ptr->height; y++) {
         delete[] row_pointers[y];
     }
     delete[] row_pointers;

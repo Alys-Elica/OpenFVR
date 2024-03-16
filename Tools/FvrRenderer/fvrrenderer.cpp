@@ -1,16 +1,15 @@
 #include "fvrrenderer.h"
 
+#include <cmath>
+#include <cstdint>
 #include <iostream>
 #include <vector>
-#include <cstdint>
-#include <cmath>
 
-class FvrRenderer::FvrRendererPrivate
-{
+class FvrRenderer::FvrRendererPrivate {
     friend class FvrRenderer;
 
 private:
-    unsigned short *m_cubemapBuffer;
+    unsigned short* m_cubemapBuffer;
 
     float m_outputWidth;
     float m_outputHeight;
@@ -28,7 +27,7 @@ FvrRenderer::~FvrRenderer()
     delete d_ptr;
 }
 
-unsigned short *FvrRenderer::cubemapBuffer()
+unsigned short* FvrRenderer::cubemapBuffer()
 {
     return d_ptr->m_cubemapBuffer;
 }
@@ -42,7 +41,7 @@ void FvrRenderer::setResolution(
 }
 
 void FvrRenderer::render(
-    unsigned short *outputBuffer,
+    unsigned short* outputBuffer,
     float yaw,
     float pitch,
     float roll,
@@ -67,22 +66,19 @@ void FvrRenderer::render(
     // Precompute look-up tables
     std::vector<float> lutNormXSin(outputWidth);
     std::vector<float> lutNormXCos(outputWidth);
-    for (int x = 0; x < outputWidth; ++x)
-    {
+    for (int x = 0; x < outputWidth; ++x) {
         float tmp = -(2.0f * x / outputWidth - 1.0f) * aspectRatio;
         lutNormXSin[x] = tmp * sinRollTanHalfFov;
         lutNormXCos[x] = tmp * cosRollTanHalfFov;
     }
 
     // Render
-    for (int y = 0; y < outputHeight; ++y)
-    {
+    for (int y = 0; y < outputHeight; ++y) {
         const float tmp = (1.0f - 2.0f * y / outputHeight);
         const float normYSin = tmp * sinRollTanHalfFov;
         const float normYCos = tmp * cosRollTanHalfFov;
 
-        for (int x = 0; x < outputWidth; ++x)
-        {
+        for (int x = 0; x < outputWidth; ++x) {
             // Calculate ray direction
             const float rollX = lutNormXCos[x] + normYSin;
             const float rollY = lutNormXSin[x] - normYCos;
@@ -103,216 +99,148 @@ void FvrRenderer::render(
 
             int faceOffset = 0;
             int subfaceOffset = 0;
-            if (absX >= absY && absX >= absZ)
-            {
+            if (absX >= absY && absX >= absZ) {
                 float tmpU = coordZ / coordX;
                 float tmpV = coordY / coordX;
 
-                if (coordX < 0.0)
-                {
+                if (coordX < 0.0) {
                     // Left
                     faceOffset = 1;
-                    if (tmpU <= 0.0f)
-                    {
+                    if (tmpU <= 0.0f) {
                         u = std::fabs(tmpU);
-                        if (tmpV <= 0.0f)
-                        {
+                        if (tmpV <= 0.0f) {
                             subfaceOffset = 1;
                             v = 0.99999f - std::fabs(tmpV);
-                        }
-                        else
-                        {
+                        } else {
                             subfaceOffset = 2;
                             v = std::fabs(tmpV);
                         }
-                    }
-                    else
-                    {
+                    } else {
                         u = 0.99999f - std::fabs(tmpU);
-                        if (tmpV <= 0.0f)
-                        {
+                        if (tmpV <= 0.0f) {
                             subfaceOffset = 0;
                             v = 0.99999f - std::fabs(tmpV);
-                        }
-                        else
-                        {
+                        } else {
                             subfaceOffset = 3;
                             v = std::fabs(tmpV);
                         }
                     }
-                }
-                else
-                {
+                } else {
                     // Right
                     faceOffset = 3;
-                    if (tmpU <= 0.0f)
-                    {
+                    if (tmpU <= 0.0f) {
                         u = std::fabs(tmpU);
-                        if (tmpV <= 0.0f)
-                        {
+                        if (tmpV <= 0.0f) {
                             subfaceOffset = 2;
                             v = std::fabs(tmpV);
-                        }
-                        else
-                        {
+                        } else {
                             subfaceOffset = 1;
                             v = 0.99999f - std::fabs(tmpV);
                         }
-                    }
-                    else
-                    {
+                    } else {
                         u = 0.99999f - std::fabs(tmpU);
-                        if (tmpV <= 0.0f)
-                        {
+                        if (tmpV <= 0.0f) {
                             subfaceOffset = 3;
                             v = std::fabs(tmpV);
-                        }
-                        else
-                        {
+                        } else {
                             subfaceOffset = 0;
                             v = 0.99999f - std::fabs(tmpV);
                         }
                     }
                 }
-            }
-            else if (absY >= absX && absY >= absZ)
-            {
+            } else if (absY >= absX && absY >= absZ) {
                 float tmpU = coordX / coordY;
                 float tmpV = coordZ / coordY;
 
-                if (coordY < 0.0)
-                {
+                if (coordY < 0.0) {
                     // Down
                     faceOffset = 0;
-                    if (tmpU <= 0.0f)
-                    {
+                    if (tmpU <= 0.0f) {
                         u = std::fabs(tmpU);
-                        if (tmpV <= 0.0f)
-                        {
+                        if (tmpV <= 0.0f) {
                             subfaceOffset = 1;
                             v = 0.99999f - std::fabs(tmpV);
-                        }
-                        else
-                        {
+                        } else {
                             subfaceOffset = 2;
                             v = std::fabs(tmpV);
                         }
-                    }
-                    else
-                    {
+                    } else {
                         u = 0.99999f - std::fabs(tmpU);
-                        if (tmpV <= 0.0f)
-                        {
+                        if (tmpV <= 0.0f) {
                             subfaceOffset = 0;
                             v = 0.99999f - std::fabs(tmpV);
-                        }
-                        else
-                        {
+                        } else {
                             subfaceOffset = 3;
                             v = std::fabs(tmpV);
                         }
                     }
-                }
-                else
-                {
+                } else {
                     // Up
                     faceOffset = 2;
-                    if (tmpU <= 0.0f)
-                    {
+                    if (tmpU <= 0.0f) {
                         u = 0.99999f - std::fabs(tmpU);
-                        if (tmpV <= 0.0f)
-                        {
+                        if (tmpV <= 0.0f) {
                             subfaceOffset = 0;
                             v = 0.99999f - std::fabs(tmpV);
-                        }
-                        else
-                        {
+                        } else {
                             subfaceOffset = 3;
                             v = std::fabs(tmpV);
                         }
-                    }
-                    else
-                    {
+                    } else {
                         u = std::fabs(tmpU);
-                        if (tmpV <= 0.0f)
-                        {
+                        if (tmpV <= 0.0f) {
                             subfaceOffset = 1;
                             v = 0.99999f - std::fabs(tmpV);
-                        }
-                        else
-                        {
+                        } else {
                             subfaceOffset = 2;
                             v = std::fabs(tmpV);
                         }
                     }
                 }
-            }
-            else
-            {
+            } else {
                 float tmpU = coordX / coordZ;
                 float tmpV = coordY / coordZ;
 
-                if (coordZ < 0.0)
-                {
+                if (coordZ < 0.0) {
                     // Back
                     faceOffset = 5;
-                    if (tmpU <= 0.0f)
-                    {
+                    if (tmpU <= 0.0f) {
                         u = 0.99999f - std::fabs(tmpU);
-                        if (tmpV <= 0.0f)
-                        {
+                        if (tmpV <= 0.0f) {
                             subfaceOffset = 0;
                             v = 0.99999f - std::fabs(tmpV);
-                        }
-                        else
-                        {
+                        } else {
                             subfaceOffset = 3;
                             v = std::fabs(tmpV);
                         }
-                    }
-                    else
-                    {
+                    } else {
                         u = std::fabs(tmpU);
-                        if (tmpV <= 0.0f)
-                        {
+                        if (tmpV <= 0.0f) {
                             subfaceOffset = 1;
                             v = 0.99999f - std::fabs(tmpV);
-                        }
-                        else
-                        {
+                        } else {
                             subfaceOffset = 2;
                             v = std::fabs(tmpV);
                         }
                     }
-                }
-                else
-                {
+                } else {
                     // Front
                     faceOffset = 4;
-                    if (tmpU <= 0.0f)
-                    {
+                    if (tmpU <= 0.0f) {
                         u = 0.99999f - std::fabs(tmpU);
-                        if (tmpV <= 0.0f)
-                        {
+                        if (tmpV <= 0.0f) {
                             subfaceOffset = 3;
                             v = std::fabs(tmpV);
-                        }
-                        else
-                        {
+                        } else {
                             subfaceOffset = 0;
                             v = 0.99999f - std::fabs(tmpV);
                         }
-                    }
-                    else
-                    {
+                    } else {
                         u = std::fabs(tmpU);
-                        if (tmpV <= 0.0f)
-                        {
+                        if (tmpV <= 0.0f) {
                             subfaceOffset = 2;
                             v = std::fabs(tmpV);
-                        }
-                        else
-                        {
+                        } else {
                             subfaceOffset = 1;
                             v = 0.99999f - std::fabs(tmpV);
                         }
@@ -323,10 +251,7 @@ void FvrRenderer::render(
             int cubemapX = static_cast<int>(u * 256);
             int cubemapY = static_cast<int>(v * 256);
 
-            outputBuffer[y * outputWidth + x] =
-                d_ptr->m_cubemapBuffer[faceOffset * 256 * 256 * 4 +
-                                       subfaceOffset * 256 * 256 +
-                                       cubemapY * 256 + cubemapX];
+            outputBuffer[y * outputWidth + x] = d_ptr->m_cubemapBuffer[faceOffset * 256 * 256 * 4 + subfaceOffset * 256 * 256 + cubemapY * 256 + cubemapX];
         }
     }
 }

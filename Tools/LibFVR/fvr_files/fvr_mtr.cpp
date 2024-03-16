@@ -6,14 +6,13 @@
 #include <vector>
 
 /* Private */
-class FvrMtr::FvrMtrPrivate
-{
+class FvrMtr::FvrMtrPrivate {
     friend class FvrMtr;
 
 public:
     FvrMtrPrivate();
 
-    static void rleDecompress(const std::vector<uint8_t> &data, std::vector<uint8_t> &dest);
+    static void rleDecompress(const std::vector<uint8_t>& data, std::vector<uint8_t>& dest);
 
     bool checkMagic();
     bool checkType();
@@ -36,26 +35,20 @@ FvrMtr::FvrMtrPrivate::FvrMtrPrivate()
     type.resize(2);
 }
 
-void FvrMtr::FvrMtrPrivate::rleDecompress(const std::vector<uint8_t> &data, std::vector<uint8_t> &dest)
+void FvrMtr::FvrMtrPrivate::rleDecompress(const std::vector<uint8_t>& data, std::vector<uint8_t>& dest)
 {
     size_t i = 0;
-    while (i < data.size())
-    {
+    while (i < data.size()) {
         uint8_t count = data[i++];
-        if (count < 128)
-        {
+        if (count < 128) {
             count++;
             uint8_t value = data[i++];
-            for (int k = 0; k < count; k++)
-            {
+            for (int k = 0; k < count; k++) {
                 dest.push_back(value);
             }
-        }
-        else
-        {
+        } else {
             count = count - 127;
-            for (int k = 0; k < count; k++)
-            {
+            for (int k = 0; k < count; k++) {
                 dest.push_back(data[i++]);
             }
         }
@@ -116,16 +109,12 @@ bool FvrMtr::FvrMtrPrivate::readData()
     fileMtr.seekg(0x10);
     std::string tmp(4, '\0');
     fileMtr.read(tmp.data(), 4);
-    if (tmp == "00FF")
-    {
-        if (type == "NC")
-        { // MST NC 00FF
+    if (tmp == "00FF") {
+        if (type == "NC") { // MST NC 00FF
             // TODO: implement
             std::cerr << "NOT IMPLEMENTED" << std::endl;
             return false;
-        }
-        else if (type == "FC")
-        { // MST FC 00FF
+        } else if (type == "FC") { // MST FC 00FF
             fileMtr.seekg(-8, std::ios_base::end);
             std::streampos end = fileMtr.tellg();
 
@@ -133,64 +122,49 @@ bool FvrMtr::FvrMtrPrivate::readData()
             uint64_t dataSize = size - 0x32 - 0x300 - 8;
             std::vector<uint8_t> source(dataSize);
             fileMtr.seekg(0x332);
-            fileMtr.read((char *)source.data(), dataSize);
+            fileMtr.read((char*)source.data(), dataSize);
 
             std::vector<uint8_t> decompressed;
             decompressed.reserve(width * height);
 
             rleDecompress(source, decompressed);
 
-            if (decompressed.size() != width * height)
-            {
+            if (decompressed.size() != width * height) {
                 std::cerr << "Invalid decompressed size" << std::endl;
                 return false;
             }
 
-            if (!image.resize(width, height))
-            {
+            if (!image.resize(width, height)) {
                 std::cerr << "Failed to resize out image" << std::endl;
                 return false;
             }
 
-            for (size_t i = 0; i < decompressed.size(); i++)
-            {
+            for (size_t i = 0; i < decompressed.size(); i++) {
                 image.setPixel(
                     i % width, i / width,
-                    {palette[decompressed[i] * 3 + 0],
-                     palette[decompressed[i] * 3 + 1],
-                     palette[decompressed[i] * 3 + 2], 255});
+                    { palette[decompressed[i] * 3 + 0],
+                        palette[decompressed[i] * 3 + 1],
+                        palette[decompressed[i] * 3 + 2], 255 });
             }
 
             return true;
-        }
-        else
-        {
+        } else {
             return false;
         }
-    }
-    else
-    {
-        if (tmp[2] == 'P')
-        {
-            if (type == "NC")
-            { // MST NC 00xP
+    } else {
+        if (tmp[2] == 'P') {
+            if (type == "NC") { // MST NC 00xP
                 // TODO: implement
                 std::cerr << "NOT IMPLEMENTED" << std::endl;
                 return false;
-            }
-            else if (type == "FC")
-            { // MST FC 00xP
+            } else if (type == "FC") { // MST FC 00xP
                 // TODO: implement
                 std::cerr << "NOT IMPLEMENTED" << std::endl;
                 return false;
-            }
-            else
-            {
+            } else {
                 return false;
             }
-        }
-        else
-        {
+        } else {
             std::cerr << "Invalid type" << std::endl;
             return false;
         }
@@ -208,51 +182,45 @@ FvrMtr::~FvrMtr()
     delete d_ptr;
 }
 
-bool FvrMtr::open(const std::string &mtrFileName)
+bool FvrMtr::open(const std::string& mtrFileName)
 {
     d_ptr->fileMtr.open(mtrFileName, std::ios_base::in | std::ios_base::binary);
 
-    if (!d_ptr->fileMtr.is_open())
-    {
+    if (!d_ptr->fileMtr.is_open()) {
         std::cerr << "Failed to open " << mtrFileName << std::endl;
         return false;
     }
 
     // Check magic
-    if (!d_ptr->checkMagic())
-    {
+    if (!d_ptr->checkMagic()) {
         std::cerr << "Invalid magic" << std::endl;
         return false;
     }
 
     // Check type
-    if (!d_ptr->checkType())
-    {
+    if (!d_ptr->checkType()) {
         std::cerr << "Invalid type" << std::endl;
         return false;
     }
 
     // Read size
-    if (!d_ptr->readSize())
-    {
+    if (!d_ptr->readSize()) {
         std::cerr << "Invalid size" << std::endl;
         return false;
     }
 
     // Read size
-    if (!d_ptr->checkFileSize())
-    {
+    if (!d_ptr->checkFileSize()) {
         std::cerr << "Invalid file size" << std::endl;
         return false;
     }
 
     // Read palette
     d_ptr->fileMtr.seekg(0x32);
-    d_ptr->fileMtr.read(reinterpret_cast<char *>(d_ptr->palette), 0x300);
+    d_ptr->fileMtr.read(reinterpret_cast<char*>(d_ptr->palette), 0x300);
 
     // Read data
-    if (!d_ptr->readData())
-    {
+    if (!d_ptr->readData()) {
         std::cerr << "Invalid data" << std::endl;
         return false;
     }
@@ -280,7 +248,7 @@ uint32_t FvrMtr::height() const
     return d_ptr->height;
 }
 
-Image const &FvrMtr::image() const
+Image const& FvrMtr::image() const
 {
     return d_ptr->image;
 }

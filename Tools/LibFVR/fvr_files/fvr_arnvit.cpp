@@ -5,8 +5,7 @@
 #include "fvr/file.h"
 
 /* Private */
-class FvrArnVit::FvrArnVitPrivate
-{
+class FvrArnVit::FvrArnVitPrivate {
     friend class FvrArnVit;
 
 private:
@@ -27,16 +26,14 @@ FvrArnVit::~FvrArnVit()
     delete d_ptr;
 }
 
-bool FvrArnVit::open(const std::string &vitFileName, const std::string &arnFileName)
+bool FvrArnVit::open(const std::string& vitFileName, const std::string& arnFileName)
 {
-    if (!d_ptr->fileVit.open(vitFileName, std::ios::binary | std::ios::in))
-    {
+    if (!d_ptr->fileVit.open(vitFileName, std::ios::binary | std::ios::in)) {
         std::cerr << "Unable to open VIT file " << vitFileName << std::endl;
         return false;
     }
 
-    if (!d_ptr->fileArn.open(arnFileName, std::ios::binary | std::ios::in))
-    {
+    if (!d_ptr->fileArn.open(arnFileName, std::ios::binary | std::ios::in)) {
         std::cerr << "Unable to open ARN file " << arnFileName << std::endl;
         return false;
     }
@@ -53,8 +50,7 @@ bool FvrArnVit::open(const std::string &vitFileName, const std::string &arnFileN
     d_ptr->fileVit >> unkn;
 
     uint32_t offset = 0;
-    for (uint32_t i = 0; i < fileCount; i++)
-    {
+    for (uint32_t i = 0; i < fileCount; i++) {
         ArnVitFile file;
 
         char fileName[32];
@@ -106,11 +102,10 @@ FvrArnVit::ArnVitFile FvrArnVit::getFile(const int index) const
     return file;
 }
 
-bool FvrArnVit::writeToBmp(const int index, const std::string &outputDirectory) const
+bool FvrArnVit::writeToBmp(const int index, const std::string& outputDirectory) const
 {
     ArnVitFile file = getFile(index);
-    if (file.data.empty())
-    {
+    if (file.data.empty()) {
         std::cerr << "Unable to read file data" << std::endl;
         return false;
     }
@@ -118,52 +113,46 @@ bool FvrArnVit::writeToBmp(const int index, const std::string &outputDirectory) 
     std::string bmpFile = outputDirectory + file.fileName;
     File fileBmp;
     fileBmp.setEndian(std::endian::little);
-    if (!fileBmp.open(bmpFile, std::ios::binary | std::ios::out))
-    {
+    if (!fileBmp.open(bmpFile, std::ios::binary | std::ios::out)) {
         std::cerr << "Unable to open BMP file " << bmpFile << std::endl;
         return false;
     }
 
     // BMP header
     fileBmp << uint16_t(0x4D42); // BM
-    fileBmp << uint32_t(0);      // File size (will be updated later)
-    fileBmp << uint16_t(0);      // Reserved
-    fileBmp << uint16_t(0);      // Reserved
-    fileBmp << uint32_t(54);     // Offset to image data
+    fileBmp << uint32_t(0); // File size (will be updated later)
+    fileBmp << uint16_t(0); // Reserved
+    fileBmp << uint16_t(0); // Reserved
+    fileBmp << uint32_t(54); // Offset to image data
 
     // DIB header
-    fileBmp << uint32_t(40);           // DIB header size
-    fileBmp << uint32_t(file.width);   // Width
+    fileBmp << uint32_t(40); // DIB header size
+    fileBmp << uint32_t(file.width); // Width
     fileBmp << uint32_t(-file.height); // Height
-    fileBmp << uint16_t(1);            // Planes
-    fileBmp << uint16_t(16);           // Bits per pixel
-    fileBmp << uint32_t(0);            // Compression
-    fileBmp << uint32_t(0);            // Image size (ignored for uncompressed images)
-    fileBmp << uint32_t(0);            // X pixels per meter
-    fileBmp << uint32_t(0);            // Y pixels per meter
-    fileBmp << uint32_t(0);            // Colors in color table
-    fileBmp << uint32_t(0);            // Important color count
+    fileBmp << uint16_t(1); // Planes
+    fileBmp << uint16_t(16); // Bits per pixel
+    fileBmp << uint32_t(0); // Compression
+    fileBmp << uint32_t(0); // Image size (ignored for uncompressed images)
+    fileBmp << uint32_t(0); // X pixels per meter
+    fileBmp << uint32_t(0); // Y pixels per meter
+    fileBmp << uint32_t(0); // Colors in color table
+    fileBmp << uint32_t(0); // Important color count
 
     // Image data
     bool addPadding = (file.width * 2) % 4 != 0;
-    for (uint32_t y = 0; y < file.height; y++)
-    {
+    for (uint32_t y = 0; y < file.height; y++) {
         // fileBmp.write(data.data() + y * file.width * 2, file.width * 2);
-        for (uint32_t x = 0; x < file.width; x++)
-        {
+        for (uint32_t x = 0; x < file.width; x++) {
             int idx = (y * file.width + x) * 2;
             uint16_t pixel = (file.data[idx + 1] << 8) | file.data[idx];
 
             // RGB565 to RGB555
-            pixel = ((pixel & 0b1111'1000'0000'0000) >> 1 |
-                     (pixel & 0b0000'0111'1100'0000) >> 1 |
-                     (pixel & 0b0000'0000'0001'1111));
+            pixel = ((pixel & 0b1111'1000'0000'0000) >> 1 | (pixel & 0b0000'0111'1100'0000) >> 1 | (pixel & 0b0000'0000'0001'1111));
 
             fileBmp << pixel;
         }
 
-        if (addPadding)
-        {
+        if (addPadding) {
             fileBmp << uint8_t(0x00);
             fileBmp << uint8_t(0xFF);
         }

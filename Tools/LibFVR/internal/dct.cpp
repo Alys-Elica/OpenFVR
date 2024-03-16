@@ -17,7 +17,8 @@ const int AAN_scales[64] = {
     16384, 22725, 21407, 19266, 16384, 12873, 8867, 4520,
     12873, 17855, 16819, 15137, 12873, 10114, 6967, 3552,
     8867, 12299, 11585, 10426, 8867, 6967, 4799, 2446,
-    4520, 6270, 5906, 5315, 4520, 3552, 2446, 1247};
+    4520, 6270, 5906, 5315, 4520, 3552, 2446, 1247
+};
 
 const int Y_Q[64] = {
     16, 11, 10, 16, 24, 40, 51, 61,
@@ -27,7 +28,8 @@ const int Y_Q[64] = {
     18, 22, 37, 56, 68, 109, 103, 77,
     24, 35, 55, 64, 81, 104, 113, 92,
     49, 64, 78, 87, 103, 121, 120, 101,
-    72, 92, 95, 98, 112, 100, 103, 99};
+    72, 92, 95, 98, 112, 100, 103, 99
+};
 
 const int C_Q[64] = {
     17, 18, 24, 47, 99, 99, 99, 99,
@@ -37,7 +39,8 @@ const int C_Q[64] = {
     99, 99, 99, 99, 99, 99, 99, 99,
     99, 99, 99, 99, 99, 99, 99, 99,
     99, 99, 99, 99, 99, 99, 99, 99,
-    99, 99, 99, 99, 99, 99, 99, 99};
+    99, 99, 99, 99, 99, 99, 99, 99
+};
 
 const int ZIGZAG[64] = {
     0, 1, 8, 16, 9, 2, 3, 10,
@@ -47,7 +50,8 @@ const int ZIGZAG[64] = {
     35, 42, 49, 56, 57, 50, 43, 36,
     29, 22, 15, 23, 30, 37, 44, 51,
     58, 59, 52, 45, 38, 31, 39, 46,
-    53, 60, 61, 54, 47, 55, 62, 63};
+    53, 60, 61, 54, 47, 55, 62, 63
+};
 
 int VEC_COL[64] = {
     0, 8, 16, 24, 32, 40, 48, 56,
@@ -57,7 +61,8 @@ int VEC_COL[64] = {
     4, 12, 20, 28, 36, 44, 52, 60,
     5, 13, 21, 29, 37, 45, 53, 61,
     6, 14, 22, 30, 38, 46, 54, 62,
-    7, 15, 23, 31, 39, 47, 55, 63};
+    7, 15, 23, 31, 39, 47, 55, 63
+};
 
 int VEC_ROW[64] = {
     0, 1, 2, 3, 4, 5, 6, 7,
@@ -67,9 +72,10 @@ int VEC_ROW[64] = {
     32, 33, 34, 35, 36, 37, 38, 39,
     40, 41, 42, 43, 44, 45, 46, 47,
     48, 49, 50, 51, 52, 53, 54, 55,
-    56, 57, 58, 59, 60, 61, 62, 63};
+    56, 57, 58, 59, 60, 61, 62, 63
+};
 
-void idctVectorTransform(int mcu[64], int *vec_lookup)
+void idctVectorTransform(int mcu[64], int* vec_lookup)
 {
     int add_0_4, sub_0_4,
         add_1_7, sub_1_7,
@@ -81,12 +87,11 @@ void idctVectorTransform(int mcu[64], int *vec_lookup)
         mul1, mul2,
         mul3, mul4;
 
-    int *vec = vec_lookup;
+    int* vec = vec_lookup;
 
 #define mul(a, b) (((a) * (b)) >> 16)
 
-    for (int i = 0; i < 64; i += 8, vec += 8)
-    {
+    for (int i = 0; i < 64; i += 8, vec += 8) {
         add_0_4 = mcu[vec[0]] + mcu[vec[4]];
         sub_0_4 = mcu[vec[0]] - mcu[vec[4]];
         add_1_7 = mcu[vec[1]] + mcu[vec[7]];
@@ -128,15 +133,13 @@ void idct(int mcu[64])
     idctVectorTransform(mcu, VEC_ROW);
 
     // Performs descaling from previous upscaling, see AA&N scales.
-    for (int i = 0; i < 64; i++)
-    {
+    for (int i = 0; i < 64; i++) {
         mcu[i] = std::clamp(mcu[i] / 16, -128, 128);
     }
 }
 
 /* Private */
-class Dct::DctPrivate
-{
+class Dct::DctPrivate {
     friend class Dct;
 
 private:
@@ -151,17 +154,13 @@ public:
     {
         quality = std::clamp(quality, 1, 100);
 
-        if (quality >= 50)
-        {
+        if (quality >= 50) {
             this->quality = 2 * (100 - quality);
-        }
-        else
-        {
+        } else {
             this->quality = 5000 / quality;
         }
 
-        for (int i = 0; i < 64; ++i)
-        {
+        for (int i = 0; i < 64; ++i) {
             this->y_quants[i] = std::clamp((Y_Q[i] * this->quality + 50) / 100, 8, 255);
             this->y_quants[i] = (this->y_quants[i] * AAN_scales[i]) >> 13;
 
@@ -170,20 +169,17 @@ public:
         }
     }
 
-    void unpackMcu(InverseBitstream &ac, InverseBitstream &dc, DataStream &dsAcCode, int mcu[64], int quants[64])
+    void unpackMcu(InverseBitstream& ac, InverseBitstream& dc, DataStream& dsAcCode, int mcu[64], int quants[64])
     {
         off_t index = 0;
         mcu[ZIGZAG[index]] = dc.next(8) * quants[ZIGZAG[index]];
 
-        while (++index < 64)
-        {
+        while (++index < 64) {
             uint8_t acCode;
             dsAcCode >> acCode;
 
-            if (acCode == 0)
-            {
-                while (index < 64)
-                {
+            if (acCode == 0) {
+                while (index < 64) {
                     mcu[ZIGZAG[index++]] = 0;
                 }
 
@@ -192,8 +188,7 @@ public:
 
             // Most significant nibble is number of null-bytes padding
             uint8_t ac_padd = acCode >> 4;
-            for (int i = 0; i < ac_padd; i++)
-            {
+            for (int i = 0; i < ac_padd; i++) {
                 mcu[ZIGZAG[index++]] = 0;
             }
 
@@ -201,17 +196,13 @@ public:
             uint8_t ac_bits = acCode & 0xf;
 
             int ac_data;
-            if (ac_bits > 0)
-            {
+            if (ac_bits > 0) {
                 ac_data = ac.next(ac_bits);
 
-                if (((1 << (ac_bits - 1)) & ac_data) == 0)
-                {
+                if (((1 << (ac_bits - 1)) & ac_data) == 0) {
                     ac_data += 1 - (1 << ac_bits);
                 }
-            }
-            else
-            {
+            } else {
                 ac_data = 0;
             }
 
@@ -226,15 +217,14 @@ public:
         int y[64],
         int cb[64],
         int cr[64],
-        int *r,
-        int *g,
-        int *b)
+        int* r,
+        int* g,
+        int* b)
     {
         int index;
         int lum;
 
-        for (int i = 0; i < 64; i++)
-        {
+        for (int i = 0; i < 64; i++) {
             lum = (y[i] + 128) << 16;
 
             /*
@@ -256,7 +246,7 @@ public:
         }
     }
 
-    void putBlock(uint16_t *buffer, int width, int *r, int *g, int *b)
+    void putBlock(uint16_t* buffer, int width, int* r, int* g, int* b)
     {
         int r_overflow = 0,
             g_overflow = 0,
@@ -266,22 +256,18 @@ public:
             g_val,
             b_val;
 
-        for (int i = 0; i < width * 8; i++)
-        {
+        for (int i = 0; i < width * 8; i++) {
             r_val = std::clamp(r[i], 0, 0xff0000);
             g_val = std::clamp(g[i], 0, 0xff0000);
             b_val = std::clamp(b[i], 0, 0xff0000);
 
-            buffer[i] = (((r_val >> 8) & 0xF800) +
-                         ((g_val >> 13) & 0xFFE0) +
-                         (b_val >> 19));
+            buffer[i] = (((r_val >> 8) & 0xF800) + ((g_val >> 13) & 0xFFE0) + (b_val >> 19));
 
             r_overflow = (r_val - (r_val & 0xF80000)) >> 1;
             g_overflow = (g_val - (g_val & 0xFC0000)) >> 1;
             b_overflow = (b_val - (b_val & 0xF80000)) >> 1;
 
-            if ((i + 1) % width > 0)
-            {
+            if ((i + 1) % width > 0) {
                 r[i + 1] += r_overflow;
                 g[i + 1] += g_overflow;
                 b[i + 1] += b_overflow;
@@ -306,11 +292,11 @@ Dct::~Dct()
 }
 
 bool Dct::unpack(
-    const std::vector<uint8_t> &imageData,
+    const std::vector<uint8_t>& imageData,
     const int quality,
     const int width,
     const int height,
-    std::vector<uint8_t> &rgb565Data)
+    std::vector<uint8_t>& rgb565Data)
 {
     rgb565Data.resize(width * height * 2);
 
@@ -376,11 +362,9 @@ bool Dct::unpack(
     std::vector<int> g(width * 9, 0);
     std::vector<int> b(width * 9, 0);
 
-    uint8_t *buffer = rgb565Data.data();
-    for (int y = 0; y < height; y += 8)
-    {
-        for (int x = 0; x < width; x += 8)
-        {
+    uint8_t* buffer = rgb565Data.data();
+    for (int y = 0; y < height; y += 8) {
+        for (int x = 0; x < width; x += 8) {
             d_ptr->unpackMcu(ac, dc, dsAcCode, mcuY, d_ptr->y_quants);
             d_ptr->unpackMcu(ac, dc, dsAcCode, mcuCb, d_ptr->c_quants);
             d_ptr->unpackMcu(ac, dc, dsAcCode, mcuCr, d_ptr->c_quants);
@@ -396,8 +380,7 @@ bool Dct::unpack(
         }
 
         /* Contribute overflowing bits from previous iteration. */
-        for (int i = 0, ii = width * 8; i < width; i++, ii++)
-        {
+        for (int i = 0, ii = width * 8; i < width; i++, ii++) {
             r[i] += r[ii];
             g[i] += g[ii];
             b[i] += b[ii];
@@ -408,7 +391,7 @@ bool Dct::unpack(
         }
 
         d_ptr->putBlock(
-            (uint16_t *)buffer,
+            (uint16_t*)buffer,
             width,
             r.data(),
             g.data(),
@@ -422,9 +405,9 @@ bool Dct::unpack(
 
 bool Dct::unpackBlock(
     const int blockCount,
-    const std::vector<uint8_t> &imageData,
+    const std::vector<uint8_t>& imageData,
     const int quality,
-    std::vector<uint8_t> &outData)
+    std::vector<uint8_t>& outData)
 {
     // 8*8 blocks are placed in top to bottom order
     return unpack(imageData, quality, 8, blockCount * 8, outData);

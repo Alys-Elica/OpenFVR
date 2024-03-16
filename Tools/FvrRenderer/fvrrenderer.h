@@ -25,8 +25,7 @@
  *
  * Feel free to optimize it as you see fit.
  */
-class FVRRENDERER_EXPORT FvrRenderer
-{
+class FVRRENDERER_EXPORT FvrRenderer {
 public:
     FvrRenderer();
     ~FvrRenderer();
@@ -53,7 +52,7 @@ public:
      *
      * @return The pointer to the internal cubemap buffer.
      */
-    unsigned short *cubemapBuffer();
+    unsigned short* cubemapBuffer();
 
     /**
      * @brief Sets the resolution for the VR projection.
@@ -78,7 +77,7 @@ public:
      * @param fov The field of view.
      */
     void render(
-        unsigned short *outputBuffer,
+        unsigned short* outputBuffer,
         float yaw,
         float pitch,
         float roll,
@@ -86,7 +85,7 @@ public:
 
 private:
     class FvrRendererPrivate;
-    FvrRendererPrivate *d_ptr;
+    FvrRendererPrivate* d_ptr;
 };
 
 #endif // FVRRENDERER_H

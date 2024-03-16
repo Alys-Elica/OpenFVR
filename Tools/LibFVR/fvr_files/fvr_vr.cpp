@@ -9,12 +9,11 @@
 #include "internal/dct.h"
 
 /* Private */
-class FvrVr::FvrVrPrivate
-{
+class FvrVr::FvrVrPrivate {
     friend class FvrVr;
 
 public:
-    bool rgb565DataToCubemap(const std::vector<uint8_t> &rgb565Data, std::vector<uint8_t> &cubemapRgb565Data);
+    bool rgb565DataToCubemap(const std::vector<uint8_t>& rgb565Data, std::vector<uint8_t>& cubemapRgb565Data);
 
 private:
     File m_fileVr;
@@ -24,10 +23,9 @@ private:
     std::map<std::string, Animation> m_animationList;
 };
 
-bool FvrVr::FvrVrPrivate::rgb565DataToCubemap(const std::vector<uint8_t> &rgb565Data, std::vector<uint8_t> &cubemapRgb565Data)
+bool FvrVr::FvrVrPrivate::rgb565DataToCubemap(const std::vector<uint8_t>& rgb565Data, std::vector<uint8_t>& cubemapRgb565Data)
 {
-    if (rgb565Data.size() != 256 * 6144 * 2)
-    {
+    if (rgb565Data.size() != 256 * 6144 * 2) {
         std::cerr << "Invalid RGB565 data size" << std::endl;
         return false;
     }
@@ -42,12 +40,10 @@ bool FvrVr::FvrVrPrivate::rgb565DataToCubemap(const std::vector<uint8_t> &rgb565
         2048u * 512u * 2u + 512u * 2u * 3u,
     };
 
-    for (int faceIdx = 0; faceIdx < 6; ++faceIdx)
-    {
+    for (int faceIdx = 0; faceIdx < 6; ++faceIdx) {
         uint32_t faceOffset = faceOffsets[faceIdx];
 
-        for (int lineIdx = 0; lineIdx < 256; ++lineIdx)
-        {
+        for (int lineIdx = 0; lineIdx < 256; ++lineIdx) {
             std::memcpy(
                 cubemapRgb565Data.data() + faceOffset + lineIdx * 2048 * 2,
                 rgb565Data.data() + faceIdx * 512 * 512 * 2 + lineIdx * 256 * 2,
@@ -84,10 +80,9 @@ FvrVr::~FvrVr()
     delete d_ptr;
 }
 
-bool FvrVr::open(const std::string &vrFileName)
+bool FvrVr::open(const std::string& vrFileName)
 {
-    if (!d_ptr->m_fileVr.open(vrFileName, std::ios::binary | std::ios::in))
-    {
+    if (!d_ptr->m_fileVr.open(vrFileName, std::ios::binary | std::ios::in)) {
         // std::cerr << "Failed to open file " << vrFileName << std::endl;
         return false;
     }
@@ -100,16 +95,11 @@ bool FvrVr::open(const std::string &vrFileName)
     d_ptr->m_fileVr >> fileSize;
     d_ptr->m_fileVr >> type;
 
-    if (type == -0x5f4e3e00)
-    {
+    if (type == -0x5f4e3e00) {
         d_ptr->m_type = Type::VR_STATIC_VR;
-    }
-    else if (type == -0x5f4e3c00)
-    {
+    } else if (type == -0x5f4e3c00) {
         d_ptr->m_type = Type::VR_STATIC_PIC;
-    }
-    else
-    {
+    } else {
         d_ptr->m_type = Type::VR_UNKNOWN;
     }
 
@@ -126,38 +116,31 @@ bool FvrVr::open(const std::string &vrFileName)
     d_ptr->m_fileVr >> dataSize; // File size - 16
 
     std::vector<uint8_t> rawData(dataSize);
-    d_ptr->m_fileVr.read((char *)rawData.data(), dataSize);
+    d_ptr->m_fileVr.read((char*)rawData.data(), dataSize);
 
     // Unpack image
     Dct dct;
     bool ret = false;
-    if (d_ptr->m_type == FvrVr::Type::VR_STATIC_VR)
-    {
+    if (d_ptr->m_type == FvrVr::Type::VR_STATIC_VR) {
         ret = dct.unpack(rawData, quality, 256, 6144, d_ptr->m_rgb565Data);
-    }
-    else if (d_ptr->m_type == FvrVr::Type::VR_STATIC_PIC)
-    {
+    } else if (d_ptr->m_type == FvrVr::Type::VR_STATIC_PIC) {
         ret = dct.unpack(rawData, quality, 640, 480, d_ptr->m_rgb565Data);
     }
 
-    if (!ret)
-    {
+    if (!ret) {
         std::cerr << "Failed to unpack image" << std::endl;
         return false;
     }
 
     // Read animation data
     d_ptr->m_animationList.clear();
-    if (!d_ptr->m_fileVr.atEnd())
-    {
+    if (!d_ptr->m_fileVr.atEnd()) {
         // Animation data
-        while (!d_ptr->m_fileVr.atEnd())
-        {
+        while (!d_ptr->m_fileVr.atEnd()) {
             uint32_t animHeader;
             d_ptr->m_fileVr >> animHeader;
 
-            if (animHeader != 0xa0b1c201)
-            {
+            if (animHeader != 0xa0b1c201) {
                 break;
             }
 
@@ -174,13 +157,11 @@ bool FvrVr::open(const std::string &vrFileName)
 
             Animation animation;
             animation.name = animNameStr;
-            for (int i = 0; i < frameCount; i++)
-            {
+            for (int i = 0; i < frameCount; i++) {
                 uint32_t frameHeader;
                 d_ptr->m_fileVr >> frameHeader;
 
-                if (frameHeader != 0xa0b1c211)
-                {
+                if (frameHeader != 0xa0b1c211) {
                     std::cerr << "Invalid frame header" << std::endl;
                     return false;
                 }
@@ -188,8 +169,7 @@ bool FvrVr::open(const std::string &vrFileName)
                 uint32_t frameSize;
                 d_ptr->m_fileVr >> frameSize;
 
-                if (frameSize == 8)
-                {
+                if (frameSize == 8) {
                     animation.frames.push_back({});
                     continue;
                 }
@@ -198,8 +178,7 @@ bool FvrVr::open(const std::string &vrFileName)
                 d_ptr->m_fileVr >> blockCount;
 
                 std::vector<uint32_t> blockOffsetList(blockCount);
-                for (int idxBlock = 0; idxBlock < blockCount; idxBlock++)
-                {
+                for (int idxBlock = 0; idxBlock < blockCount; idxBlock++) {
                     uint32_t pixelOffset;
                     d_ptr->m_fileVr >> pixelOffset;
 
@@ -214,21 +193,20 @@ bool FvrVr::open(const std::string &vrFileName)
                 d_ptr->m_fileVr >> dataSize; // File size - 16
 
                 std::vector<uint8_t> rawData(dataSize);
-                d_ptr->m_fileVr.read((char *)rawData.data(), dataSize);
+                d_ptr->m_fileVr.read((char*)rawData.data(), dataSize);
 
                 Dct dct;
                 std::vector<uint8_t> frameData;
-                if (!dct.unpackBlock(blockCount, rawData, quality, frameData))
-                {
+                if (!dct.unpackBlock(blockCount, rawData, quality, frameData)) {
                     std::cerr << "Failed to unpack animation frame" << std::endl;
                     return false;
                 }
 
-                AnimationFrame frame{blockOffsetList, frameData};
+                AnimationFrame frame { blockOffsetList, frameData };
                 animation.frames.push_back(frame);
             }
 
-            d_ptr->m_animationList.insert({animNameStr, animation});
+            d_ptr->m_animationList.insert({ animNameStr, animation });
         }
     }
 
@@ -247,8 +225,7 @@ bool FvrVr::isOpen() const
 
 int FvrVr::getWidth() const
 {
-    switch (d_ptr->m_type)
-    {
+    switch (d_ptr->m_type) {
     case FvrVr::Type::VR_STATIC_VR:
         return 256;
     case FvrVr::Type::VR_STATIC_PIC:
@@ -260,8 +237,7 @@ int FvrVr::getWidth() const
 
 int FvrVr::getHeight() const
 {
-    switch (d_ptr->m_type)
-    {
+    switch (d_ptr->m_type) {
     case FvrVr::Type::VR_STATIC_VR:
         return 6144;
     case FvrVr::Type::VR_STATIC_PIC:
@@ -276,10 +252,9 @@ FvrVr::Type FvrVr::getType() const
     return d_ptr->m_type;
 }
 
-bool FvrVr::getImage(Image &image) const
+bool FvrVr::getImage(Image& image) const
 {
-    if (d_ptr->m_rgb565Data.empty())
-    {
+    if (d_ptr->m_rgb565Data.empty()) {
         return false;
     }
 
@@ -288,16 +263,14 @@ bool FvrVr::getImage(Image &image) const
     return true;
 }
 
-bool FvrVr::getImageCubemap(Image &image) const
+bool FvrVr::getImageCubemap(Image& image) const
 {
-    if (d_ptr->m_rgb565Data.empty())
-    {
+    if (d_ptr->m_rgb565Data.empty()) {
         return false;
     }
 
     std::vector<uint8_t> cubemapRgb565Data;
-    if (!d_ptr->rgb565DataToCubemap(d_ptr->m_rgb565Data, cubemapRgb565Data))
-    {
+    if (!d_ptr->rgb565DataToCubemap(d_ptr->m_rgb565Data, cubemapRgb565Data)) {
         return false;
     }
 
@@ -306,7 +279,7 @@ bool FvrVr::getImageCubemap(Image &image) const
     return true;
 }
 
-const std::vector<uint8_t> &FvrVr::getData() const
+const std::vector<uint8_t>& FvrVr::getData() const
 {
     return d_ptr->m_rgb565Data;
 }
@@ -314,19 +287,17 @@ const std::vector<uint8_t> &FvrVr::getData() const
 std::vector<std::string> FvrVr::getAnimationList() const
 {
     std::vector<std::string> animList;
-    for (const auto &anim : d_ptr->m_animationList)
-    {
+    for (const auto& anim : d_ptr->m_animationList) {
         animList.push_back(anim.first);
     }
 
     return animList;
 }
 
-bool FvrVr::getAnimation(const std::string &animName, Animation &animation) const
+bool FvrVr::getAnimation(const std::string& animName, Animation& animation) const
 {
     auto it = d_ptr->m_animationList.find(animName);
-    if (it == d_ptr->m_animationList.end())
-    {
+    if (it == d_ptr->m_animationList.end()) {
         std::cerr << "Animation " << animName << " not found" << std::endl;
         return false;
     }

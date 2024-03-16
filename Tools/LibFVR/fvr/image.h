@@ -3,15 +3,13 @@
 
 #include "libfvr_globals.h"
 
+#include <cstdint>
 #include <string>
 #include <vector>
-#include <cstdint>
 
-class LIBFVR_EXPORT Image final
-{
+class LIBFVR_EXPORT Image final {
 public:
-    struct Pixel
-    {
+    struct Pixel {
         uint8_t r;
         uint8_t g;
         uint8_t b;
@@ -22,8 +20,8 @@ public:
     Image(int width = 0, int height = 0);
     ~Image();
 
-    Image(const Image &other) = delete;
-    Image &operator=(const Image &other) = delete;
+    Image(const Image& other) = delete;
+    Image& operator=(const Image& other) = delete;
 
     bool isValid() const;
 
@@ -33,17 +31,17 @@ public:
     bool resize(int width, int height);
     void clear();
 
-    void setPixel(int x, int y, const Pixel &pixel);
+    void setPixel(int x, int y, const Pixel& pixel);
     Pixel pixel(int x, int y) const;
 
-    bool fromRgb565(const std::vector<uint8_t> &rgb565Data, int width, int height);
-    bool toRgb565(std::vector<uint8_t> &rgb565Data) const;
+    bool fromRgb565(const std::vector<uint8_t>& rgb565Data, int width, int height);
+    bool toRgb565(std::vector<uint8_t>& rgb565Data) const;
 
-    bool savePng(const std::string &fileName) const;
+    bool savePng(const std::string& fileName) const;
 
 private:
     class ImagePrivate;
-    ImagePrivate *d_ptr;
+    ImagePrivate* d_ptr;
 };
 
 #endif // IMAGE_H
