@@ -31,7 +31,6 @@ public:
     InstructionBlock& getTestBlock(const std::string& warpName, const int& testId);
 
     bool saveText(const std::string& fileOut);
-    bool saveLua(const std::string& outputDirectory);
 
 private:
     class LstScriptPrivate;
