@@ -9,7 +9,7 @@
 
 class LIBFVR_EXPORT FvrScript final {
 public:
-    using InstructionParam = std::variant<int, double, std::string>;
+    using InstructionParam = std::variant<double, std::string>;
     struct Instruction {
         std::string name;
         std::vector<InstructionParam> params;

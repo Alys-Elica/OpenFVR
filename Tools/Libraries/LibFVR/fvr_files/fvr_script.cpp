@@ -221,7 +221,6 @@ bool FvrScript::FvrScriptPrivate::parseInstruction(const std::string& line, FvrS
     trim(params);
 
     enum class InstrParamType {
-        INT,
         DOUBLE,
         STRING
     };
@@ -234,24 +233,24 @@ bool FvrScript::FvrScriptPrivate::parseInstruction(const std::string& line, FvrS
         //{"ifand", {InstrParamType::STRING}},
         //{"ifor", {InstrParamType::STRING}},
         { "gotowarp", { InstrParamType::STRING } },
-        { "set", { InstrParamType::STRING, InstrParamType::INT }, '=' },
-        { "playmusique", { InstrParamType::STRING, InstrParamType::INT } },
+        { "set", { InstrParamType::STRING, InstrParamType::DOUBLE }, '=' },
+        { "playmusique", { InstrParamType::STRING, InstrParamType::DOUBLE } },
         { "stopmusique", { InstrParamType::STRING } },
-        { "playsound", { InstrParamType::STRING, InstrParamType::INT, InstrParamType::INT } },
+        { "playsound", { InstrParamType::STRING, InstrParamType::DOUBLE, InstrParamType::DOUBLE } },
         { "stopsound", { InstrParamType::STRING } },
-        { "playsound3d", { InstrParamType::STRING, InstrParamType::INT, InstrParamType::INT, InstrParamType::INT } },
+        { "playsound3d", { InstrParamType::STRING, InstrParamType::DOUBLE, InstrParamType::DOUBLE, InstrParamType::DOUBLE } },
         { "stopsound3d", { InstrParamType::STRING } },
-        { "setcursor", { InstrParamType::STRING, InstrParamType::STRING, InstrParamType::INT } },
-        { "setcursordefault", { InstrParamType::INT, InstrParamType::STRING } },
-        { "hidecursor", { InstrParamType::STRING, InstrParamType::INT } },
+        { "setcursor", { InstrParamType::STRING, InstrParamType::STRING, InstrParamType::DOUBLE } },
+        { "setcursordefault", { InstrParamType::DOUBLE, InstrParamType::STRING } },
+        { "hidecursor", { InstrParamType::STRING, InstrParamType::DOUBLE } },
         { "setangle", { InstrParamType::DOUBLE, InstrParamType::DOUBLE } },
         { "interpolangle", { InstrParamType::DOUBLE, InstrParamType::DOUBLE, InstrParamType::DOUBLE } },
-        { "anglexmax", { InstrParamType::INT } },
-        { "angleymax", { InstrParamType::INT } },
+        { "anglexmax", { InstrParamType::DOUBLE } },
+        { "angleymax", { InstrParamType::DOUBLE } },
         { "return", {} },
         { "end", {} },
-        { "fade", { InstrParamType::INT, InstrParamType::INT, InstrParamType::INT } },
-        { "lockkey", { InstrParamType::INT, InstrParamType::STRING } }, // Second argument is either a string or a number (0)
+        { "fade", { InstrParamType::DOUBLE, InstrParamType::DOUBLE, InstrParamType::DOUBLE } },
+        { "lockkey", { InstrParamType::DOUBLE, InstrParamType::STRING } }, // Second argument is either a string or a number (0)
         { "resetlockkey", {} },
         { "setzoom", { InstrParamType::STRING } },
         { "gosub", { InstrParamType::STRING } },
@@ -300,8 +299,8 @@ bool FvrScript::FvrScriptPrivate::parseInstruction(const std::string& line, FvrS
                 }
 
                 for (size_t i = 0; i < paramsList.size(); ++i) {
-                    if (instrTmp.params[i] == InstrParamType::INT) {
-                        instruction.params.push_back(std::stoi(paramsList[i]));
+                    if (instrTmp.params[i] == InstrParamType::DOUBLE) {
+                        instruction.params.push_back((double)std::stoi(paramsList[i]));
                     } else if (instrTmp.params[i] == InstrParamType::DOUBLE) {
                         instruction.params.push_back(std::stod(paramsList[i]));
                     } else if (instrTmp.params[i] == InstrParamType::STRING) {
@@ -340,13 +339,6 @@ bool FvrScript::FvrScriptPrivate::parsePluginInstruction(const std::string& line
 
     std::vector<std::string> paramsList = split(params, ',');
     for (const std::string& param : paramsList) {
-        try {
-            instruction.params.push_back(std::stoi(param));
-            continue;
-        } catch (const std::invalid_argument&) {
-            // Not an int: do nothing
-        }
-
         try {
             instruction.params.push_back(std::stod(param));
             continue;
