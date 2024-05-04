@@ -9,6 +9,7 @@
 #include <thread>
 
 #include <SDL.h>
+#include <fvr_files/fvr_4xm.h>
 #include <fvr_files/fvr_script.h>
 #include <fvr_files/fvr_tst.h>
 #include <fvr_files/fvr_vr.h>
@@ -83,6 +84,10 @@ private:
     float m_roll = 0.0f; // 0°
 
     int m_pointedZone = -1;
+
+    // Movie
+    bool m_inMovieMode = false;
+    std::vector<uint16_t> m_frameBufferMovie;
 };
 
 bool Engine::EnginePrivate::loadScript(const std::string& scriptFile)
@@ -166,45 +171,47 @@ bool Engine::EnginePrivate::isPanoramic() const
 
 void Engine::EnginePrivate::render()
 {
-    // Update animations
-    for (auto& animIt : m_playingAnim) {
-        if (animIt.second < m_animData[animIt.first].frames.size() - 1) {
-            animIt.second++;
-        } else {
-            animIt.second = 0;
-        }
+    if (!m_inMovieMode) {
+        // Update animations
+        for (auto& animIt : m_playingAnim) {
+            if (animIt.second < m_animData[animIt.first].frames.size() - 1) {
+                animIt.second++;
+            } else {
+                animIt.second = 0;
+            }
 
-        // Apply frame
-        const FvrVr::AnimationFrame& frame = m_animData.at(animIt.first).frames[animIt.second];
-        for (int idxBlock = 0; idxBlock < frame.offsetList.size(); idxBlock++) {
-            const uint32_t offset = frame.offsetList.at(idxBlock);
-            const uint8_t* blockData = frame.data.data() + idxBlock * 64 * 2;
+            // Apply frame
+            const FvrVr::AnimationFrame& frame = m_animData.at(animIt.first).frames[animIt.second];
+            for (int idxBlock = 0; idxBlock < frame.offsetList.size(); idxBlock++) {
+                const uint32_t offset = frame.offsetList.at(idxBlock);
+                const uint8_t* blockData = frame.data.data() + idxBlock * 64 * 2;
 
-            for (int idxPixel = 0; idxPixel < 64; idxPixel++) {
-                const uint8_t lsb = blockData[idxPixel * 2];
-                const uint8_t msb = blockData[idxPixel * 2 + 1];
+                for (int idxPixel = 0; idxPixel < 64; idxPixel++) {
+                    const uint8_t lsb = blockData[idxPixel * 2];
+                    const uint8_t msb = blockData[idxPixel * 2 + 1];
 
-                const uint16_t pixel = (msb << 8) | lsb;
+                    const uint16_t pixel = (msb << 8) | lsb;
 
-                if (isPanoramic()) {
-                    unsigned short* buffer = m_vrRenderer.cubemapBuffer();
-                    buffer[offset + m_fileVr.getWidth() * (idxPixel / 8) + (idxPixel % 8)] = pixel;
-                } else {
-                    m_frameBuffer[offset + m_fileVr.getWidth() * (idxPixel / 8) + (idxPixel % 8)] = pixel;
+                    if (isPanoramic()) {
+                        unsigned short* buffer = m_vrRenderer.cubemapBuffer();
+                        buffer[offset + m_fileVr.getWidth() * (idxPixel / 8) + (idxPixel % 8)] = pixel;
+                    } else {
+                        m_frameBuffer[offset + m_fileVr.getWidth() * (idxPixel / 8) + (idxPixel % 8)] = pixel;
+                    }
                 }
             }
         }
-    }
 
-    // Render
-    if (isPanoramic()) {
-        // Draw to surface
-        m_vrRenderer.render(
-            m_frameBuffer.data(),
-            m_yaw - 1.570795f, // Rotate 90 degrees
-            m_pitch,
-            m_roll,
-            WINDOW_FOV);
+        // Render
+        if (isPanoramic()) {
+            // Draw to surface
+            m_vrRenderer.render(
+                m_frameBuffer.data(),
+                m_yaw - 1.570795f, // Rotate 90 degrees
+                m_pitch,
+                m_roll,
+                WINDOW_FOV);
+        }
     }
 
     m_render.render(*parent);
@@ -224,7 +231,7 @@ Engine::~Engine()
 
 bool Engine::init()
 {
-    SDL_Init(SDL_INIT_VIDEO);
+    SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
 
     // Init engine objects
     if (!d_ptr->m_audio.init()) {
@@ -364,6 +371,11 @@ void Engine::registerScriptFunction(const std::string& name, const ScriptFunctio
     d_ptr->m_functions[name] = function;
 }
 
+bool Engine::inMovieMode() const
+{
+    return d_ptr->m_inMovieMode;
+}
+
 bool Engine::isPanoramic() const
 {
     return d_ptr->m_fileVr.getType() == FvrVr::Type::VR_STATIC_VR;
@@ -381,7 +393,7 @@ int Engine::pointedZone() const
 
 std::vector<uint16_t>& Engine::getFrameBuffer()
 {
-    return d_ptr->m_frameBuffer;
+    return inMovieMode() ? d_ptr->m_frameBufferMovie : d_ptr->m_frameBuffer;
 }
 
 void Engine::registerKeyWarp(int key, const std::string& warpName)
@@ -496,4 +508,98 @@ void Engine::playSound(const std::string& soundFile, uint8_t volume, bool loop)
 void Engine::stopSound(const std::string& soundFile)
 {
     d_ptr->m_audio.stopSound(soundFile);
+}
+
+void Engine::playMovie(const std::string& movieFile)
+{
+    Fvr4xm fvr4xm;
+    if (!fvr4xm.open("data/video/" + movieFile)) {
+        std::cerr << "Failed to open " << movieFile << std::endl;
+        return;
+    }
+    fvr4xm.printInfo();
+
+    // Init sound
+    SDL_AudioDeviceID deviceId = 0;
+    if (fvr4xm.hasSound()) {
+        Fvr4xm::TrackSound trackSound = fvr4xm.getTrackSound();
+
+        SDL_AudioSpec wav_spec;
+        SDL_zero(wav_spec);
+        wav_spec.freq = trackSound.sampleRate;
+        wav_spec.format = trackSound.sampleResolution == 16 ? AUDIO_S16 : AUDIO_S8;
+        wav_spec.channels = trackSound.channels;
+        wav_spec.samples = 4096;
+
+        // Ouvrir le périphérique audio
+        deviceId = SDL_OpenAudioDevice(NULL, 0, &wav_spec, NULL, 0);
+        if (deviceId == 0) {
+            // Gérer l'erreur
+            std::cerr << "SDL audio error: " << SDL_GetError() << std::endl;
+            return;
+        }
+
+        SDL_PauseAudioDevice(deviceId, 0);
+    }
+
+    d_ptr->m_inMovieMode = true;
+
+    // Render video
+    const double frameTimeMs = 1000.0 / fvr4xm.getFrameRate();
+    std::chrono::steady_clock::time_point start = std::chrono::steady_clock::now();
+    for (int i = 0; i < fvr4xm.getFrameCount(); ++i) {
+        // Time management
+        std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
+        std::chrono::duration<double> elapsed = now - start;
+        double elapsedMs = elapsed.count() * 1000.0;
+        double sleepTimeMs = frameTimeMs - elapsedMs;
+        if (sleepTimeMs > 0) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<int>(sleepTimeMs)));
+        } else {
+            std::cerr << "Frame " << i << " took too long: " << elapsedMs << " ms" << std::endl;
+        }
+        start = std::chrono::steady_clock::now();
+
+        // Frame reading
+        std::vector<uint8_t> dataAudio;
+        if (!fvr4xm.readFrame(d_ptr->m_frameBufferMovie, dataAudio)) {
+            break;
+        }
+
+        // Video
+        d_ptr->render();
+
+        // Audio
+        if (fvr4xm.hasSound()) {
+            SDL_QueueAudio(deviceId, dataAudio.data(), dataAudio.size());
+        }
+
+        // Events
+        SDL_Event event;
+        bool exit = false;
+        while (SDL_PollEvent(&event)) {
+            if (event.type == SDL_KEYDOWN) {
+                exit = true;
+                break;
+            } else if (event.type == SDL_MOUSEBUTTONDOWN) {
+                exit = true;
+                break;
+            }
+        }
+
+        if (exit) {
+            break;
+        }
+    }
+
+    // Wait for sound to finish
+    while (SDL_GetQueuedAudioSize(deviceId) > 0) {
+        SDL_Delay(100);
+    }
+
+    fvr4xm.close();
+
+    SDL_CloseAudioDevice(deviceId);
+
+    d_ptr->m_inMovieMode = false;
 }

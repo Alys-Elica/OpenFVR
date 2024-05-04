@@ -78,13 +78,6 @@ bool Render::init()
 
 void Render::render(Engine& engine)
 {
-    if (engine.isPanoramic()) {
-        SDL_SetRelativeMouseMode(SDL_TRUE);
-        SDL_WarpMouseInWindow(d_ptr->m_window, WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2);
-    } else {
-        SDL_SetRelativeMouseMode(SDL_FALSE);
-    }
-
     // Draw to renderer
     SDL_RenderClear(d_ptr->m_renderer);
 
@@ -97,43 +90,57 @@ void Render::render(Engine& engine)
     SDL_RenderCopy(d_ptr->m_renderer, texture, NULL, NULL);
     SDL_DestroyTexture(texture);
 
-    // Draw cursor
-    SDL_Surface* curImage = nullptr;
-
-    if (engine.isOnZone()) {
-        // Specific zone
-        SDL_SetRenderDrawColor(d_ptr->m_renderer, 255, 0, 0, 255);
-
-        // Draw cursor image
-        std::string cursorFile = engine.getWarpZoneCursor(engine.pointedZone());
-        if (!cursorFile.empty()) {
-            curImage = IMG_Load((IMAGE_DIR + cursorFile).c_str());
-        } else {
-            curImage = IMG_Load(IMAGE_DIR "cursor2.gif");
-        }
+    if (engine.inMovieMode()) {
+        SDL_ShowCursor(SDL_DISABLE);
     } else {
-        // No specific zone
-        SDL_SetRenderDrawColor(d_ptr->m_renderer, 255, 255, 255, 255);
+        SDL_ShowCursor(SDL_ENABLE);
 
-        curImage = IMG_Load(IMAGE_DIR "cursor1.gif");
-    }
-
-    if (curImage) {
-        // Remove black background
-        SDL_SetColorKey(curImage, SDL_TRUE, SDL_MapRGB(curImage->format, 0, 0, 0));
-
+        // Set mouse mode
         if (engine.isPanoramic()) {
-            // Draw cursor image
-            SDL_Texture* curTexture = SDL_CreateTextureFromSurface(d_ptr->m_renderer, curImage);
-            SDL_Rect curRect = { WINDOW_WIDTH / 2 - curImage->w / 2, WINDOW_HEIGHT / 2 - curImage->h / 2, curImage->w, curImage->h };
-            SDL_RenderCopy(d_ptr->m_renderer, curTexture, NULL, &curRect);
-            SDL_DestroyTexture(curTexture);
+            SDL_SetRelativeMouseMode(SDL_TRUE);
+            SDL_WarpMouseInWindow(d_ptr->m_window, WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2);
         } else {
-            SDL_Cursor* cursor = SDL_CreateColorCursor(curImage, curImage->w / 2, curImage->h / 2);
-            SDL_SetCursor(cursor);
+            SDL_SetRelativeMouseMode(SDL_FALSE);
         }
 
-        SDL_FreeSurface(curImage);
+        // Draw cursor
+        SDL_Surface* curImage = nullptr;
+
+        if (engine.isOnZone()) {
+            // Specific zone
+            SDL_SetRenderDrawColor(d_ptr->m_renderer, 255, 0, 0, 255);
+
+            // Draw cursor image
+            std::string cursorFile = engine.getWarpZoneCursor(engine.pointedZone());
+            if (!cursorFile.empty()) {
+                curImage = IMG_Load((IMAGE_DIR + cursorFile).c_str());
+            } else {
+                curImage = IMG_Load(IMAGE_DIR "cursor2.gif");
+            }
+        } else {
+            // No specific zone
+            SDL_SetRenderDrawColor(d_ptr->m_renderer, 255, 255, 255, 255);
+
+            curImage = IMG_Load(IMAGE_DIR "cursor1.gif");
+        }
+
+        if (curImage) {
+            // Remove black background
+            SDL_SetColorKey(curImage, SDL_TRUE, SDL_MapRGB(curImage->format, 0, 0, 0));
+
+            if (engine.isPanoramic()) {
+                // Draw cursor image
+                SDL_Texture* curTexture = SDL_CreateTextureFromSurface(d_ptr->m_renderer, curImage);
+                SDL_Rect curRect = { WINDOW_WIDTH / 2 - curImage->w / 2, WINDOW_HEIGHT / 2 - curImage->h / 2, curImage->w, curImage->h };
+                SDL_RenderCopy(d_ptr->m_renderer, curTexture, NULL, &curRect);
+                SDL_DestroyTexture(curTexture);
+            } else {
+                SDL_Cursor* cursor = SDL_CreateColorCursor(curImage, curImage->w / 2, curImage->h / 2);
+                SDL_SetCursor(cursor);
+            }
+
+            SDL_FreeSurface(curImage);
+        }
     }
 
     SDL_RenderPresent(d_ptr->m_renderer);

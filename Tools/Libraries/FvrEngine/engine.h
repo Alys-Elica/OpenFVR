@@ -25,6 +25,7 @@ public:
 
     void registerScriptFunction(const std::string& name, const ScriptFunction& function);
 
+    bool inMovieMode() const;
     bool isPanoramic() const;
     bool isOnZone() const;
     int pointedZone() const;
@@ -48,6 +49,8 @@ public:
 
     void playSound(const std::string& soundFile, uint8_t volume, bool loop = false);
     void stopSound(const std::string& soundFile);
+
+    void playMovie(const std::string& movieFile);
 
 private:
     class EnginePrivate;

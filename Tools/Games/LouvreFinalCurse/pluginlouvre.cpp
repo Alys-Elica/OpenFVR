@@ -24,8 +24,7 @@ void plgPlayMovie(Engine& engine, std::vector<FvrScript::InstructionParam> args)
 
     std::string movie = std::get<std::string>(args[0]);
 
-    // TODO: implement
-    std::cout << "plgPlayMovie: not implemented: " << movie << std::endl;
+    engine.playMovie(movie);
 }
 
 void plgCmp(Engine& engine, std::vector<FvrScript::InstructionParam> args)

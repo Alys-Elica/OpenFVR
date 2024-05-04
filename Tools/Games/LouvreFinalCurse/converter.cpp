@@ -95,7 +95,7 @@ void saveScript(const std::vector<uint8_t>& data, const std::string& fileOut)
     file.close();
 }
 
-void convertVideo(const std::string& path, const std::string& pathOut)
+void copyVideo(const std::string& path, const std::string& pathOut)
 {
     for (const auto& entry : std::filesystem::directory_iterator(path)) {
         std::string path = entry.path().string();
@@ -104,8 +104,11 @@ void convertVideo(const std::string& path, const std::string& pathOut)
         toLower(ext);
         toLower(name);
         if (ext == ".4xm") {
-            std::string cmd = "ffmpeg -i " + path + " -c:v libtheora -q:v 10 -c:a libvorbis -q:a 10 " + pathOut + name + ".ogv";
-            std::system(cmd.c_str());
+            try {
+                std::filesystem::copy(path, pathOut + name + ".4xm");
+            } catch (const std::exception&) {
+                // std::cerr << e.what() << '\n';
+            }
         }
     }
 }
@@ -147,9 +150,9 @@ int main(int argc, char* argv[])
     copyImage(pathData2, pathOutImage);
 
     // Videos
-    // convertVideo(pathInstall, pathOutVideo);
-    // convertVideo(pathData1, pathOutVideo);
-    // convertVideo(pathData2, pathOutVideo);
+    copyVideo(pathInstall, pathOutVideo);
+    copyVideo(pathData1, pathOutVideo);
+    copyVideo(pathData2, pathOutVideo);
 
     // ARN/VIT
     copyArnVit(pathInstall + "BDataHeader.vit", pathInstall + "BData1.arn", pathOutImage + "objects/");
