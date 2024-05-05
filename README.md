@@ -4,29 +4,28 @@ WIP documentation of 4X Technologies's Phoenix VR engine used in adventure games
 
 ## Current status
 
-Project is currently focused on documenting the interpreter engine (file formats, scripting, etc.) and creating some basic conversion tools.
+Most file formats are now at least partially understood and have some kind of reading tool.  
 
-### File formats
+Development of an experimental (read hacky, quick and dirty code hell) [engine](Tools/Libraries/FvrEngine/) has been started. It is able to *run* some games but needs some convertion (more like file copying).  
+What remains to be done in the engine is mostly script function/plugin implementation, 4XM video image decoding (audio works) and optimisation/better code.
 
-| File                              | Description        | Status     | Tool                                      |
-| --------------------------------- | ------------------ | ---------- | ----------------------------------------- |
-| [ARN/VIT](Doc/Formats/ARN_VIT.md) | Archive            | Partial    | [ArnVitConverter](Tools/ArnVitConverter/) |
-| DAT                               | Archive            | Partial    | [DatExtractor](Tools/DatExtractor/)       |
-| [LST](Doc/Formats/LST.md)         | Game script        | Unknown    | None                                      |
-| MTR                               | Bitmap image       | Partial    | [MtrComverter](Tools/MtrConverter/)       |
-| [PAK](Doc/Formats/PAK.md)         | Compressed archive | Partial    | [PakConverter](Tools/PakConverter/)       |
-| [TST](Doc/Formats/TST.md)         | Clickable zones    | Documented | [VrConverter](Tools/VrConverter/)         |
-| [VR](Doc/Formats/VR.md)           | Game images        | Partial    | [VrConverter](Tools/VrConverter/)         |
+From then on it is possible to start implementing games (`Louvre: The final curse` - aka `The messenger` - is being worked on [here](Tools/Games/LouvreFinalCurse/README.md)).
+
+## File formats
+
+| File                              | Description        | Documentation | Tool                                      |
+| --------------------------------- | ------------------ | ------------- | ----------------------------------------- |
+| [ARN/VIT](Doc/Formats/ARN_VIT.md) | Archive            | Partial       | [ArnVitConverter](Tools/ArnVitConverter/) |
+| DAT                               | Archive            | Partial       | [DatExtractor](Tools/DatExtractor/)       |
+| [LST](Doc/Formats/LST.md)         | Game script        | Partial       | None, but a basic parser exists in LibFVR |
+| MTR                               | Bitmap image       | Partial       | [MtrComverter](Tools/MtrConverter/)       |
+| [PAK](Doc/Formats/PAK.md)         | Compressed archive | Partial       | [PakConverter](Tools/PakConverter/)       |
+| [TST](Doc/Formats/TST.md)         | Clickable zones    | Documented    | [VrConverter](Tools/VrConverter/)         |
+| [VR](Doc/Formats/VR.md)           | Game images        | Partial       | [VrConverter](Tools/VrConverter/)         |
 
 ### Kaitai files
 
 Some Kaitai struct files and parsers exists, but they mainly are test stuff. Consider it an optional addition to documenting files, the real documentation should still be done in Markdown.
-
-## Future plans
-
-Once the engine is mostly documented, work will be initiated to eventually create an open source interpreter that can be used to play these games on modern platforms (Windows, Linux, MacOS and even consoles).
-
-Ideally, a more complete game engine could be made (including features like greater resolutions, better graphics and LUA scripting) to create new games while still providing older games compatibility (maybe through the use of one-way conversion tools).
 
 ## Contribute
 
