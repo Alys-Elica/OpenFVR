@@ -37,6 +37,7 @@ public:
 
     int fileCount() const;
     ArnVitFile getFile(const int index) const;
+    ArnVitFile getFile(const std::string& name) const;
     bool writeToBmp(const int index, const std::string& outputDirectory) const;
 
 private:

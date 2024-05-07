@@ -17,59 +17,33 @@ void toLower(std::string& str)
     std::transform(str.begin(), str.end(), str.begin(), ::tolower);
 }
 
-void copyFiles(const std::string& path, const std::string& pathOut, const std::string& extension)
+void copyFile(const std::string& path, const std::string& pathOut, const std::string& extension)
 {
-    for (const auto& entry : std::filesystem::directory_iterator(path)) {
-        std::string path = entry.path().string();
-        std::string ext = std::filesystem::path(path).extension().string();
-        std::string name = std::filesystem::path(path).filename().string();
-        toLower(ext);
-        toLower(name);
-        if (ext == extension) {
-            try {
-                std::filesystem::copy(path, pathOut + name);
-            } catch (const std::exception&) {
-                // std::cerr << e.what() << '\n';
-            }
+    std::string ext = std::filesystem::path(path).extension().string();
+    std::string name = std::filesystem::path(path).filename().string();
+    toLower(ext);
+    toLower(name);
+    if (ext == extension) {
+        try {
+            std::filesystem::copy(path, pathOut + name);
+        } catch (const std::exception&) {
+            // std::cerr << e.what() << '\n';
         }
     }
 }
 
-void copySound(const std::string& path, const std::string& pathOut)
+void copyFiles(const std::string& path, const std::string& pathOut, const std::string& extension)
 {
-    copyFiles(path, pathOut, ".wav");
+    for (const auto& entry : std::filesystem::directory_iterator(path)) {
+        std::string path = entry.path().string();
+        copyFile(path, pathOut, extension);
+    }
 }
 
 void copyImage(const std::string& path, const std::string& pathOut)
 {
     copyFiles(path, pathOut, ".gif");
     copyFiles(path, pathOut, ".pcx");
-}
-
-void copyVr(const std::string& path, const std::string& pathOut)
-{
-    copyFiles(path, pathOut, ".vr");
-}
-
-void copyTst(const std::string& path, const std::string& pathOut)
-{
-    copyFiles(path, pathOut, ".tst");
-}
-
-void copyArnVit(const std::string& pathVit, const std::string& pathArn, const std::string& pathOut)
-{
-    FvrArnVit fvrArnVit;
-    if (!fvrArnVit.open(pathVit, pathArn)) {
-        std::cerr << "Error opening ARN/VIT file: " << pathVit << " " << pathArn << std::endl;
-        return;
-    }
-
-    for (int i = 0; i < fvrArnVit.fileCount(); i++) {
-        FvrArnVit::ArnVitFile file = fvrArnVit.getFile(i);
-        std::string fileName = file.fileName;
-        toLower(fileName);
-        fvrArnVit.writeToBmp(i, pathOut + fileName);
-    }
 }
 
 std::vector<uint8_t> readScript(const std::string& fileIn)
@@ -133,16 +107,16 @@ int main(int argc, char* argv[])
     std::filesystem::create_directories(pathOut);
     std::filesystem::create_directories(pathOutAudio);
     std::filesystem::create_directories(pathOutImage);
-    std::filesystem::create_directories(pathOutImage + "objects/");
+    // std::filesystem::create_directories(pathOutImage + "objects/");
     std::filesystem::create_directories(pathOutVideo);
     std::filesystem::create_directories(pathOutWarp);
     std::filesystem::create_directories(pathOutTest);
     std::filesystem::create_directories(pathOutScript);
 
     // Sounds
-    copySound(pathInstall, pathOutAudio);
-    copySound(pathData1, pathOutAudio);
-    copySound(pathData2, pathOutAudio);
+    copyFiles(pathInstall, pathOutAudio, ".wav");
+    copyFiles(pathData1, pathOutAudio, ".wav");
+    copyFiles(pathData2, pathOutAudio, ".wav");
 
     // Images
     copyImage(pathInstall, pathOutImage);
@@ -155,16 +129,20 @@ int main(int argc, char* argv[])
     copyVideo(pathData2, pathOutVideo);
 
     // ARN/VIT
-    copyArnVit(pathInstall + "BDataHeader.vit", pathInstall + "BData1.arn", pathOutImage + "objects/");
+    copyFile(pathInstall + "BData1.arn", pathOut, ".arn");
+    copyFile(pathInstall + "BDataHeader.vit", pathOut, ".vit");
+
+    // Texts
+    copyFile(pathInstall + "Textes.txt", pathOut, ".txt");
 
     // Scripts
     std::vector<uint8_t> dataScript1 = readScript(pathData1 + "Script.pak");
-    // Patching script
+    // Patching script 1
     dataScript1[375'198] = ';';
     saveScript(dataScript1, pathOutScript + "script_1.lst");
 
     std::vector<uint8_t> dataScript2 = readScript(pathData2 + "Script2.pak");
-    // Patching script
+    // Patching script 2
     dataScript2[10'846] = '0';
     dataScript2[423'083] = ';';
     dataScript2[423'588] = ';';
@@ -174,14 +152,14 @@ int main(int argc, char* argv[])
     saveScript(dataScript2, pathOutScript + "script_2.lst");
 
     // VR
-    copyVr(pathInstall, pathOutWarp);
-    copyVr(pathData1, pathOutWarp);
-    copyVr(pathData2, pathOutWarp);
+    copyFiles(pathInstall, pathOutWarp, ".vr");
+    copyFiles(pathData1, pathOutWarp, ".vr");
+    copyFiles(pathData2, pathOutWarp, ".vr");
 
     // TST
-    copyTst(pathInstall, pathOutTest);
-    copyTst(pathData1, pathOutTest);
-    copyTst(pathData2, pathOutTest);
+    copyFiles(pathInstall, pathOutTest, ".tst");
+    copyFiles(pathData1, pathOutTest, ".tst");
+    copyFiles(pathData2, pathOutTest, ".tst");
 
     return 0;
 }

@@ -1,6 +1,7 @@
 #include "fvr_arnvit.h"
 
 #include <iostream>
+#include <map>
 
 #include "fvr/file.h"
 
@@ -13,6 +14,7 @@ private:
     File fileArn;
 
     std::vector<FvrArnVit::ArnVitFile> fileList;
+    std::map<std::string, int> fileNameMap;
 };
 
 /* Public */
@@ -70,6 +72,8 @@ bool FvrArnVit::open(const std::string& vitFileName, const std::string& arnFileN
         offset += file.fileSize;
 
         d_ptr->fileList.push_back(file);
+
+        d_ptr->fileNameMap[file.fileName] = i;
     }
 
     return true;
@@ -100,6 +104,16 @@ FvrArnVit::ArnVitFile FvrArnVit::getFile(const int index) const
     d_ptr->fileArn.read(file.data.data(), file.fileSize);
 
     return file;
+}
+
+FvrArnVit::ArnVitFile FvrArnVit::getFile(const std::string& name) const
+{
+    auto it = d_ptr->fileNameMap.find(name);
+    if (it == d_ptr->fileNameMap.end()) {
+        return {};
+    }
+
+    return getFile(it->second);
 }
 
 bool FvrArnVit::writeToBmp(const int index, const std::string& outputDirectory) const

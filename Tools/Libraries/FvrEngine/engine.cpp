@@ -512,6 +512,9 @@ void Engine::stopSound(const std::string& soundFile)
 
 void Engine::playMovie(const std::string& movieFile)
 {
+    // TODO: debug to skip movie playback, remove when done
+    return;
+
     Fvr4xm fvr4xm;
     if (!fvr4xm.open("data/video/" + movieFile)) {
         std::cerr << "Failed to open " << movieFile << std::endl;

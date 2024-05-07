@@ -1,15 +1,56 @@
 #include "pluginlouvre.h"
 
+#include <iomanip>
 #include <iostream>
+#include <map>
+#include <sstream>
 #include <string>
 #include <thread>
 
+#include <fvr_files/fvr_arnvit.h>
+
+#define INVENTORY_SIZE 8
+
 struct LouvreData {
-    std::vector<uint32_t> objectInventory;
+    int objectInventory[INVENTORY_SIZE] = { -1 };
+    int selectedObject = -1;
+
+    FvrArnVit arnVit;
 };
 
 LouvreData g_louvreData;
 
+/* Helper functions */
+void printPortefSelectedObject(Engine& engine, int objectId)
+{
+    // ObjXXX0.bmp -> selected inventory image
+    // ObjXXX1.bmp -> inventory image
+    std::stringstream ss;
+    ss << std::setw(4) << std::setfill('0') << objectId;
+    std::string imageName = "Obj" + ss.str() + ".bmp";
+    FvrArnVit::ArnVitFile file = g_louvreData.arnVit.getFile(imageName);
+
+    if (file.data.empty()) {
+        std::cerr << "Unable to read file data" << std::endl;
+        return;
+    }
+
+    // Offsets for selected inventory slot on screen
+    constexpr int xOffset = 103;
+    constexpr int yOffset = 122;
+
+    // Draw on screen
+    std::vector<uint16_t>& fb = engine.getFrameBuffer();
+    uint16_t* img = (uint16_t*)file.data.data();
+    for (int y = 0; y < file.height; ++y) {
+        for (int x = 0; x < file.width; ++x) {
+            uint16_t pix = img[y * file.width + x];
+            fb[(y + yOffset) * 640 + x + xOffset] = pix;
+        }
+    }
+}
+
+/* Plugin */
 void plgPlayMovie(Engine& engine, std::vector<FvrScript::InstructionParam> args)
 {
     if (args.size() != 1) {
@@ -149,9 +190,47 @@ void plgAffichePortef(Engine& engine, std::vector<FvrScript::InstructionParam> a
     }
 
     double value = std::get<double>(args[0]);
+    for (int i = 0; i < INVENTORY_SIZE; ++i) {
+        if (g_louvreData.objectInventory[i] == -1) {
+            // Skip empty slots
+            continue;
+        }
 
-    // TODO: implement
-    std::cout << "plgAffichePortef: not implemented: " << value << std::endl;
+        int objectId = g_louvreData.objectInventory[i];
+
+        // ObjXXX0.bmp -> selected inventory image
+        // ObjXXX1.bmp -> inventory image
+        std::stringstream ss;
+        ss << std::setw(4) << std::setfill('0') << (objectId + 1);
+        std::string imageName = "Obj" + ss.str() + ".bmp";
+        FvrArnVit::ArnVitFile file = g_louvreData.arnVit.getFile(imageName);
+
+        if (file.data.empty()) {
+            std::cerr << "Unable to read file data" << std::endl;
+            return;
+        }
+
+        // Offsets for each inventory slot on screen
+        constexpr int xOffsets[INVENTORY_SIZE] = { 380, 476, 564, 452, 548, 468, 557, 548 };
+        constexpr int yOffsets[INVENTORY_SIZE] = { 27, 27, 27, 114, 122, 203, 212, 298 };
+
+        // Draw on screen
+        std::vector<uint16_t>& fb = engine.getFrameBuffer();
+        uint16_t* img = (uint16_t*)file.data.data();
+        for (int y = 0; y < file.height; ++y) {
+            for (int x = 0; x < file.width; ++x) {
+                uint16_t pix = img[y * file.width + x];
+                fb[(y + yOffsets[i]) * 640 + x + xOffsets[i]] = pix;
+            }
+        }
+    }
+}
+
+void plgAfficheSelection(Engine& engine, std::vector<FvrScript::InstructionParam> args)
+{
+    if (g_louvreData.selectedObject != -1) {
+        printPortefSelectedObject(engine, g_louvreData.selectedObject);
+    }
 }
 
 void plgAfficheCoffre(Engine& engine, std::vector<FvrScript::InstructionParam> args)
@@ -489,10 +568,17 @@ void plgAddObject(Engine& engine, std::vector<FvrScript::InstructionParam> args)
     std::string cond = std::get<std::string>(args[1]);
     std::string notCond = std::get<std::string>(args[2]);
 
-    // TODO: implement correctly
-    g_louvreData.objectInventory.push_back((int)value);
-    engine.setStateValue(cond, 1.0);
-    engine.setStateValue(notCond, 0.0);
+    bool inserted = false;
+    for (int i = 0; i < INVENTORY_SIZE; ++i) {
+        if (g_louvreData.objectInventory[i] == -1) {
+            g_louvreData.objectInventory[i] = (int)value;
+            inserted = true;
+            break;
+        }
+    }
+
+    engine.setStateValue(cond, inserted ? 1.0 : 0.0);
+    engine.setStateValue(notCond, inserted ? 0.0 : 1.0);
 }
 
 void plgAddCoffreObject(Engine& engine, std::vector<FvrScript::InstructionParam> args)
@@ -530,7 +616,13 @@ void plgIsPresent(Engine& engine, std::vector<FvrScript::InstructionParam> args)
     std::string notCond = std::get<std::string>(args[2]);
 
     // TODO: implement correctly
-    bool result = std::find(g_louvreData.objectInventory.begin(), g_louvreData.objectInventory.end(), value) != g_louvreData.objectInventory.end();
+    bool result = false;
+    for (int i = 0; i < INVENTORY_SIZE; ++i) {
+        if (g_louvreData.objectInventory[i] == (int)value) {
+            result = true;
+            break;
+        }
+    }
     engine.setStateValue(cond, result ? 1.0 : 0.0);
     engine.setStateValue(notCond, result ? 0.0 : 1.0);
 }
@@ -548,9 +640,12 @@ void plgRemoveObject(Engine& engine, std::vector<FvrScript::InstructionParam> ar
     }
 
     double value = std::get<double>(args[0]);
-
-    // TODO: implement correctly
-    g_louvreData.objectInventory.erase(std::remove(g_louvreData.objectInventory.begin(), g_louvreData.objectInventory.end(), value), g_louvreData.objectInventory.end());
+    for (int i = 0; i < INVENTORY_SIZE; ++i) {
+        if (g_louvreData.objectInventory[i] == (int)value) {
+            g_louvreData.objectInventory[i] = -1;
+            break;
+        }
+    }
 }
 
 void plgStartTimer(Engine& engine, std::vector<FvrScript::InstructionParam> args)
@@ -695,6 +790,13 @@ void plgInit(Engine& engine, std::vector<FvrScript::InstructionParam> args)
 
     // TODO: implement
     std::cout << "plgInit: not implemented: " << value << " " << variable << std::endl;
+
+    bool ret = g_louvreData.arnVit.open("data/bdataheader.vit", "data/bdata1.arn");
+    if (!ret) {
+        std::cerr << "Failed to open arnVit" << std::endl;
+        return;
+    }
+
     engine.setStateValue(variable, 0.0);
 }
 
@@ -746,12 +848,6 @@ void plgGetMonde4(Engine& engine, std::vector<FvrScript::InstructionParam> args)
     engine.setStateValue(notCond, 1.0);
 }
 
-void plgAfficheSelection(Engine& engine, std::vector<FvrScript::InstructionParam> args)
-{
-    // TODO: implement
-    std::cout << "plgAfficheSelection: not implemented" << std::endl;
-}
-
 void plgSelect(Engine& engine, std::vector<FvrScript::InstructionParam> args)
 {
     if (args.size() != 3) {
@@ -768,8 +864,15 @@ void plgSelect(Engine& engine, std::vector<FvrScript::InstructionParam> args)
     std::string w = std::get<std::string>(args[1]);
     std::string z = std::get<std::string>(args[2]);
 
-    // TODO: implement
-    std::cout << "plgSelect: not implemented: " << value << " " << w << " " << z << std::endl;
+    int objectId = g_louvreData.objectInventory[(int)value - 1];
+    if (objectId == -1) {
+        std::cerr << "Invalid object id" << std::endl;
+        return;
+    }
+
+    g_louvreData.selectedObject = objectId;
+
+    printPortefSelectedObject(engine, objectId);
 }
 
 void plgDoAction(Engine& engine, std::vector<FvrScript::InstructionParam> args)
@@ -789,6 +892,12 @@ void plgDoAction(Engine& engine, std::vector<FvrScript::InstructionParam> args)
 
     // TODO: implement
     std::cout << "plgDoAction: not implemented: " << value << " " << z << std::endl;
+
+    // Value:
+    //      1: "Prendre"
+    //      2: "Voir"
+    //      4: "Associer"
+    //      5: "Discocier
 }
 
 void plgDiscocier(Engine& engine, std::vector<FvrScript::InstructionParam> args)
@@ -816,6 +925,7 @@ void registerPluginLouvre(Engine& engine)
     engine.registerScriptFunction("add", &plgAdd);
     engine.registerScriptFunction("initcoffre", &plgInitCoffre);
     engine.registerScriptFunction("afficheportef", &plgAffichePortef);
+    engine.registerScriptFunction("afficheselection", &plgAfficheSelection);
     engine.registerScriptFunction("affichecoffre", &plgAfficheCoffre);
     engine.registerScriptFunction("scroll", &plgScroll);
     engine.registerScriptFunction("selectportef", &plgSelectPorteF);
@@ -853,7 +963,6 @@ void registerPluginLouvre(Engine& engine)
     engine.registerScriptFunction("loadsave_enter_script", &plgLoadSaveEnterScript);
     engine.registerScriptFunction("loadcoffre", &plgLoadCoffre);
     engine.registerScriptFunction("getmonde4", &plgGetMonde4);
-    engine.registerScriptFunction("afficheselection", &plgAfficheSelection);
     engine.registerScriptFunction("select", &plgSelect);
     engine.registerScriptFunction("doaction", &plgDoAction);
     engine.registerScriptFunction("discocier", &plgDiscocier);
