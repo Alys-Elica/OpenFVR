@@ -9,10 +9,18 @@
 
 #include <fvr_files/fvr_arnvit.h>
 
-#define INVENTORY_SIZE 8
+constexpr int INVENTORY_SIZE = 8;
+
+// Offsets for each inventory slot on screen
+constexpr int PORTEF_OFFSETS_X[INVENTORY_SIZE] = { 380, 476, 564, 452, 548, 468, 557, 548 };
+constexpr int PORTEF_OFFSETS_Y[INVENTORY_SIZE] = { 27, 27, 27, 114, 122, 203, 212, 298 };
+
+// Offsets for selected inventory slot on screen
+constexpr int PORTEF_OFFSET_X_SELEC = 103;
+constexpr int PORTEF_OFFSET_Y_SELEC = 122;
 
 struct LouvreData {
-    int objectInventory[INVENTORY_SIZE] = { -1 };
+    int objectInventory[INVENTORY_SIZE] = { -1, -1, -1, -1, -1, -1, -1, -1 };
     int selectedObject = -1;
 
     FvrArnVit arnVit;
@@ -35,17 +43,13 @@ void printPortefSelectedObject(Engine& engine, int objectId)
         return;
     }
 
-    // Offsets for selected inventory slot on screen
-    constexpr int xOffset = 103;
-    constexpr int yOffset = 122;
-
     // Draw on screen
     std::vector<uint16_t>& fb = engine.getFrameBuffer();
     uint16_t* img = (uint16_t*)file.data.data();
     for (int y = 0; y < file.height; ++y) {
         for (int x = 0; x < file.width; ++x) {
             uint16_t pix = img[y * file.width + x];
-            fb[(y + yOffset) * 640 + x + xOffset] = pix;
+            fb[(y + PORTEF_OFFSET_Y_SELEC) * 640 + x + PORTEF_OFFSET_X_SELEC] = pix;
         }
     }
 }
@@ -210,17 +214,13 @@ void plgAffichePortef(Engine& engine, std::vector<FvrScript::InstructionParam> a
             return;
         }
 
-        // Offsets for each inventory slot on screen
-        constexpr int xOffsets[INVENTORY_SIZE] = { 380, 476, 564, 452, 548, 468, 557, 548 };
-        constexpr int yOffsets[INVENTORY_SIZE] = { 27, 27, 27, 114, 122, 203, 212, 298 };
-
         // Draw on screen
         std::vector<uint16_t>& fb = engine.getFrameBuffer();
         uint16_t* img = (uint16_t*)file.data.data();
         for (int y = 0; y < file.height; ++y) {
             for (int x = 0; x < file.width; ++x) {
                 uint16_t pix = img[y * file.width + x];
-                fb[(y + yOffsets[i]) * 640 + x + xOffsets[i]] = pix;
+                fb[(y + PORTEF_OFFSETS_Y[i]) * 640 + x + PORTEF_OFFSETS_X[i]] = pix;
             }
         }
     }
