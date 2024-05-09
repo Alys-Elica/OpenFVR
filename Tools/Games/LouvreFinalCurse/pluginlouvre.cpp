@@ -890,14 +890,27 @@ void plgDoAction(Engine& engine, std::vector<FvrScript::InstructionParam> args)
     double value = std::get<double>(args[0]);
     std::string z = std::get<std::string>(args[1]);
 
-    // TODO: implement
-    std::cout << "plgDoAction: not implemented: " << value << " " << z << std::endl;
-
-    // Value:
-    //      1: "Prendre"
-    //      2: "Voir"
-    //      4: "Associer"
-    //      5: "Discocier
+    switch ((int)value) {
+    case 1:
+        // Take
+        engine.setStateValue("inventaire", (double)g_louvreData.selectedObject);
+        break;
+    case 2:
+        // See
+        // TODO: implement
+        break;
+    case 4:
+        // Combine
+        // TODO: implement
+        break;
+    case 8:
+        // Separate
+        // TODO: implement
+        break;
+    default:
+        std::cerr << "plgDoAction: invalid action" << std::endl;
+        break;
+    }
 }
 
 void plgDiscocier(Engine& engine, std::vector<FvrScript::InstructionParam> args)
