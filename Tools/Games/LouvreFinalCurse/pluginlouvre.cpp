@@ -241,120 +241,63 @@ struct LouvreData {
 LouvreData g_louvreData;
 
 /* Helper functions */
+void drawImageToScreen(Engine& engine, const std::string& img, int x, int y)
+{
+    FvrArnVit::ArnVitFile file = g_louvreData.arnVit.getFile(img);
+    if (file.data.empty()) {
+        std::cerr << "Unable to read image file: " << img << std::endl;
+        return;
+    }
+
+    std::vector<uint16_t>& fb = engine.getFrameBuffer();
+    uint16_t* imgData = (uint16_t*)file.data.data();
+    for (int i = 0; i < file.height; ++i) {
+        for (int j = 0; j < file.width; ++j) {
+            fb[(y + i) * 640 + x + j] = imgData[i * file.width + j];
+        }
+    }
+}
+
 void printPortefSelectedObject(Engine& engine, int objectSlot)
 {
     int objectId = g_louvreData.objectInventory[objectSlot];
 
     // Print object selection
-    FvrArnVit::ArnVitFile file = g_louvreData.arnVit.getFile(g_objectMap[objectId].imgInventorySelected);
-    if (file.data.empty()) {
-        std::cerr << "Unable to read object selected image" << std::endl;
-        return;
-    }
-
-    std::vector<uint16_t>& fb = engine.getFrameBuffer();
-    uint16_t* img = (uint16_t*)file.data.data();
-    for (int y = 0; y < file.height; ++y) {
-        for (int x = 0; x < file.width; ++x) {
-            uint16_t pix = img[y * file.width + x];
-            fb[(y + PORTEF_OFFSET_Y_SELEC) * 640 + x + PORTEF_OFFSET_X_SELEC] = pix;
-        }
-    }
+    drawImageToScreen(engine, g_objectMap[objectId].imgInventorySelected, PORTEF_OFFSET_X_SELEC, PORTEF_OFFSET_Y_SELEC);
 
     // Print object description
-    file = g_louvreData.arnVit.getFile(INV_TEXT_BACKGROUND);
-    if (file.data.empty()) {
-        std::cerr << "Unable to read text background file" << std::endl;
-        return;
-    }
-
-    img = (uint16_t*)file.data.data();
-    for (int y = 0; y < file.height; ++y) {
-        for (int x = 0; x < file.width; ++x) {
-            uint16_t pix = img[y * file.width + x];
-            fb[(y + INV_TEXT_OFFSET_Y) * 640 + x + INV_TEXT_OFFSET_X] = pix;
-        }
-    }
+    drawImageToScreen(engine, INV_TEXT_BACKGROUND, INV_TEXT_OFFSET_X, INV_TEXT_OFFSET_Y);
 
     // Print action buttons
+    // Can use
     if (g_objectMap[objectId].canUse) {
-        file = g_louvreData.arnVit.getFile(INV_ACTION_BUTTON_USE_ENABLED);
+        drawImageToScreen(engine, INV_ACTION_BUTTON_USE_ENABLED, INV_ACTION_BUTTON_OFFSET_X_USE, INV_ACTION_BUTTON_OFFSET_Y_USE);
     } else {
-        file = g_louvreData.arnVit.getFile(INV_ACTION_BUTTON_USE_DISABLED);
+        drawImageToScreen(engine, INV_ACTION_BUTTON_USE_DISABLED, INV_ACTION_BUTTON_OFFSET_X_USE, INV_ACTION_BUTTON_OFFSET_Y_USE);
     }
 
-    if (file.data.empty()) {
-        std::cerr << "Unable to read action button file" << std::endl;
-        return;
-    }
-
-    img = (uint16_t*)file.data.data();
-    for (int y = 0; y < file.height; ++y) {
-        for (int x = 0; x < file.width; ++x) {
-            uint16_t pix = img[y * file.width + x];
-            fb[(y + INV_ACTION_BUTTON_OFFSET_Y_USE) * 640 + x + INV_ACTION_BUTTON_OFFSET_X_USE] = pix;
-        }
-    }
-
+    // Can see
     if (g_objectMap[objectId].canSee) {
-        file = g_louvreData.arnVit.getFile(INV_ACTION_BUTTON_SEE_ENABLED);
+        drawImageToScreen(engine, INV_ACTION_BUTTON_SEE_ENABLED, INV_ACTION_BUTTON_OFFSET_X_SEE, INV_ACTION_BUTTON_OFFSET_Y_SEE);
     } else {
-        file = g_louvreData.arnVit.getFile(INV_ACTION_BUTTON_SEE_DISABLED);
-    }
-
-    if (file.data.empty()) {
-        std::cerr << "Unable to read see action button file" << std::endl;
-        return;
-    }
-
-    img = (uint16_t*)file.data.data();
-    for (int y = 0; y < file.height; ++y) {
-        for (int x = 0; x < file.width; ++x) {
-            uint16_t pix = img[y * file.width + x];
-            fb[(y + INV_ACTION_BUTTON_OFFSET_Y_SEE) * 640 + x + INV_ACTION_BUTTON_OFFSET_X_SEE] = pix;
-        }
+        drawImageToScreen(engine, INV_ACTION_BUTTON_SEE_DISABLED, INV_ACTION_BUTTON_OFFSET_X_SEE, INV_ACTION_BUTTON_OFFSET_Y_SEE);
     }
 
     // TODO: implement combine action
 
+    // Separate
     if (!g_objectMap[objectId].separeTo.empty()) {
-        file = g_louvreData.arnVit.getFile(INV_ACTION_BUTTON_SEPARATE_ENABLED);
+        drawImageToScreen(engine, INV_ACTION_BUTTON_SEPARATE_ENABLED, INV_ACTION_BUTTON_OFFSET_X_SEPARATE, INV_ACTION_BUTTON_OFFSET_Y_SEPARATE);
     } else {
-        file = g_louvreData.arnVit.getFile(INV_ACTION_BUTTON_SEPARATE_DISABLED);
-    }
-
-    if (file.data.empty()) {
-        std::cerr << "Unable to read separe action button file" << std::endl;
-        return;
-    }
-
-    img = (uint16_t*)file.data.data();
-    for (int y = 0; y < file.height; ++y) {
-        for (int x = 0; x < file.width; ++x) {
-            uint16_t pix = img[y * file.width + x];
-            fb[(y + INV_ACTION_BUTTON_OFFSET_Y_SEPARATE) * 640 + x + INV_ACTION_BUTTON_OFFSET_X_SEPARATE] = pix;
-        }
+        drawImageToScreen(engine, INV_ACTION_BUTTON_SEPARATE_DISABLED, INV_ACTION_BUTTON_OFFSET_X_SEPARATE, INV_ACTION_BUTTON_OFFSET_Y_SEPARATE);
     }
 
     // Print slot selection
     for (int i = 0; i < INVENTORY_SIZE; ++i) {
         if (i == objectSlot) {
-            file = g_louvreData.arnVit.getFile(INV_SLOT_SELECTED_GREEN[i]);
+            drawImageToScreen(engine, INV_SLOT_SELECTED_GREEN[i], INV_SLOT_SELECTED_OFFSET_X[i], INV_SLOT_SELECTED_OFFSET_Y[i]);
         } else {
-            file = g_louvreData.arnVit.getFile(INV_SLOT_SELECTED_GREY[i]);
-        }
-
-        if (file.data.empty()) {
-            std::cerr << "Unable to read slot selection file" << std::endl;
-            return;
-        }
-
-        img = (uint16_t*)file.data.data();
-        for (int y = 0; y < file.height; ++y) {
-            for (int x = 0; x < file.width; ++x) {
-                uint16_t pix = img[y * file.width + x];
-                fb[(y + INV_SLOT_SELECTED_OFFSET_Y[i]) * 640 + x + INV_SLOT_SELECTED_OFFSET_X[i]] = pix;
-            }
+            drawImageToScreen(engine, INV_SLOT_SELECTED_GREY[i], INV_SLOT_SELECTED_OFFSET_X[i], INV_SLOT_SELECTED_OFFSET_Y[i]);
         }
     }
 }
@@ -507,21 +450,7 @@ void plgAffichePortef(Engine& engine, std::vector<FvrScript::InstructionParam> a
 
         int objectId = g_louvreData.objectInventory[i];
 
-        FvrArnVit::ArnVitFile file = g_louvreData.arnVit.getFile(g_objectMap[objectId].imgInventory);
-        if (file.data.empty()) {
-            std::cerr << "Unable to read file data" << std::endl;
-            return;
-        }
-
-        // Draw on screen
-        std::vector<uint16_t>& fb = engine.getFrameBuffer();
-        uint16_t* img = (uint16_t*)file.data.data();
-        for (int y = 0; y < file.height; ++y) {
-            for (int x = 0; x < file.width; ++x) {
-                uint16_t pix = img[y * file.width + x];
-                fb[(y + PORTEF_OFFSETS_Y[i]) * 640 + x + PORTEF_OFFSETS_X[i]] = pix;
-            }
-        }
+        drawImageToScreen(engine, g_objectMap[objectId].imgInventory, PORTEF_OFFSETS_X[i], PORTEF_OFFSETS_Y[i]);
     }
 }
 
