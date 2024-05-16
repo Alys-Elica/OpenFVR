@@ -30,15 +30,14 @@ std::vector<std::string> split(const std::string& s, char delimiter)
 }
 
 /* Private */
+struct Warp {
+    std::string name;
+    FvrScript::InstructionBlock initBlock;
+    std::map<uint32_t, FvrScript::InstructionBlock> testBlockList;
+};
+
 class FvrScript::FvrScriptPrivate {
     friend class FvrScript;
-
-public:
-    struct Warp {
-        std::string name;
-        InstructionBlock initBlock;
-        std::map<uint32_t, InstructionBlock> testBlockList;
-    };
 
 public:
     bool nextLine(std::string& line);
@@ -379,7 +378,7 @@ bool FvrScript::FvrScriptPrivate::addInstruction(
     }
 
     if (m_listWarps.find(warpName) == m_listWarps.end()) {
-        FvrScriptPrivate::Warp warp;
+        Warp warp;
         warp.name = warpName;
         m_listWarps[warpName] = warp;
     }
@@ -514,6 +513,158 @@ bool FvrScript::parseLst(const std::string& fileName)
     d_ptr->m_file.close();
 
     d_ptr->optimize();
+
+    return true;
+}
+
+std::string doubleToString(double value)
+{
+    std::ostringstream oss;
+    oss << std::setprecision(8) << std::noshowpoint << value;
+    return oss.str();
+}
+
+std::string instructionToString(const FvrScript::Instruction& instruction, int level)
+{
+    std::string str;
+    for (int i = 0; i < level; ++i) {
+        str += "\t";
+    }
+
+    if (instruction.name == "ifand" || instruction.name == "ifor") {
+        bool first = true;
+        for (const auto& subInstruction : instruction.subInstructions) {
+            if (first) {
+                first = false;
+            } else {
+                for (int i = 0; i < level; ++i) {
+                    str += "\t";
+                }
+            }
+            str += instruction.name + "=";
+            for (const auto& param : instruction.params) {
+                str += std::get<std::string>(param);
+                if (&param != &instruction.params.back()) {
+                    str += ",";
+                }
+            }
+            str += "\n";
+            str += instructionToString(subInstruction, level + 1);
+            if (&subInstruction != &instruction.subInstructions.back()) {
+                str += "\n";
+            }
+        }
+
+        return str;
+    } else if (instruction.name == "plugin") {
+        str += "plugin\n";
+        for (const auto& subInstruction : instruction.subInstructions) {
+            for (int i = 0; i < level + 1; ++i) {
+                str += "\t";
+            }
+            str += subInstruction.name + "(";
+            for (const auto& param : subInstruction.params) {
+                if (std::holds_alternative<double>(param)) {
+                    str += doubleToString(std::get<double>(param));
+                } else {
+                    str += std::get<std::string>(param);
+                }
+
+                if (&param != &subInstruction.params.back()) {
+                    str += ",";
+                }
+            }
+            str += ")\n";
+        }
+
+        for (int i = 0; i < level; ++i) {
+            str += "\t";
+        }
+        str += "endplugin";
+    } else if (instruction.name == "setzoom") {
+        str += instruction.name + "=" + std::get<std::string>(instruction.params[0]);
+    } else if (instruction.name == "gotowarp") {
+        str += instruction.name + "=" + std::get<std::string>(instruction.params[0]) + ".vr";
+    } else if (instruction.name == "set") {
+        str += instruction.name + " "
+            + std::get<std::string>(instruction.params[0]) + "="
+            + doubleToString(std::get<double>(instruction.params[1]));
+    } else {
+        str += instruction.name;
+        if (instruction.params.empty()) {
+            return str;
+        }
+        str += " ";
+        for (const auto& param : instruction.params) {
+            if (std::holds_alternative<double>(param)) {
+                str += doubleToString(std::get<double>(param));
+            } else {
+                str += std::get<std::string>(param);
+            }
+
+            if (&param != &instruction.params.back()) {
+                str += ",";
+            }
+        }
+    }
+
+    return str;
+}
+
+void printWarp(std::ofstream& file, const std::string& warpName, const Warp& warp)
+{
+    file << "[warp]=" << warpName << ".vr," << warpName << ".tst" << std::endl;
+
+    // Init block
+    if (!warp.initBlock.empty()) {
+        file << "\t[test]=-1" << std::endl;
+        for (const auto& instruction : warp.initBlock) {
+            file << instructionToString(instruction, 2) << std::endl;
+        }
+    }
+
+    // Tests
+    for (const auto& test : warp.testBlockList) {
+        file << "\t[test]=" << test.first << std::endl;
+        for (const auto& instruction : test.second) {
+            file << instructionToString(instruction, 2) << std::endl;
+        }
+    }
+}
+
+bool FvrScript::saveLst(const std::string& fileName)
+{
+    std::ofstream file(fileName);
+    if (!file) {
+        std::cerr << "Could not open file: " << fileName << std::endl;
+        return false;
+    }
+
+    // Variables
+    for (const std::string& var : d_ptr->m_listVariables) {
+        file << "[bool]=" << var << std::endl;
+    }
+
+    // Warps
+    printWarp(file, d_ptr->m_initWarp, d_ptr->m_listWarps[d_ptr->m_initWarp]);
+    for (const auto& warp : d_ptr->m_listWarps) {
+        if (warp.first == d_ptr->m_initWarp) {
+            continue;
+        }
+
+        printWarp(file, warp.first, warp.second);
+    }
+
+    // Subroutines
+    for (const auto& subroutine : d_ptr->m_listSubroutines) {
+        file << "label " << subroutine.first << std::endl;
+        for (const auto& instruction : subroutine.second.subInstructions) {
+            file << instructionToString(instruction, 1) << std::endl;
+        }
+        file << "return" << std::endl;
+    }
+
+    file.close();
 
     return true;
 }

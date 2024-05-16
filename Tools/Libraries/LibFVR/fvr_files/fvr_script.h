@@ -22,6 +22,7 @@ public:
     ~FvrScript();
 
     bool parseLst(const std::string& fileName);
+    bool saveLst(const std::string& fileName);
 
     InstructionBlock& getInitBlock(const std::string& warpName);
     InstructionBlock& getTestBlock(const std::string& warpName, const int& testId);

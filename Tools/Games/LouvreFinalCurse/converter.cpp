@@ -64,9 +64,23 @@ std::vector<uint8_t> readScript(const std::string& fileIn)
 
 void saveScript(const std::vector<uint8_t>& data, const std::string& fileOut)
 {
-    std::ofstream file(fileOut, std::ios::binary);
-    file.write(reinterpret_cast<const char*>(data.data()), data.size());
-    file.close();
+    const std::string tmpFileName = "tmp.lst";
+    std::ofstream fileTmp(tmpFileName, std::ios::binary);
+    fileTmp.write(reinterpret_cast<const char*>(data.data()), data.size());
+    fileTmp.close();
+
+    FvrScript fvrScript;
+    if (!fvrScript.parseLst(tmpFileName)) {
+        std::cerr << "Error parsing script: " << tmpFileName << std::endl;
+        return;
+    }
+
+    if (!fvrScript.saveLst(fileOut)) {
+        std::cerr << "Error saving script: " << fileOut << std::endl;
+        return;
+    }
+
+    std::filesystem::remove(tmpFileName);
 }
 
 void copyVideo(const std::string& path, const std::string& pathOut)
