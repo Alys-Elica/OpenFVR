@@ -20,6 +20,13 @@
 #include "engine/render.h"
 #include "engine/script.h"
 
+extern "C" {
+#include <libavcodec/avcodec.h>
+#include <libavformat/avformat.h>
+#include <libavutil/imgutils.h>
+#include <libswscale/swscale.h>
+}
+
 /* Constants */
 #define ENGINE_DATA_PATH "data/"
 #define ENGINE_FPS 30
@@ -513,25 +520,81 @@ void Engine::stopSound(const std::string& soundFile)
 void Engine::playMovie(const std::string& movieFile)
 {
     // TODO: debug to skip movie playback, remove when done
-    return;
+    // return;
 
-    Fvr4xm fvr4xm;
-    if (!fvr4xm.open("data/video/" + movieFile)) {
-        std::cerr << "Failed to open " << movieFile << std::endl;
+    std::string fileName = d_ptr->m_dataPath + "video/" + movieFile;
+
+    // Init libavcodec
+    AVFormatContext* formatContext = avformat_alloc_context();
+    if (avformat_open_input(&formatContext, fileName.c_str(), NULL, NULL) != 0) {
+        std::cout << "Unable to open file" << std::endl;
         return;
     }
-    fvr4xm.printInfo();
 
-    // Init sound
+    if (avformat_find_stream_info(formatContext, NULL) < 0) {
+        avformat_close_input(&formatContext);
+        std::cout << "Unable to find stream info" << std::endl;
+        return;
+    }
+
+    // Video
+    int videoStreamIndex = -1;
+    for (int i = 0; i < formatContext->nb_streams; i++) {
+        if (formatContext->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_VIDEO) {
+            videoStreamIndex = i;
+            break;
+        }
+    }
+
+    if (videoStreamIndex == -1) {
+        avformat_close_input(&formatContext);
+        std::cout << "Unable to find video stream" << std::endl;
+        return;
+    }
+
+    AVCodecParameters* localCodecParametersVideo = formatContext->streams[videoStreamIndex]->codecpar;
+    const AVCodec* localCodecVideo = avcodec_find_decoder(localCodecParametersVideo->codec_id);
+    if (localCodecVideo == NULL) {
+        avformat_close_input(&formatContext);
+        std::cout << "Unable to find codec" << std::endl;
+        return;
+    }
+
+    AVCodecContext* codecContextVideo = avcodec_alloc_context3(localCodecVideo);
+    if (avcodec_parameters_to_context(codecContextVideo, localCodecParametersVideo) < 0) {
+        avformat_close_input(&formatContext);
+        avcodec_close(codecContextVideo);
+        std::cout << "Unable to copy codec parameters" << std::endl;
+        return;
+    }
+
+    if (avcodec_open2(codecContextVideo, localCodecVideo, NULL) < 0) {
+        avformat_close_input(&formatContext);
+        avcodec_close(codecContextVideo);
+        std::cout << "Unable to open codec" << std::endl;
+        return;
+    }
+
+    // Audio
+    int audioSreamIndex = -1;
+    for (int i = 0; i < formatContext->nb_streams; i++) {
+        if (formatContext->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_AUDIO) {
+            audioSreamIndex = i;
+            break;
+        }
+    }
+
     SDL_AudioDeviceID deviceId = 0;
-    if (fvr4xm.hasSound()) {
-        Fvr4xm::TrackSound trackSound = fvr4xm.getTrackSound();
-
+    AVCodecParameters* localCodecParametersAudio = NULL;
+    AVCodec* localCodecAudio = NULL;
+    AVCodecContext* codecContextAudio = NULL;
+    if (audioSreamIndex >= 0) {
+        std::cout << "Audio stream found" << std::endl;
         SDL_AudioSpec wav_spec;
         SDL_zero(wav_spec);
-        wav_spec.freq = trackSound.sampleRate;
-        wav_spec.format = trackSound.sampleResolution == 16 ? AUDIO_S16 : AUDIO_S8;
-        wav_spec.channels = trackSound.channels;
+        wav_spec.freq = formatContext->streams[audioSreamIndex]->codecpar->sample_rate;
+        wav_spec.format = AUDIO_S16SYS;
+        wav_spec.channels = formatContext->streams[audioSreamIndex]->codecpar->channels;
         wav_spec.samples = 4096;
 
         // Ouvrir le périphérique audio
@@ -543,48 +606,121 @@ void Engine::playMovie(const std::string& movieFile)
         }
 
         SDL_PauseAudioDevice(deviceId, 0);
+
+        localCodecParametersAudio = formatContext->streams[audioSreamIndex]->codecpar;
+        // TODO: supposed to be const
+        localCodecAudio = (AVCodec*)avcodec_find_decoder(localCodecParametersAudio->codec_id);
+        if (localCodecAudio == NULL) {
+            avformat_close_input(&formatContext);
+            std::cout << "Unable to find codec" << std::endl;
+            return;
+        }
+
+        codecContextAudio = avcodec_alloc_context3(localCodecAudio);
+        if (avcodec_parameters_to_context(codecContextAudio, localCodecParametersAudio) < 0) {
+            avformat_close_input(&formatContext);
+            avcodec_close(codecContextVideo);
+            avcodec_close(codecContextAudio);
+            std::cout << "Unable to copy codec parameters" << std::endl;
+            return;
+        }
+
+        if (avcodec_open2(codecContextAudio, localCodecAudio, NULL) < 0) {
+            avformat_close_input(&formatContext);
+            avcodec_close(codecContextVideo);
+            avcodec_close(codecContextAudio);
+            std::cout << "Unable to open codec" << std::endl;
+            return;
+        }
     }
+
+    // Decoding
+    AVPacket* packet = av_packet_alloc();
+    AVFrame* frame = av_frame_alloc();
 
     d_ptr->m_inMovieMode = true;
 
     // Render video
-    const double frameTimeMs = 1000.0 / fvr4xm.getFrameRate();
+    double frameRate = av_q2d(formatContext->streams[videoStreamIndex]->r_frame_rate);
+    double waitTimeMs = 1000.0 / (double)frameRate;
+    std::cout << "Frame rate: " << frameRate << std::endl;
     std::chrono::steady_clock::time_point start = std::chrono::steady_clock::now();
-    for (int i = 0; i < fvr4xm.getFrameCount(); ++i) {
-        // Time management
-        std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
-        std::chrono::duration<double> elapsed = now - start;
-        double elapsedMs = elapsed.count() * 1000.0;
-        double sleepTimeMs = frameTimeMs - elapsedMs;
-        if (sleepTimeMs > 0) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<int>(sleepTimeMs)));
-        } else {
-            std::cerr << "Frame " << i << " took too long: " << elapsedMs << " ms" << std::endl;
-        }
-        start = std::chrono::steady_clock::now();
+    while (av_read_frame(formatContext, packet) >= 0) {
+        if (packet->stream_index == audioSreamIndex) {
+            if (audioSreamIndex >= 0) {
+                // Decode audio
+                if (avcodec_send_packet(codecContextAudio, packet) < 0) {
+                    continue;
+                }
 
-        // Frame reading
-        std::vector<uint8_t> dataAudio;
-        if (!fvr4xm.readFrame(d_ptr->m_frameBufferMovie, dataAudio)) {
-            break;
-        }
+                if (avcodec_receive_frame(codecContextAudio, frame) < 0) {
+                    continue;
+                }
 
-        // Video
-        d_ptr->render();
-
-        // Audio
-        if (fvr4xm.hasSound()) {
-            SDL_QueueAudio(deviceId, dataAudio.data(), dataAudio.size());
+                // Play audio
+                if (frame->nb_samples > 0) {
+                    SDL_QueueAudio(deviceId, frame->data[0], frame->nb_samples * frame->channels * 2);
+                }
+            }
         }
 
-        // Events
-        SDL_Event event;
+        if (packet->stream_index == videoStreamIndex) {
+            // Decode frame
+            if (avcodec_send_packet(codecContextVideo, packet) < 0) {
+                continue;
+            }
+
+            if (avcodec_receive_frame(codecContextVideo, frame) < 0) {
+                continue;
+            }
+
+            if (frame->width != 640 || frame->height != 480) {
+                std::cerr << "Invalid frame size" << std::endl;
+                continue;
+            }
+
+            d_ptr->m_frameBufferMovie.resize(frame->width * frame->height);
+            struct SwsContext* swsCtx = sws_getContext(
+                frame->width, frame->height, (AVPixelFormat)frame->format, // source
+                frame->width, frame->height, AV_PIX_FMT_RGB565, // destination
+                SWS_BILINEAR, NULL, NULL, NULL);
+
+            if (!swsCtx) {
+                std::cerr << "Failed to create swscale context" << std::endl;
+                return;
+            }
+
+            AVFrame* pFrameRGB565 = av_frame_alloc();
+            pFrameRGB565->format = AV_PIX_FMT_RGB565;
+            pFrameRGB565->width = frame->width;
+            pFrameRGB565->height = frame->height;
+            av_frame_get_buffer(pFrameRGB565, 0);
+
+            sws_scale(swsCtx, frame->data, frame->linesize, 0, frame->height, pFrameRGB565->data, pFrameRGB565->linesize);
+            std::memcpy(d_ptr->m_frameBufferMovie.data(), pFrameRGB565->data[0], frame->width * frame->height * 2);
+
+            // Cleanup
+            sws_freeContext(swsCtx);
+            av_frame_free(&pFrameRGB565);
+
+            d_ptr->render();
+
+            // Wait for next frame
+            std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+            std::chrono::milliseconds elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+            if (elapsed.count() < waitTimeMs) {
+                std::this_thread::sleep_for(std::chrono::milliseconds((int)(waitTimeMs - elapsed.count())));
+            }
+            start = std::chrono::steady_clock::now();
+        }
+
+        av_packet_unref(packet);
+
+        // Event
         bool exit = false;
+        SDL_Event event;
         while (SDL_PollEvent(&event)) {
-            if (event.type == SDL_KEYDOWN) {
-                exit = true;
-                break;
-            } else if (event.type == SDL_MOUSEBUTTONDOWN) {
+            if (event.type == SDL_KEYDOWN || event.type == SDL_MOUSEBUTTONDOWN) {
                 exit = true;
                 break;
             }
@@ -595,14 +731,13 @@ void Engine::playMovie(const std::string& movieFile)
         }
     }
 
-    // Wait for sound to finish
-    while (SDL_GetQueuedAudioSize(deviceId) > 0) {
-        SDL_Delay(100);
+    av_frame_free(&frame);
+    av_packet_free(&packet);
+    avcodec_close(codecContextVideo);
+    if (audioSreamIndex != NULL) {
+        SDL_CloseAudioDevice(deviceId);
     }
-
-    fvr4xm.close();
-
-    SDL_CloseAudioDevice(deviceId);
+    avformat_close_input(&formatContext);
 
     d_ptr->m_inMovieMode = false;
 }

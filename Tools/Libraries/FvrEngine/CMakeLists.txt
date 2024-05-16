@@ -46,3 +46,23 @@ target_link_libraries(${PROJECT_NAME} PRIVATE ${SDL2_LIBRARIES})
 # SDL2_image
 find_package(SDL2_image REQUIRED)
 target_link_libraries(${PROJECT_NAME} PRIVATE $<IF:$<TARGET_EXISTS:SDL2_image::SDL2_image>,SDL2_image::SDL2_image,SDL2_image::SDL2_image-static>)
+
+# FFMPEG
+# find_package(FFMPEG REQUIRED)
+# target_include_directories(${PROJECT_NAME} PRIVATE ${FFMPEG_INCLUDE_DIRS})
+# target_link_directories(${PROJECT_NAME} PRIVATE ${FFMPEG_LIBRARY_DIRS})
+# target_link_libraries(${PROJECT_NAME} PRIVATE ${FFMPEG_LIBRARIES})
+
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(LIBAV REQUIRED IMPORTED_TARGET
+    libavdevice
+    libavfilter
+    libavformat
+    libavcodec
+    libswresample
+    libswscale
+    libavutil
+)
+target_link_libraries(${PROJECT_NAME} PRIVATE
+    PkgConfig::LIBAV
+)
