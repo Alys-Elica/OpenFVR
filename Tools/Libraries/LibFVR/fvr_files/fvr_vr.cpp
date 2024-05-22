@@ -265,6 +265,10 @@ bool FvrVr::getImage(Image& image) const
 
 bool FvrVr::getImageCubemap(Image& image) const
 {
+    if (getType() != Type::VR_STATIC_VR) {
+        return false;
+    }
+
     if (d_ptr->m_rgb565Data.empty()) {
         return false;
     }
@@ -282,6 +286,20 @@ bool FvrVr::getImageCubemap(Image& image) const
 const std::vector<uint8_t>& FvrVr::getData() const
 {
     return d_ptr->m_rgb565Data;
+}
+
+const std::vector<uint8_t> FvrVr::getDataCrossCubemap() const
+{
+    if (getType() != Type::VR_STATIC_VR) {
+        return {};
+    }
+
+    std::vector<uint8_t> cubemapRgb565Data;
+    if (!d_ptr->rgb565DataToCubemap(d_ptr->m_rgb565Data, cubemapRgb565Data)) {
+        return {};
+    }
+
+    return cubemapRgb565Data;
 }
 
 std::vector<std::string> FvrVr::getAnimationList() const
@@ -303,5 +321,57 @@ bool FvrVr::getAnimation(const std::string& animName, Animation& animation) cons
     }
 
     animation = it->second;
+    return true;
+}
+
+bool FvrVr::getAnimationCrossCubemap(const std::string& animName, Animation& animation) const
+{
+    if (getType() != Type::VR_STATIC_VR) {
+        return false;
+    }
+
+    if (!getAnimation(animName, animation)) {
+        return false;
+    }
+
+    for (auto& frame : animation.frames) {
+        for (uint32_t& offset : frame.offsetList) {
+            // Convert offset from 256x6144 original to 2048x1536 cross cubemap format
+            size_t faceOffsets[6 * 4] = {
+                2048u * 512u * 2u * 2u + 512u * 2u,
+                2048u * 512u * 2u * 2u + 512u * 2u + 256u * 2u,
+                2048u * 512u * 2u * 2u + 512u * 2u + 2048u * 256u * 2u + 256u * 2u,
+                2048u * 512u * 2u * 2u + 512u * 2u + 2048u * 256u * 2u,
+
+                2048u * 512u * 2u,
+                2048u * 512u * 2u + 256u * 2u,
+                2048u * 512u * 2u + 2048u * 256u * 2u + 256u * 2u,
+                2048u * 512u * 2u + 2048u * 256u * 2u,
+
+                512u * 2u,
+                512u * 2u + 256u * 2u,
+                512u * 2u + 2048u * 256u * 2u + 256u * 2u,
+                512u * 2u + 2048u * 256u * 2u,
+
+                2048u * 512u * 2u + 512u * 2u * 2u,
+                2048u * 512u * 2u + 512u * 2u * 2u + 256u * 2u,
+                2048u * 512u * 2u + 512u * 2u * 2u + 2048u * 256u * 2u + 256u * 2u,
+                2048u * 512u * 2u + 512u * 2u * 2u + 2048u * 256u * 2u,
+
+                2048u * 512u * 2u + 512u * 2u,
+                2048u * 512u * 2u + 512u * 2u + 256u * 2u,
+                2048u * 512u * 2u + 512u * 2u + 2048u * 256u * 2u + 256u * 2u,
+                2048u * 512u * 2u + 512u * 2u + 2048u * 256u * 2u,
+
+                2048u * 512u * 2u + 512u * 2u * 3u,
+                2048u * 512u * 2u + 512u * 2u * 3u + 256u * 2u,
+                2048u * 512u * 2u + 512u * 2u * 3u + 2048u * 256u * 2u + 256u * 2u,
+                2048u * 512u * 2u + 512u * 2u * 3u + 2048u * 256u * 2u,
+            };
+            int mod = offset % (256 * 256);
+            offset = faceOffsets[offset / (256 * 256)] + mod % 256 * 2 + mod / 256 * 2048 * 2;
+        }
+    }
+
     return true;
 }

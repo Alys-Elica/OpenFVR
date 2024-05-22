@@ -48,10 +48,12 @@ public:
     bool getImageCubemap(Image& image) const;
 
     const std::vector<uint8_t>& getData() const;
+    const std::vector<uint8_t> getDataCrossCubemap() const;
 
     // Animation data
     std::vector<std::string> getAnimationList() const;
     bool getAnimation(const std::string& animName, Animation& animation) const;
+    bool getAnimationCrossCubemap(const std::string& animName, Animation& animation) const;
 
 private:
     class FvrVrPrivate;
