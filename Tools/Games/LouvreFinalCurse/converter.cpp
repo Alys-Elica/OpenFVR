@@ -55,7 +55,7 @@ std::vector<uint8_t> readScript(const std::string& fileIn)
     }
 
     if (fvrPak.fileCount() != 1) {
-        std::cerr << "Error opening PAK file: " << fileIn << std::endl;
+        std::cerr << "No file in PAK file: " << fileIn << std::endl;
         return {};
     }
 

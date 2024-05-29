@@ -4,7 +4,7 @@
 #include <iostream>
 #include <vector>
 
-#include "fvr/file.h"
+#include "fvr/datastream.h"
 
 /* Private */
 struct DatFile {
@@ -17,7 +17,7 @@ class FvrDat::FvrDatPrivate {
     friend class FvrDat;
 
 private:
-    File fileDat;
+    std::ifstream fileDat;
     std::vector<DatFile> listFile;
     size_t dataOffset = -1;
 };
@@ -26,8 +26,6 @@ private:
 FvrDat::FvrDat()
 {
     d_ptr = new FvrDatPrivate();
-
-    d_ptr->fileDat.setEndian(std::endian::little);
 }
 
 FvrDat::~FvrDat()
@@ -38,42 +36,45 @@ FvrDat::~FvrDat()
 bool FvrDat::open(const std::string& datFileName)
 {
     d_ptr->fileDat.open(datFileName, std::ios_base::in | std::ios_base::binary);
-    if (!d_ptr->fileDat.isOpen()) {
+    if (!d_ptr->fileDat.is_open()) {
         std::cerr << "Failed to open " << datFileName << std::endl;
         return false;
     }
 
     d_ptr->listFile.clear();
 
+    DataStream ds(&d_ptr->fileDat);
+    ds.setEndian(std::endian::little);
+
     // Check magic
-    d_ptr->fileDat.seek(0);
+    d_ptr->fileDat.seekg(0);
     std::string magic(4, '\0');
-    d_ptr->fileDat.read(magic.data(), 4);
+    ds.read(4, (uint8_t*)magic.data());
     if (magic != "BIGF") {
         std::cerr << "Invalid magic" << std::endl;
         return false;
     }
 
     // Read file index
-    d_ptr->fileDat.seek(0x50);
-    char current;
-    d_ptr->fileDat.read(&current, 1);
+    d_ptr->fileDat.seekg(0x50);
+    uint8_t current;
+    ds.read(1, &current);
     do {
         DatFile file;
         while (current != '\0') {
             file.name += current;
-            d_ptr->fileDat.read(&current, 1);
+            ds.read(1, &current);
         }
 
-        d_ptr->fileDat >> file.size;
-        d_ptr->fileDat >> file.offset;
+        ds >> file.size;
+        ds >> file.offset;
 
         d_ptr->listFile.push_back(file);
 
-        d_ptr->fileDat.read(&current, 1);
+        ds.read(1, &current);
     } while (current != '\0');
 
-    d_ptr->dataOffset = d_ptr->fileDat.tell();
+    d_ptr->dataOffset = d_ptr->fileDat.tellg();
 
     return true;
 }
@@ -85,7 +86,7 @@ void FvrDat::close()
 
 bool FvrDat::isOpen() const
 {
-    return d_ptr->fileDat.isOpen();
+    return d_ptr->fileDat.is_open();
 }
 
 int FvrDat::fileCount() const
@@ -117,9 +118,9 @@ std::vector<uint8_t> FvrDat::fileData(const int& index) const
         return std::vector<uint8_t>();
     }
 
-    d_ptr->fileDat.seek(d_ptr->listFile[index].offset + d_ptr->dataOffset);
+    d_ptr->fileDat.seekg(d_ptr->listFile[index].offset + d_ptr->dataOffset);
     std::vector<uint8_t> data(d_ptr->listFile[index].size);
-    d_ptr->fileDat.read(data.data(), d_ptr->listFile[index].size);
+    d_ptr->fileDat.read((char*)data.data(), d_ptr->listFile[index].size);
 
     return data;
 }

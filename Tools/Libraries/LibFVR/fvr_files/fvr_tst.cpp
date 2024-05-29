@@ -3,7 +3,7 @@
 #include <iostream>
 #include <vector>
 
-#include <fvr/file.h>
+#include "fvr/datastream.h"
 
 /* Private */
 class FvrTst::FvrTstPrivate {
@@ -37,15 +37,17 @@ bool FvrTst::loadFile(const std::string& fileName)
 {
     d_ptr->m_listZone.clear();
 
-    File tstFile;
-    tstFile.setEndian(std::endian::little);
-    if (!tstFile.open(fileName, std::ios::binary | std::ios::in)) {
+    std::ifstream tstFile(fileName, std::ios::binary | std::ios::in);
+    if (!tstFile.is_open()) {
         std::cerr << "Failed to open TST file" << std::endl;
         return false;
     }
 
+    DataStream ds(&tstFile);
+    ds.setEndian(std::endian::little);
+
     uint32_t zoneCount = 0;
-    tstFile >> zoneCount;
+    ds >> zoneCount;
 
     for (uint32_t i = 0; i < zoneCount; i++) {
         // TODO: some more checks ?
@@ -53,10 +55,10 @@ bool FvrTst::loadFile(const std::string& fileName)
 
         zone.index = i;
 
-        tstFile >> zone.x1;
-        tstFile >> zone.x2;
-        tstFile >> zone.y1;
-        tstFile >> zone.y2;
+        ds >> zone.x1;
+        ds >> zone.x2;
+        ds >> zone.y1;
+        ds >> zone.y2;
 
         d_ptr->m_listZone.push_back(zone);
     }

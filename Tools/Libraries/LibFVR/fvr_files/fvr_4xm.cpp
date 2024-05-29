@@ -6,7 +6,6 @@
 #include <vector>
 
 #include "fvr/datastream.h"
-#include "fvr/file.h"
 #include "internal/dct.h"
 
 /* Private */
@@ -28,7 +27,7 @@ public:
     bool readMovi();
 
 private:
-    File m_file;
+    std::ifstream m_file;
 
     std::string m_name;
     std::string m_info;
@@ -42,7 +41,7 @@ private:
 
 void Fvr4xm::Fvr4xmPrivate::logFileError(const std::string& message)
 {
-    std::cerr << "[4XM](off: " << m_file.tell() << ") - " << message << std::endl;
+    std::cerr << "[4XM](off: " << m_file.tellg() << ") - " << message << std::endl;
 }
 
 /**
@@ -287,7 +286,7 @@ bool Fvr4xm::Fvr4xmPrivate::readTrk_()
         return false;
     }
 
-    size_t offsetTrk = m_file.tell();
+    size_t offsetTrk = m_file.tellg();
 
     // TRK_ header
     char trk_[5] = { 0 };
@@ -297,7 +296,7 @@ bool Fvr4xm::Fvr4xmPrivate::readTrk_()
         return false;
     }
 
-    while (m_file.tell() < offsetTrk + chunkTrk_ListSize) {
+    while (m_file.tellg() < offsetTrk + chunkTrk_ListSize) {
         uint32_t chunkSubTrkListSize = readChunkList();
         if (chunkSubTrkListSize == 0) {
             logFileError("Invalid ?TRK chunk list");
@@ -322,7 +321,7 @@ bool Fvr4xm::Fvr4xmPrivate::readTrk_()
         }
     }
 
-    m_file.seek(offsetTrk + chunkTrk_ListSize);
+    m_file.seekg(offsetTrk + chunkTrk_ListSize);
 
     return true;
 }
@@ -335,7 +334,7 @@ bool Fvr4xm::Fvr4xmPrivate::readMovi()
         return false;
     }
 
-    size_t offsetMovi = m_file.tell();
+    size_t offsetMovi = m_file.tellg();
 
     // MOVI header
     char movi[5] = { 0 };
@@ -345,16 +344,16 @@ bool Fvr4xm::Fvr4xmPrivate::readMovi()
         return false;
     }
 
-    size_t offsetMoviData = m_file.tell();
+    size_t offsetMoviData = m_file.tellg();
     m_frameCount = 0;
-    while (m_file.tell() < offsetMovi + chunkMovi_ListSize) {
+    while (m_file.tellg() < offsetMovi + chunkMovi_ListSize) {
         uint32_t chunkSubMoviListSize = readChunkList();
         if (chunkSubMoviListSize == 0) {
             logFileError("Invalid ?MOVI chunk list");
             return false;
         }
 
-        size_t curFrameOffset = m_file.tell();
+        size_t curFrameOffset = m_file.tellg();
 
         char fram[5] = { 0 };
         m_file.read(fram, 4);
@@ -364,7 +363,7 @@ bool Fvr4xm::Fvr4xmPrivate::readMovi()
             return false;
         }
 
-        while (m_file.tell() < curFrameOffset + chunkSubMoviListSize) {
+        while (m_file.tellg() < curFrameOffset + chunkSubMoviListSize) {
             char chunkType[5] = { 0 };
             m_file.read(chunkType, 4);
             std::string chunkTypeStr(chunkType);
@@ -377,13 +376,13 @@ bool Fvr4xm::Fvr4xmPrivate::readMovi()
                 return false;
             }
 
-            m_file.seek(m_file.tell() + (std::streampos)chunkSize);
+            m_file.seekg(m_file.tellg() + (std::streampos)chunkSize);
         }
 
         ++m_frameCount;
     }
 
-    m_file.seek(offsetMoviData);
+    m_file.seekg(offsetMoviData);
 
     return true;
 }
@@ -401,7 +400,8 @@ Fvr4xm::~Fvr4xm()
 
 bool Fvr4xm::open(const std::string& videoName)
 {
-    if (!d_ptr->m_file.open(videoName, std::ios::in | std::ios::binary)) {
+    d_ptr->m_file.open(videoName, std::ios::in | std::ios::binary);
+    if (!d_ptr->m_file.is_open()) {
         return false;
     }
 
@@ -439,7 +439,7 @@ void Fvr4xm::close()
 
 bool Fvr4xm::isOpen() const
 {
-    return d_ptr->m_file.isOpen();
+    return d_ptr->m_file.is_open();
 }
 
 void Fvr4xm::printInfo() const
@@ -573,7 +573,7 @@ bool Fvr4xm::readFrame(std::vector<uint16_t>& dataVideo, std::vector<uint8_t>& d
         return false;
     }
 
-    size_t curFrameOffset = d_ptr->m_file.tell();
+    size_t curFrameOffset = d_ptr->m_file.tellg();
 
     char fram[5] = { 0 };
     d_ptr->m_file.read(fram, 4);
@@ -583,7 +583,7 @@ bool Fvr4xm::readFrame(std::vector<uint16_t>& dataVideo, std::vector<uint8_t>& d
         return false;
     }
 
-    while (d_ptr->m_file.tell() < curFrameOffset + chunkSubMoviListSize) {
+    while (d_ptr->m_file.tellg() < curFrameOffset + chunkSubMoviListSize) {
         char chunkType[5] = { 0 };
         d_ptr->m_file.read(chunkType, 4);
 
@@ -591,12 +591,11 @@ bool Fvr4xm::readFrame(std::vector<uint16_t>& dataVideo, std::vector<uint8_t>& d
         d_ptr->m_file >> chunkSize;
 
         std::vector<uint8_t> chunkData(chunkSize);
-        d_ptr->m_file.read(chunkData.data(), chunkSize);
+        d_ptr->m_file.read((char*)chunkData.data(), chunkSize);
 
         if (strcmp(chunkType, "ifrm") == 0) {
-            DataStream ds;
+            DataStream ds(&chunkData);
             ds.setEndian(std::endian::little);
-            ds.setData(chunkData);
 
             uint32_t unkn1;
             ds >> unkn1;
@@ -604,8 +603,8 @@ bool Fvr4xm::readFrame(std::vector<uint16_t>& dataVideo, std::vector<uint8_t>& d
             uint32_t bitstreamSize;
             ds >> bitstreamSize;
 
-            std::vector<uint8_t> bitstream;
-            ds.read(bitstream, bitstreamSize);
+            std::vector<uint8_t> bitstream(bitstreamSize);
+            ds.read(bitstreamSize, bitstream.data());
 
             uint32_t prefixStreamSize; // Size of the prefix stream divided by 4
             ds >> prefixStreamSize;
@@ -614,8 +613,8 @@ bool Fvr4xm::readFrame(std::vector<uint16_t>& dataVideo, std::vector<uint8_t>& d
             ds >> tokenCount;
 
             // Prefix stream
-            std::vector<uint8_t> prefixStream;
-            ds.read(prefixStream, prefixStreamSize * 4);
+            std::vector<uint8_t> prefixStream(prefixStreamSize * 4);
+            ds.read(prefixStreamSize * 4, prefixStream.data());
 
             // TODO
             if (d_ptr->m_videoTracks.empty()) {
@@ -633,9 +632,8 @@ bool Fvr4xm::readFrame(std::vector<uint16_t>& dataVideo, std::vector<uint8_t>& d
                 break;
             }
 
-            DataStream ds;
+            DataStream ds(&chunkData);
             ds.setEndian(std::endian::little);
-            ds.setData(chunkData);
 
             uint32_t unkn; // Probably the track number (need to check)
             ds >> unkn;
@@ -648,13 +646,12 @@ bool Fvr4xm::readFrame(std::vector<uint16_t>& dataVideo, std::vector<uint8_t>& d
                 break;
             }
 
+            dataAudio.resize(soundSize);
             switch (d_ptr->m_soundTracks[0].type) {
             case AudioType::AT_PCM:
-                ds.read(dataAudio, soundSize);
+                ds.read(soundSize, dataAudio.data());
                 break;
             case AudioType::AT_4X_IMA_ADPCM: {
-                dataAudio.resize(soundSize);
-
                 if (d_ptr->m_soundTracks[0].channels == 1) {
                     // Mono
                     int16_t initialPredictor;

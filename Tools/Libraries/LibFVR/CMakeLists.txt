@@ -12,7 +12,6 @@ set(PROJECT_FILE_HEADERS
     libfvr_globals.h
 
     fvr/datastream.h
-    fvr/file.h
     fvr/huffmantable.h
     fvr/image.h
     fvr/inversebitstream.h
@@ -31,7 +30,6 @@ set(PROJECT_FILE_HEADERS
     
 set(PROJECT_FILE_SOURCES
     fvr/datastream.cpp
-    fvr/file.cpp
     fvr/huffmantable.cpp
     fvr/image.cpp
     fvr/inversebitstream.cpp

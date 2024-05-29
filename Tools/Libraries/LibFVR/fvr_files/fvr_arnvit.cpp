@@ -1,17 +1,18 @@
 #include "fvr_arnvit.h"
 
+#include <fstream>
 #include <iostream>
 #include <map>
 
-#include "fvr/file.h"
+#include "fvr/datastream.h"
 
 /* Private */
 class FvrArnVit::FvrArnVitPrivate {
     friend class FvrArnVit;
 
 private:
-    File fileVit;
-    File fileArn;
+    std::ifstream fileVit;
+    std::ifstream fileArn;
 
     std::vector<FvrArnVit::ArnVitFile> fileList;
     std::map<std::string, int> fileNameMap;
@@ -30,12 +31,14 @@ FvrArnVit::~FvrArnVit()
 
 bool FvrArnVit::open(const std::string& vitFileName, const std::string& arnFileName)
 {
-    if (!d_ptr->fileVit.open(vitFileName, std::ios::binary | std::ios::in)) {
+    d_ptr->fileVit.open(vitFileName, std::ios::binary | std::ios::in);
+    if (!d_ptr->fileVit.is_open()) {
         std::cerr << "Unable to open VIT file " << vitFileName << std::endl;
         return false;
     }
 
-    if (!d_ptr->fileArn.open(arnFileName, std::ios::binary | std::ios::in)) {
+    d_ptr->fileArn.open(arnFileName, std::ios::binary | std::ios::in);
+    if (!d_ptr->fileArn.is_open()) {
         std::cerr << "Unable to open ARN file " << arnFileName << std::endl;
         return false;
     }
@@ -43,29 +46,30 @@ bool FvrArnVit::open(const std::string& vitFileName, const std::string& arnFileN
     d_ptr->fileList.clear();
 
     // Parse VIT header file
-    d_ptr->fileVit.setEndian(std::endian::little);
+    DataStream ds(&d_ptr->fileVit);
+    ds.setEndian(std::endian::little);
 
     uint32_t fileCount;
-    d_ptr->fileVit >> fileCount;
+    ds >> fileCount;
 
     uint32_t unkn;
-    d_ptr->fileVit >> unkn;
+    ds >> unkn;
 
     uint32_t offset = 0;
     for (uint32_t i = 0; i < fileCount; i++) {
         ArnVitFile file;
 
         char fileName[32];
-        d_ptr->fileVit.read(fileName, 32);
+        ds.read(32, (uint8_t*)fileName);
         file.fileName = std::string(fileName);
 
-        d_ptr->fileVit >> file.unkn1;
-        d_ptr->fileVit >> file.unkn2;
-        d_ptr->fileVit >> file.width;
-        d_ptr->fileVit >> file.height;
-        d_ptr->fileVit >> file.unkn3;
-        d_ptr->fileVit >> file.fileSize;
-        d_ptr->fileVit >> file.unkn4;
+        ds >> file.unkn1;
+        ds >> file.unkn2;
+        ds >> file.width;
+        ds >> file.height;
+        ds >> file.unkn3;
+        ds >> file.fileSize;
+        ds >> file.unkn4;
 
         file.offset = offset;
 
@@ -87,7 +91,7 @@ void FvrArnVit::close()
 
 bool FvrArnVit::isOpen() const
 {
-    return d_ptr->fileVit.isOpen() && d_ptr->fileArn.isOpen();
+    return d_ptr->fileVit.is_open() && d_ptr->fileArn.is_open();
 }
 
 int FvrArnVit::fileCount() const
@@ -99,9 +103,9 @@ FvrArnVit::ArnVitFile FvrArnVit::getFile(const int index) const
 {
     ArnVitFile file = d_ptr->fileList[index];
 
-    d_ptr->fileArn.seek(file.offset);
+    d_ptr->fileArn.seekg(file.offset);
     file.data.resize(file.fileSize);
-    d_ptr->fileArn.read(file.data.data(), file.fileSize);
+    d_ptr->fileArn.read((char*)file.data.data(), file.fileSize);
 
     return file;
 }
@@ -125,32 +129,36 @@ bool FvrArnVit::writeToBmp(const int index, const std::string& outputDirectory) 
     }
 
     std::string bmpFile = outputDirectory + file.fileName;
-    File fileBmp;
-    fileBmp.setEndian(std::endian::little);
-    if (!fileBmp.open(bmpFile, std::ios::binary | std::ios::out)) {
+    std::ofstream fileBmp(bmpFile, std::ios::binary | std::ios::out);
+    if (!fileBmp.is_open()) {
         std::cerr << "Unable to open BMP file " << bmpFile << std::endl;
         return false;
     }
 
+    DataStream ds(&fileBmp);
+    ds.setEndian(std::endian::little);
+
     // BMP header
-    fileBmp << uint16_t(0x4D42); // BM
-    fileBmp << uint32_t(0); // File size (will be updated later)
-    fileBmp << uint16_t(0); // Reserved
-    fileBmp << uint16_t(0); // Reserved
-    fileBmp << uint32_t(54); // Offset to image data
+    ds << uint16_t(0x4D42); // BM
+    ds << uint32_t(0); // File size (will be updated later)
+    ds << uint16_t(0); // Reserved
+    ds << uint16_t(0); // Reserved
+    ds << uint32_t(54); // Offset to image data
 
     // DIB header
-    fileBmp << uint32_t(40); // DIB header size
-    fileBmp << uint32_t(file.width); // Width
-    fileBmp << uint32_t(-file.height); // Height
-    fileBmp << uint16_t(1); // Planes
-    fileBmp << uint16_t(16); // Bits per pixel
-    fileBmp << uint32_t(0); // Compression
-    fileBmp << uint32_t(0); // Image size (ignored for uncompressed images)
-    fileBmp << uint32_t(0); // X pixels per meter
-    fileBmp << uint32_t(0); // Y pixels per meter
-    fileBmp << uint32_t(0); // Colors in color table
-    fileBmp << uint32_t(0); // Important color count
+    ds << uint32_t(40); // DIB header size
+    ds << uint32_t(file.width); // Width
+    ds << uint32_t(-file.height); // Height
+    ds << uint16_t(1); // Planes
+    ds << uint16_t(16); // Bits per pixel
+    ds << uint32_t(0); // Compression
+    ds << uint32_t(0); // Image size (ignored for uncompressed images)
+    ds << uint32_t(0); // X pixels per meter
+    ds << uint32_t(0); // Y pixels per meter
+    ds << uint32_t(0); // Colors in color table
+    ds << uint32_t(0); // Important color count
+
+    size_t fileSize = 54;
 
     // Image data
     bool addPadding = (file.width * 2) % 4 != 0;
@@ -163,19 +171,22 @@ bool FvrArnVit::writeToBmp(const int index, const std::string& outputDirectory) 
             // RGB565 to RGB555
             pixel = ((pixel & 0b1111'1000'0000'0000) >> 1 | (pixel & 0b0000'0111'1100'0000) >> 1 | (pixel & 0b0000'0000'0001'1111));
 
-            fileBmp << pixel;
+            ds << pixel;
+
+            fileSize += 2;
         }
 
         if (addPadding) {
-            fileBmp << uint8_t(0x00);
-            fileBmp << uint8_t(0xFF);
+            ds << uint8_t(0x00);
+            ds << uint8_t(0xFF);
+
+            fileSize += 2;
         }
     }
 
     // Write file size
-    uint32_t fileSize = fileBmp.tell();
-    fileBmp.seek(2);
-    fileBmp << uint32_t(fileSize);
+    fileBmp.seekp(2);
+    ds << uint32_t(fileSize);
 
     fileBmp.close();
 

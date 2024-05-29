@@ -5,7 +5,7 @@
 #include <iostream>
 #include <vector>
 
-#include "fvr/file.h"
+#include "fvr/datastream.h"
 
 /* Private */
 struct PakFile {
@@ -24,7 +24,7 @@ public:
     static void uncompressPakData3(const std::vector<uint8_t>& dataIn, std::vector<uint8_t>& dataOut);
 
 private:
-    File filePak;
+    std::ifstream filePak;
     std::vector<PakFile> listFile;
 };
 
@@ -83,35 +83,42 @@ FvrPak::~FvrPak()
 
 bool FvrPak::open(const std::string& pakFileName)
 {
-    d_ptr->filePak.setEndian(std::endian::little);
-
-    if (!d_ptr->filePak.open(pakFileName, std::ios_base::in | std::ios_base::binary)) {
+    d_ptr->filePak.open(pakFileName, std::ios_base::in | std::ios_base::binary);
+    if (!d_ptr->filePak.is_open()) {
         std::cerr << "Unable to open file " << pakFileName << std::endl;
         return false;
     }
 
-    char header[5] = { 0, 0, 0, 0, 0 };
-    d_ptr->filePak.read(header, 4);
+    DataStream ds(&d_ptr->filePak);
+    ds.setEndian(std::endian::little);
+
+    uint8_t header[5] = { 0, 0, 0, 0, 0 };
+    ds.read(4, header);
 
     uint32_t fileSize;
-    d_ptr->filePak >> fileSize;
+    ds >> fileSize;
 
     d_ptr->listFile.clear();
-    while (!d_ptr->filePak.atEnd()) {
+    while (!d_ptr->filePak.eof()) {
         PakFile subFile;
 
-        char compFileName[16]; // Compressed file name
-        d_ptr->filePak.read(compFileName, 16);
-        subFile.fileName = std::string(compFileName);
+        uint8_t compFileName[16]; // Compressed file name
+        ds.read(16, compFileName);
+        subFile.fileName = std::string((char*)compFileName);
 
-        d_ptr->filePak >> subFile.compressionLevel;
-        d_ptr->filePak >> subFile.compressedSize;
-        d_ptr->filePak >> subFile.uncompressedSize;
+        ds >> subFile.compressionLevel;
+        ds >> subFile.compressedSize;
+        ds >> subFile.uncompressedSize;
 
         subFile.compressedData.resize(subFile.compressedSize, 0x00);
-        d_ptr->filePak.read(subFile.compressedData.data(), subFile.compressedSize);
+        ds.read(subFile.compressedSize, subFile.compressedData.data());
 
         d_ptr->listFile.push_back(subFile);
+
+        // Check if we are at the end of the file
+        if (d_ptr->filePak.tellg() == fileSize) {
+            break;
+        }
     }
 
     return true;
@@ -124,7 +131,7 @@ void FvrPak::close()
 
 bool FvrPak::isOpen() const
 {
-    return d_ptr->filePak.isOpen();
+    return d_ptr->filePak.is_open();
 }
 
 int FvrPak::fileCount() const

@@ -5,7 +5,7 @@
 #include <iostream>
 #include <map>
 
-#include "fvr/file.h"
+#include "fvr/datastream.h"
 #include "internal/dct.h"
 
 /* Private */
@@ -16,7 +16,7 @@ public:
     bool rgb565DataToCubemap(const std::vector<uint8_t>& rgb565Data, std::vector<uint8_t>& cubemapRgb565Data);
 
 private:
-    File m_fileVr;
+    std::ifstream m_fileVr;
     FvrVr::Type m_type;
 
     std::vector<uint8_t> m_rgb565Data;
@@ -71,7 +71,6 @@ FvrVr::FvrVr()
 {
     d_ptr = new FvrVrPrivate;
 
-    d_ptr->m_fileVr.setEndian(std::endian::little);
     d_ptr->m_type = FvrVr::Type::VR_UNKNOWN;
 }
 
@@ -82,18 +81,22 @@ FvrVr::~FvrVr()
 
 bool FvrVr::open(const std::string& vrFileName)
 {
-    if (!d_ptr->m_fileVr.open(vrFileName, std::ios::binary | std::ios::in)) {
+    d_ptr->m_fileVr.open(vrFileName, std::ios::binary | std::ios::in);
+    if (!d_ptr->m_fileVr.is_open()) {
         // std::cerr << "Failed to open file " << vrFileName << std::endl;
         return false;
     }
+
+    DataStream ds(&d_ptr->m_fileVr);
+    ds.setEndian(std::endian::little);
 
     int32_t header;
     int32_t fileSize;
     int32_t type;
 
-    d_ptr->m_fileVr >> header;
-    d_ptr->m_fileVr >> fileSize;
-    d_ptr->m_fileVr >> type;
+    ds >> header;
+    ds >> fileSize;
+    ds >> type;
 
     if (type == -0x5f4e3e00) {
         d_ptr->m_type = Type::VR_STATIC_VR;
@@ -104,19 +107,19 @@ bool FvrVr::open(const std::string& vrFileName)
     }
 
     // Parse image data
-    d_ptr->m_fileVr.seek(12);
+    d_ptr->m_fileVr.seekg(12);
 
     uint32_t imageSize;
-    d_ptr->m_fileVr >> imageSize;
+    ds >> imageSize;
 
     uint32_t quality;
-    d_ptr->m_fileVr >> quality;
+    ds >> quality;
 
     uint32_t dataSize;
-    d_ptr->m_fileVr >> dataSize; // File size - 16
+    ds >> dataSize; // File size - 16
 
     std::vector<uint8_t> rawData(dataSize);
-    d_ptr->m_fileVr.read((char*)rawData.data(), dataSize);
+    ds.read(dataSize, rawData.data());
 
     // Unpack image
     Dct dct;
@@ -134,32 +137,32 @@ bool FvrVr::open(const std::string& vrFileName)
 
     // Read animation data
     d_ptr->m_animationList.clear();
-    if (!d_ptr->m_fileVr.atEnd()) {
+    if (!d_ptr->m_fileVr.eof()) {
         // Animation data
-        while (!d_ptr->m_fileVr.atEnd()) {
+        while (!d_ptr->m_fileVr.eof()) {
             uint32_t animHeader;
-            d_ptr->m_fileVr >> animHeader;
+            ds >> animHeader;
 
             if (animHeader != 0xa0b1c201) {
                 break;
             }
 
             uint32_t animSize;
-            d_ptr->m_fileVr >> animSize;
+            ds >> animSize;
 
             char animName[0x20];
-            d_ptr->m_fileVr.read(animName, 0x20);
+            ds.read(0x20, (uint8_t*)animName);
             std::string animNameStr(animName);
             std::transform(animNameStr.begin(), animNameStr.end(), animNameStr.begin(), ::tolower);
 
             uint32_t frameCount;
-            d_ptr->m_fileVr >> frameCount;
+            ds >> frameCount;
 
             Animation animation;
             animation.name = animNameStr;
             for (int i = 0; i < frameCount; i++) {
                 uint32_t frameHeader;
-                d_ptr->m_fileVr >> frameHeader;
+                ds >> frameHeader;
 
                 if (frameHeader != 0xa0b1c211) {
                     std::cerr << "Invalid frame header" << std::endl;
@@ -167,7 +170,7 @@ bool FvrVr::open(const std::string& vrFileName)
                 }
 
                 uint32_t frameSize;
-                d_ptr->m_fileVr >> frameSize;
+                ds >> frameSize;
 
                 if (frameSize == 8) {
                     animation.frames.push_back({});
@@ -175,25 +178,25 @@ bool FvrVr::open(const std::string& vrFileName)
                 }
 
                 uint32_t blockCount;
-                d_ptr->m_fileVr >> blockCount;
+                ds >> blockCount;
 
                 std::vector<uint32_t> blockOffsetList(blockCount);
                 for (int idxBlock = 0; idxBlock < blockCount; idxBlock++) {
                     uint32_t pixelOffset;
-                    d_ptr->m_fileVr >> pixelOffset;
+                    ds >> pixelOffset;
 
                     blockOffsetList[idxBlock] = pixelOffset;
                 }
 
                 // Frame image data
                 uint32_t quality;
-                d_ptr->m_fileVr >> quality;
+                ds >> quality;
 
                 uint32_t dataSize;
-                d_ptr->m_fileVr >> dataSize; // File size - 16
+                ds >> dataSize; // File size - 16
 
                 std::vector<uint8_t> rawData(dataSize);
-                d_ptr->m_fileVr.read((char*)rawData.data(), dataSize);
+                ds.read(dataSize, rawData.data());
 
                 Dct dct;
                 std::vector<uint8_t> frameData;
@@ -220,7 +223,7 @@ void FvrVr::close()
 
 bool FvrVr::isOpen() const
 {
-    return d_ptr->m_fileVr.isOpen();
+    return d_ptr->m_fileVr.is_open();
 }
 
 int FvrVr::getWidth() const

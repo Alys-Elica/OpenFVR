@@ -306,8 +306,8 @@ bool Dct::unpack(
     d_ptr->width = width;
     d_ptr->height = height;
 
-    DataStream ds;
-    ds.setData(imageData);
+    std::vector<uint8_t> tmp = imageData;
+    DataStream ds(&tmp);
     ds.setEndian(std::endian::little);
 
     // AC code data
@@ -317,9 +317,9 @@ bool Dct::unpack(
     ds >> acCodeCompSize;
     ds >> acCodeUncompSize;
 
-    std::vector<uint8_t> dataAcCodeComp;
+    std::vector<uint8_t> dataAcCodeComp(acCodeCompSize);
     std::vector<uint8_t> dataAcCode;
-    ds.read(dataAcCodeComp, acCodeCompSize);
+    ds.read(acCodeCompSize, dataAcCodeComp.data());
 
     HuffmanTable::decompress(dataAcCodeComp, dataAcCode, acCodeUncompSize);
 
@@ -327,15 +327,15 @@ bool Dct::unpack(
     uint32_t acSize;
     ds >> acSize;
 
-    std::vector<uint8_t> dataAc;
-    ds.read(dataAc, acSize);
+    std::vector<uint8_t> dataAc(acSize);
+    ds.read(acSize, dataAc.data());
 
     // DC data
     uint32_t dcSize;
     ds >> dcSize;
 
-    std::vector<uint8_t> dataDc;
-    ds.read(dataDc, dcSize);
+    std::vector<uint8_t> dataDc(dcSize);
+    ds.read(dcSize, dataDc.data());
 
     // Unpack
     InverseBitstream ac;
@@ -344,8 +344,7 @@ bool Dct::unpack(
     InverseBitstream dc;
     dc.setData(dataDc);
 
-    DataStream dsAcCode;
-    dsAcCode.setData(dataAcCode);
+    DataStream dsAcCode(&dataAcCode);
 
     int mcuY[64];
     int mcuCb[64];

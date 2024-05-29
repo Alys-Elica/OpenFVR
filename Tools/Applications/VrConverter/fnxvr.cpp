@@ -8,7 +8,6 @@
 #include <vector>
 
 #include <SDL.h>
-#include <fvr/file.h>
 #include <fvrrenderer.h>
 
 #include "fvr_files/fvr_tst.h"
