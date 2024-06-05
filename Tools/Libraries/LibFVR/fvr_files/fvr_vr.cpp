@@ -16,7 +16,7 @@ public:
     bool rgb565DataToCubemap(const std::vector<uint8_t>& rgb565Data, std::vector<uint8_t>& cubemapRgb565Data);
 
 private:
-    std::ifstream m_fileVr;
+    std::fstream m_fileVr;
     FvrVr::Type m_type;
 
     std::vector<uint8_t> m_rgb565Data;

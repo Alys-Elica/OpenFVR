@@ -21,8 +21,7 @@ public:
     void write64(const uint64_t data);
 
 private:
-    std::ifstream* m_fileIn = nullptr;
-    std::ofstream* m_fileOut = nullptr;
+    std::fstream* m_file = nullptr;
     std::vector<uint8_t>* m_data = nullptr;
     std::endian m_endian;
 
@@ -39,13 +38,13 @@ void DataStream::DataStreamPrivate::read(const size_t size, uint8_t* data)
 
         std::memcpy(data, m_data->data() + m_pos, size);
         m_pos += size;
-    } else if (m_fileIn) {
-        if (m_fileIn->eof()) {
+    } else if (m_file) {
+        if (m_file->eof()) {
             std::cerr << "Out of range" << std::endl;
             return;
         }
 
-        m_fileIn->read(reinterpret_cast<char*>(data), size);
+        m_file->read(reinterpret_cast<char*>(data), size);
     } else {
         std::cerr << "No input data source" << std::endl;
     }
@@ -107,8 +106,8 @@ void DataStream::DataStreamPrivate::write(const size_t size, const uint8_t* data
 
         std::memcpy(m_data->data() + m_pos, data, size);
         m_pos += size;
-    } else if (m_fileOut) {
-        m_fileOut->write(reinterpret_cast<const char*>(data), size);
+    } else if (m_file) {
+        m_file->write(reinterpret_cast<const char*>(data), size);
     } else {
         std::cerr << "No data source" << std::endl;
     }
@@ -166,16 +165,10 @@ DataStream::DataStream()
 }
 
 /* Public */
-DataStream::DataStream(std::ifstream* file)
+DataStream::DataStream(std::fstream* file)
     : DataStream()
 {
-    d_ptr->m_fileIn = file;
-}
-
-DataStream::DataStream(std::ofstream* file)
-    : DataStream()
-{
-    d_ptr->m_fileOut = file;
+    d_ptr->m_file = file;
 }
 
 DataStream::DataStream(std::vector<uint8_t>* data)

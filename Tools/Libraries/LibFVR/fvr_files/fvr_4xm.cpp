@@ -27,7 +27,7 @@ public:
     bool readMovi();
 
 private:
-    std::ifstream m_file;
+    std::fstream m_file;
 
     std::string m_name;
     std::string m_info;

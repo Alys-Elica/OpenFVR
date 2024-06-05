@@ -17,7 +17,7 @@ class FvrDat::FvrDatPrivate {
     friend class FvrDat;
 
 private:
-    std::ifstream fileDat;
+    std::fstream fileDat;
     std::vector<DatFile> listFile;
     size_t dataOffset = -1;
 };

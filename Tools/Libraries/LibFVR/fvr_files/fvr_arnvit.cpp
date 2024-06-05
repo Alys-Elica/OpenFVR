@@ -11,8 +11,8 @@ class FvrArnVit::FvrArnVitPrivate {
     friend class FvrArnVit;
 
 private:
-    std::ifstream fileVit;
-    std::ifstream fileArn;
+    std::fstream fileVit;
+    std::fstream fileArn;
 
     std::vector<FvrArnVit::ArnVitFile> fileList;
     std::map<std::string, int> fileNameMap;
@@ -129,7 +129,7 @@ bool FvrArnVit::writeToBmp(const int index, const std::string& outputDirectory) 
     }
 
     std::string bmpFile = outputDirectory + file.fileName;
-    std::ofstream fileBmp(bmpFile, std::ios::binary | std::ios::out);
+    std::fstream fileBmp(bmpFile, std::ios::binary | std::ios::out);
     if (!fileBmp.is_open()) {
         std::cerr << "Unable to open BMP file " << bmpFile << std::endl;
         return false;

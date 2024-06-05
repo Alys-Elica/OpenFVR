@@ -37,7 +37,7 @@ bool FvrTst::loadFile(const std::string& fileName)
 {
     d_ptr->m_listZone.clear();
 
-    std::ifstream tstFile(fileName, std::ios::binary | std::ios::in);
+    std::fstream tstFile(fileName, std::ios::binary | std::ios::in);
     if (!tstFile.is_open()) {
         std::cerr << "Failed to open TST file" << std::endl;
         return false;

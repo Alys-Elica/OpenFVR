@@ -21,7 +21,7 @@ public:
     bool readData();
 
 private:
-    std::ifstream fileMtr;
+    std::fstream fileMtr;
     std::string type;
     uint32_t width = 0;
     uint32_t height = 0;

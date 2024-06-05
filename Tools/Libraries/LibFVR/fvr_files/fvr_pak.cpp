@@ -24,7 +24,7 @@ public:
     static void uncompressPakData3(const std::vector<uint8_t>& dataIn, std::vector<uint8_t>& dataOut);
 
 private:
-    std::ifstream filePak;
+    std::fstream filePak;
     std::vector<PakFile> listFile;
 };
 

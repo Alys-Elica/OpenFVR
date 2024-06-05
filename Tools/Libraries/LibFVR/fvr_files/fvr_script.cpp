@@ -58,7 +58,7 @@ public:
 
 private:
     // Parsing data
-    std::ifstream m_file;
+    std::fstream m_file;
     int m_currentLine = 0;
 
     // Final data

@@ -11,8 +11,7 @@
 
 class LIBFVR_EXPORT DataStream {
 public:
-    DataStream(std::ifstream* file);
-    DataStream(std::ofstream* file);
+    DataStream(std::fstream* file);
     DataStream(std::vector<uint8_t>* data);
     ~DataStream();
 
