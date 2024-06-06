@@ -7,7 +7,7 @@ WIP documentation of 4X Technologies's Phoenix VR engine used in adventure games
 Most file formats are now at least partially understood and have some kind of reading tool.  
 
 Development of an experimental (read hacky, quick and dirty code hell) [engine](Tools/Libraries/FvrEngine/) has been started. It is able to *run* some games but needs some convertion (more like file copying).  
-What remains to be done in the engine is mostly script function/plugin implementation, 4XM video image decoding (audio works) and optimisation/better code.
+What remains to be done in the engine is mostly script function/plugin implementation and optimisation/better code. Some parts (like the inefficient VR cubemap renderer) may be entirely rewritten if necessary.
 
 From then on it is possible to start implementing games (`Louvre: The final curse` - aka `The messenger` - is being worked on [here](Tools/Games/LouvreFinalCurse/README.md)).
 
