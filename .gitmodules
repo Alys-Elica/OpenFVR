@@ -1,0 +1,6 @@
+[submodule "Tools/Libraries/ofnx/"]
+	path = Tools/Libraries/ofnx/
+	url = git@github.com:Alys-Elica/OpenPhoenix.git
+[submodule "Tools/Libraries/ofnx"]
+	path = Tools/Libraries/ofnx
+	url = git@github.com:Alys-Elica/OpenPhoenix.git
