@@ -6,7 +6,6 @@
 #include <vector>
 
 #include "fvr/datastream.h"
-#include "internal/dct.h"
 
 /* Private */
 class Fvr4xm::Fvr4xmPrivate {
