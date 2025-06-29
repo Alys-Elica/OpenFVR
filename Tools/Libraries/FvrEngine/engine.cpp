@@ -484,10 +484,7 @@ void Engine::stopSound(const std::string& soundFile)
 
 void Engine::playMovie(const std::string& movieFile)
 {
-    // TODO: debug to skip movie playback, remove when done
-    // return;
-
-    /*std::string fileName = d_ptr->m_dataPath + "video/" + movieFile;
+    std::string fileName = d_ptr->m_dataPath + "video/" + movieFile;
 
     // Init libavcodec
     AVFormatContext* formatContext = avformat_alloc_context();
@@ -549,28 +546,11 @@ void Engine::playMovie(const std::string& movieFile)
         }
     }
 
-    SDL_AudioDeviceID deviceId = 0;
     AVCodecParameters* localCodecParametersAudio = NULL;
     AVCodec* localCodecAudio = NULL;
     AVCodecContext* codecContextAudio = NULL;
     if (audioSreamIndex >= 0) {
         std::cout << "Audio stream found" << std::endl;
-        SDL_AudioSpec wav_spec;
-        SDL_zero(wav_spec);
-        wav_spec.freq = formatContext->streams[audioSreamIndex]->codecpar->sample_rate;
-        wav_spec.format = AUDIO_S16SYS;
-        wav_spec.channels = formatContext->streams[audioSreamIndex]->codecpar->channels;
-        wav_spec.samples = 4096;
-
-        // Ouvrir le périphérique audio
-        deviceId = SDL_OpenAudioDevice(NULL, 0, &wav_spec, NULL, 0);
-        if (deviceId == 0) {
-            // Gérer l'erreur
-            std::cerr << "SDL audio error: " << SDL_GetError() << std::endl;
-            return;
-        }
-
-        SDL_PauseAudioDevice(deviceId, 0);
 
         localCodecParametersAudio = formatContext->streams[audioSreamIndex]->codecpar;
         // TODO: supposed to be const
@@ -624,7 +604,7 @@ void Engine::playMovie(const std::string& movieFile)
 
                 // Play audio
                 if (frame->nb_samples > 0) {
-                    SDL_QueueAudio(deviceId, frame->data[0], frame->nb_samples * frame->channels * 2);
+                    // TODO: implement
                 }
             }
         }
@@ -644,7 +624,6 @@ void Engine::playMovie(const std::string& movieFile)
                 continue;
             }
 
-            d_ptr->m_frameBufferMovie.resize(frame->width * frame->height);
             struct SwsContext* swsCtx = sws_getContext(
                 frame->width, frame->height, (AVPixelFormat)frame->format, // source
                 frame->width, frame->height, AV_PIX_FMT_RGB565, // destination
@@ -662,7 +641,11 @@ void Engine::playMovie(const std::string& movieFile)
             av_frame_get_buffer(pFrameRGB565, 0);
 
             sws_scale(swsCtx, frame->data, frame->linesize, 0, frame->height, pFrameRGB565->data, pFrameRGB565->linesize);
-            std::memcpy(d_ptr->m_frameBufferMovie.data(), pFrameRGB565->data[0], frame->width * frame->height * 2);
+
+            std::vector<uint16_t> frameData(frame->width * frame->height);
+            std::memcpy(frameData.data(), pFrameRGB565->data[0], frameData.size() * 2);
+            d_ptr->m_ofnxManager.renderer().updateFrame(frameData.data());
+            d_ptr->m_ofnxManager.renderer().renderFrame();
 
             // Cleanup
             sws_freeContext(swsCtx);
@@ -683,9 +666,13 @@ void Engine::playMovie(const std::string& movieFile)
 
         // Event
         bool exit = false;
-        SDL_Event event;
-        while (SDL_PollEvent(&event)) {
-            if (event.type == SDL_KEYDOWN || event.type == SDL_MOUSEBUTTONDOWN) {
+        std::vector<ofnx::OfnxManager::Event> events = d_ptr->m_ofnxManager.getEvents();
+        for (const ofnx::OfnxManager::Event& event : events) {
+            switch (event.type) {
+            case ofnx::OfnxManager::Event::Type::Quit:
+                exit = true;
+                break;
+            case ofnx::OfnxManager::Event::Type::MouseClickLeft:
                 exit = true;
                 break;
             }
@@ -700,9 +687,9 @@ void Engine::playMovie(const std::string& movieFile)
     av_packet_free(&packet);
     avcodec_close(codecContextVideo);
     if (audioSreamIndex != NULL) {
-        SDL_CloseAudioDevice(deviceId);
+        // TODO: implement
     }
     avformat_close_input(&formatContext);
 
-    d_ptr->m_inMovieMode = false;*/
+    d_ptr->m_inMovieMode = false;
 }
