@@ -10,5 +10,6 @@ add_executable(${PROJECT_NAME}
     main.cpp
 )
 
-# LibFVR
-target_link_libraries(${PROJECT_NAME} PRIVATE LibFVR)
+# ofnx
+add_dependencies(${PROJECT_NAME} ofnx)
+target_link_libraries(${PROJECT_NAME} LINK_PUBLIC ofnx)

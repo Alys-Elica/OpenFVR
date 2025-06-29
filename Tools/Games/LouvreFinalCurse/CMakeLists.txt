@@ -30,4 +30,8 @@ target_link_libraries(${PROJECT_NAME} PRIVATE LibFVR)
 add_executable(LouvreConverter
     converter.cpp
 )
+add_dependencies(LouvreConverter ofnx)
+target_link_libraries(LouvreConverter LINK_PUBLIC ofnx)
+
 target_link_libraries(LouvreConverter PRIVATE LibFVR)
+

@@ -18,7 +18,6 @@ set(PROJECT_FILE_HEADERS
     fvr_files/fvr_arnvit.h
     fvr_files/fvr_dat.h
     fvr_files/fvr_mtr.h
-    fvr_files/fvr_pak.h
     fvr_files/fvr_script.h
 )
     
@@ -30,7 +29,6 @@ set(PROJECT_FILE_SOURCES
     fvr_files/fvr_arnvit.cpp
     fvr_files/fvr_dat.cpp
     fvr_files/fvr_mtr.cpp
-    fvr_files/fvr_pak.cpp
     fvr_files/fvr_script.cpp
 )
 

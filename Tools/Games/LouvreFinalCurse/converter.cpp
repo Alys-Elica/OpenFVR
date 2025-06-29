@@ -4,8 +4,9 @@
 #include <iostream>
 #include <string>
 
+#include <ofnx/files/pak.h>
+
 #include <fvr_files/fvr_arnvit.h>
-#include <fvr_files/fvr_pak.h>
 #include <fvr_files/fvr_script.h>
 
 #ifdef _WIN32
@@ -48,7 +49,7 @@ void copyImage(const std::string& path, const std::string& pathOut)
 
 std::vector<uint8_t> readScript(const std::string& fileIn)
 {
-    FvrPak fvrPak;
+    ofnx::files::Pak fvrPak;
     if (!fvrPak.open(fileIn)) {
         std::cerr << "Error opening PAK file: " << fileIn << std::endl;
         return {};

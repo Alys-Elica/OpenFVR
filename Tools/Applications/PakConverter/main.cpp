@@ -1,7 +1,7 @@
 #include <fstream>
 #include <iostream>
 
-#include <fvr_files/fvr_pak.h>
+#include <ofnx/files/pak.h>
 
 int main(int argc, char* argv[])
 {
@@ -13,7 +13,7 @@ int main(int argc, char* argv[])
     for (int i = 1; i < argc; i++) {
         std::string pakFileName = argv[i];
 
-        FvrPak pak;
+        ofnx::files::Pak pak;
         if (!pak.open(pakFileName)) {
             std::cerr << "Unable to open file " << pakFileName << std::endl;
             continue;
