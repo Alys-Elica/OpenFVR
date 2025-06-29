@@ -651,8 +651,6 @@ void Engine::playMovie(const std::string& movieFile)
             sws_freeContext(swsCtx);
             av_frame_free(&pFrameRGB565);
 
-            d_ptr->render();
-
             // Wait for next frame
             std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
             std::chrono::milliseconds elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
