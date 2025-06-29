@@ -14,7 +14,6 @@ set(PROJECT_FILE_HEADERS
     fvr/datastream.h
     fvr/image.h
 
-    fvr_files/fvr_4xm.h
     fvr_files/fvr_script.h
 )
     
@@ -22,7 +21,6 @@ set(PROJECT_FILE_SOURCES
     fvr/datastream.cpp
     fvr/image.cpp
     
-    fvr_files/fvr_4xm.cpp
     fvr_files/fvr_script.cpp
 )
 
