@@ -87,9 +87,6 @@ private:
     float m_roll = 0.0f;
 
     int m_pointedZone = -1;
-
-    // Movie
-    bool m_inMovieMode = false;
 };
 
 bool Engine::EnginePrivate::loadScript(const std::string& scriptFile)
@@ -173,35 +170,33 @@ bool Engine::EnginePrivate::isPanoramic() const
 
 void Engine::EnginePrivate::render()
 {
-    if (!m_inMovieMode) {
-        // Update cursor
-        if (m_pointedZone == -1) {
-            m_ofnxManager.renderer()
-                .setCursorSystem(ofnx::graphics::RendererOpenGL::CursorSystem::Default);
-        } else {
-            m_ofnxManager.renderer()
-                .setCursorSystem(ofnx::graphics::RendererOpenGL::CursorSystem::Pointer);
-        }
+    // Update cursor
+    if (m_pointedZone == -1) {
+        m_ofnxManager.renderer()
+            .setCursorSystem(ofnx::graphics::RendererOpenGL::CursorSystem::Default);
+    } else {
+        m_ofnxManager.renderer()
+            .setCursorSystem(ofnx::graphics::RendererOpenGL::CursorSystem::Pointer);
+    }
 
-        // Update animations
-        bool updated = false;
-        for (const std::string& animName : m_playingAnim) {
-            updated = true;
-            m_fileVr.applyAnimationFrameRgb565(animName, m_vrImageData.data());
-        }
+    // Update animations
+    bool updated = false;
+    for (const std::string& animName : m_playingAnim) {
+        updated = true;
+        m_fileVr.applyAnimationFrameRgb565(animName, m_vrImageData.data());
+    }
 
-        // Render
-        if (isPanoramic()) {
-            if (updated) {
-                m_ofnxManager.renderer().updateVr(m_vrImageData.data());
-            }
-            m_ofnxManager.renderer().renderVr(m_yaw, m_pitch, m_roll, WINDOW_FOV);
-        } else {
-            if (updated) {
-                m_ofnxManager.renderer().updateFrame(m_vrImageData.data());
-            }
-            m_ofnxManager.renderer().renderFrame();
+    // Render
+    if (isPanoramic()) {
+        if (updated) {
+            m_ofnxManager.renderer().updateVr(m_vrImageData.data());
         }
+        m_ofnxManager.renderer().renderVr(m_yaw, m_pitch, m_roll, WINDOW_FOV);
+    } else {
+        if (updated) {
+            m_ofnxManager.renderer().updateFrame(m_vrImageData.data());
+        }
+        m_ofnxManager.renderer().renderFrame();
     }
 }
 
@@ -342,11 +337,6 @@ void Engine::registerScriptFunction(const std::string& name, const ScriptFunctio
     }
 
     d_ptr->m_functions[name] = function;
-}
-
-bool Engine::inMovieMode() const
-{
-    return d_ptr->m_inMovieMode;
 }
 
 bool Engine::isPanoramic() const
@@ -583,8 +573,6 @@ void Engine::playMovie(const std::string& movieFile)
     AVPacket* packet = av_packet_alloc();
     AVFrame* frame = av_frame_alloc();
 
-    d_ptr->m_inMovieMode = true;
-
     // Render video
     double frameRate = av_q2d(formatContext->streams[videoStreamIndex]->r_frame_rate);
     double waitTimeMs = 1000.0 / (double)frameRate;
@@ -688,6 +676,4 @@ void Engine::playMovie(const std::string& movieFile)
         // TODO: implement
     }
     avformat_close_input(&formatContext);
-
-    d_ptr->m_inMovieMode = false;
 }

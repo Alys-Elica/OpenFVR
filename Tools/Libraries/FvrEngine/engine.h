@@ -25,7 +25,6 @@ public:
 
     void registerScriptFunction(const std::string& name, const ScriptFunction& function);
 
-    bool inMovieMode() const;
     bool isPanoramic() const;
     bool isOnZone() const;
     int pointedZone() const;
