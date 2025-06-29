@@ -24,7 +24,6 @@ add_executable(${PROJECT_NAME}
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
 target_link_libraries(${PROJECT_NAME} PRIVATE FvrEngine)
-target_link_libraries(${PROJECT_NAME} PRIVATE LibFVR)
 
 # Converter
 add_executable(LouvreConverter
@@ -32,6 +31,3 @@ add_executable(LouvreConverter
 )
 add_dependencies(LouvreConverter ofnx)
 target_link_libraries(LouvreConverter LINK_PUBLIC ofnx)
-
-target_link_libraries(LouvreConverter PRIVATE LibFVR)
-

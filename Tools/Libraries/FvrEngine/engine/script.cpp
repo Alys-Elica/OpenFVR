@@ -5,7 +5,7 @@
 
 #include "engine.h"
 
-void fvrGotoWarp(Engine& engine, std::vector<FvrScript::InstructionParam> args)
+void fvrGotoWarp(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
 {
     if (args.size() != 1) {
         std::cerr << "fvrGotoWarp: invalid argument count" << std::endl;
@@ -22,7 +22,7 @@ void fvrGotoWarp(Engine& engine, std::vector<FvrScript::InstructionParam> args)
     engine.gotoWarp(warpId);
 }
 
-void fvrPlaySound(Engine& engine, std::vector<FvrScript::InstructionParam> args)
+void fvrPlaySound(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
 {
     if (args.size() != 3) {
         std::cerr << "fvrPlaySound: invalid argument count" << std::endl;
@@ -44,7 +44,7 @@ void fvrPlaySound(Engine& engine, std::vector<FvrScript::InstructionParam> args)
     engine.playSound(sound, (int)volume, loop == -1);
 }
 
-void fvrStopSound(Engine& engine, std::vector<FvrScript::InstructionParam> args)
+void fvrStopSound(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
 {
     if (args.size() != 1) {
         std::cerr << "fvrStopSound: invalid argument count" << std::endl;
@@ -64,7 +64,7 @@ void fvrStopSound(Engine& engine, std::vector<FvrScript::InstructionParam> args)
     engine.stopSound(sound);
 }
 
-void fvrPlaySound3d(Engine& engine, std::vector<FvrScript::InstructionParam> args)
+void fvrPlaySound3d(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
 {
     if (args.size() != 4) {
         std::cerr << "fvrPlaySound3d: invalid argument count" << std::endl;
@@ -85,7 +85,7 @@ void fvrPlaySound3d(Engine& engine, std::vector<FvrScript::InstructionParam> arg
     engine.playSound(sound, 100, false);
 }
 
-void fvrStopSound3d(Engine& engine, std::vector<FvrScript::InstructionParam> args)
+void fvrStopSound3d(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
 {
     if (args.size() != 1) {
         std::cerr << "fvrStopSound3d: invalid argument count" << std::endl;
@@ -103,7 +103,7 @@ void fvrStopSound3d(Engine& engine, std::vector<FvrScript::InstructionParam> arg
     engine.stopSound(sound);
 }
 
-void fvrPlayMusic(Engine& engine, std::vector<FvrScript::InstructionParam> args)
+void fvrPlayMusic(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
 {
     if (args.size() != 1) {
         std::cerr << "fvrPlayMusic: invalid argument count" << std::endl;
@@ -121,7 +121,7 @@ void fvrPlayMusic(Engine& engine, std::vector<FvrScript::InstructionParam> args)
     engine.playSound(music, 100, true);
 }
 
-void fvrStopMusic(Engine& engine, std::vector<FvrScript::InstructionParam> args)
+void fvrStopMusic(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
 {
     if (args.size() != 1) {
         std::cerr << "fvrStopMusic: invalid argument count" << std::endl;
@@ -138,7 +138,7 @@ void fvrStopMusic(Engine& engine, std::vector<FvrScript::InstructionParam> args)
     engine.stopSound(music);
 }
 
-void fvrSet(Engine& engine, std::vector<FvrScript::InstructionParam> args)
+void fvrSet(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
 {
     if (args.size() != 2) {
         std::cerr << "fvrSet: invalid argument count" << std::endl;
@@ -156,7 +156,7 @@ void fvrSet(Engine& engine, std::vector<FvrScript::InstructionParam> args)
     engine.setStateValue(flag, value);
 }
 
-void fvrLockKey(Engine& engine, std::vector<FvrScript::InstructionParam> args)
+void fvrLockKey(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
 {
     if (args.size() != 2) {
         std::cerr << "fvrLockKey: invalid argument count" << std::endl;
@@ -191,12 +191,12 @@ void fvrLockKey(Engine& engine, std::vector<FvrScript::InstructionParam> args)
     }
 }
 
-void fvrResetLockKey(Engine& engine, std::vector<FvrScript::InstructionParam> args)
+void fvrResetLockKey(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
 {
     engine.clearKeyWarps();
 }
 
-void fvrSetCursor(Engine& engine, std::vector<FvrScript::InstructionParam> args)
+void fvrSetCursor(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
 {
     if (args.size() != 3) {
         std::cerr << "fvrSetCursor: invalid argument count" << std::endl;
@@ -219,7 +219,7 @@ void fvrSetCursor(Engine& engine, std::vector<FvrScript::InstructionParam> args)
     engine.setWarpZoneCursor(warp, (int)zone, cursor);
 }
 
-void fvrSetCursorDefault(Engine& engine, std::vector<FvrScript::InstructionParam> args)
+void fvrSetCursorDefault(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
 {
     if (args.size() != 2) {
         std::cerr << "fvrSetCursorDefault: invalid argument count" << std::endl;
@@ -238,7 +238,7 @@ void fvrSetCursorDefault(Engine& engine, std::vector<FvrScript::InstructionParam
     std::cout << "fvrSetCursorDefault: not implemented: " << value << " " << cursor << std::endl;
 }
 
-void fvrFade(Engine& engine, std::vector<FvrScript::InstructionParam> args)
+void fvrFade(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
 {
     if (args.size() != 3) {
         std::cerr << "fvrFade: invalid argument count" << std::endl;
@@ -258,12 +258,12 @@ void fvrFade(Engine& engine, std::vector<FvrScript::InstructionParam> args)
     std::cout << "fvrFade: not implemented: " << value1 << " " << value2 << " " << value3 << std::endl;
 }
 
-void fvrEnd(Engine& engine, std::vector<FvrScript::InstructionParam> args)
+void fvrEnd(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
 {
     engine.end();
 }
 
-void fvrSetAngle(Engine& engine, std::vector<FvrScript::InstructionParam> args)
+void fvrSetAngle(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
 {
     if (args.size() != 2) {
         std::cerr << "fvrSetAngle: invalid argument count" << std::endl;
@@ -282,7 +282,7 @@ void fvrSetAngle(Engine& engine, std::vector<FvrScript::InstructionParam> args)
     std::cout << "fvrSetAngle: not implemented: " << value1 << " " << value2 << std::endl;
 }
 
-void fvrHideCursor(Engine& engine, std::vector<FvrScript::InstructionParam> args)
+void fvrHideCursor(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
 {
     if (args.size() != 2) {
         std::cerr << "fvrHideCursor: invalid argument count" << std::endl;
@@ -301,7 +301,7 @@ void fvrHideCursor(Engine& engine, std::vector<FvrScript::InstructionParam> args
     std::cout << "fvrHideCursor: not implemented: " << value1 << " " << value2 << std::endl;
 }
 
-void fvrNot(Engine& engine, std::vector<FvrScript::InstructionParam> args)
+void fvrNot(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
 {
     if (args.size() != 1) {
         std::cerr << "fvrNot: invalid argument count" << std::endl;
@@ -318,7 +318,7 @@ void fvrNot(Engine& engine, std::vector<FvrScript::InstructionParam> args)
     engine.setStateValue(value, val == 0.0 ? 1.0 : 0.0);
 }
 
-void fvrAngleXMax(Engine& engine, std::vector<FvrScript::InstructionParam> args)
+void fvrAngleXMax(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
 {
     if (args.size() != 1) {
         std::cerr << "fvrAngleXMax: invalid argument count" << std::endl;
@@ -336,7 +336,7 @@ void fvrAngleXMax(Engine& engine, std::vector<FvrScript::InstructionParam> args)
     std::cout << "fvrAngleXMax: not implemented: " << value << std::endl;
 }
 
-void fvrAngleYMax(Engine& engine, std::vector<FvrScript::InstructionParam> args)
+void fvrAngleYMax(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
 {
     if (args.size() != 1) {
         std::cerr << "fvrAngleYMax: invalid argument count" << std::endl;
@@ -354,7 +354,7 @@ void fvrAngleYMax(Engine& engine, std::vector<FvrScript::InstructionParam> args)
     std::cout << "fvrAngleXMax: not implemented: " << value << std::endl;
 }
 
-void fvrSetZoom(Engine& engine, std::vector<FvrScript::InstructionParam> args)
+void fvrSetZoom(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
 {
     if (args.size() != 1) {
         std::cerr << "fvrSetZoom: invalid argument count" << std::endl;
@@ -372,7 +372,7 @@ void fvrSetZoom(Engine& engine, std::vector<FvrScript::InstructionParam> args)
     std::cout << "fvrSetZoom: not implemented: " << value << std::endl;
 }
 
-void fvrInterpolAngle(Engine& engine, std::vector<FvrScript::InstructionParam> args)
+void fvrInterpolAngle(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
 {
     if (args.size() != 3) {
         std::cerr << "fvrInterpolAngle: invalid argument count" << std::endl;

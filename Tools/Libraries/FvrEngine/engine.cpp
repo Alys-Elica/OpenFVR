@@ -9,8 +9,6 @@
 #include <set>
 #include <thread>
 
-#include <fvr_files/fvr_script.h>
-
 #include <ofnx/files/tst.h>
 #include <ofnx/files/vr.h>
 #include <ofnx/ofnxmanager.h>
@@ -42,7 +40,7 @@ public:
     void onWarpEnter(const std::string& warpName);
     void onWarpZoneClick(const std::string& warpName, int zoneId);
 
-    void executeBlock(const FvrScript::InstructionBlock& block);
+    void executeBlock(const ofnx::files::Lst::InstructionBlock& block);
 
     bool isPanoramic() const;
     void render();
@@ -62,7 +60,7 @@ private:
     Audio m_audio;
 
     // Data
-    FvrScript m_script;
+    ofnx::files::Lst m_script;
     std::map<std::string, ScriptFunction> m_functions;
     std::string m_dataPath;
 
@@ -73,7 +71,7 @@ private:
 
     std::string m_currentWarp;
 
-    std::map<std::string, FvrScript::InstructionParam> m_stateValues;
+    std::map<std::string, ofnx::files::Lst::InstructionParam> m_stateValues;
 
     std::vector<uint16_t> m_vrImageData;
     std::set<std::string> m_playingAnim;
@@ -100,25 +98,25 @@ bool Engine::EnginePrivate::loadScript(const std::string& scriptFile)
 
 void Engine::EnginePrivate::onWarpEnter(const std::string& warpName)
 {
-    FvrScript::InstructionBlock& block = m_script.getInitBlock(warpName);
+    ofnx::files::Lst::InstructionBlock& block = m_script.getInitBlock(warpName);
     executeBlock(block);
 }
 
 void Engine::EnginePrivate::onWarpZoneClick(const std::string& warpName, int zoneId)
 {
-    FvrScript::InstructionBlock& block = m_script.getTestBlock(warpName, zoneId);
+    ofnx::files::Lst::InstructionBlock& block = m_script.getTestBlock(warpName, zoneId);
     executeBlock(block);
 }
 
-void Engine::EnginePrivate::executeBlock(const FvrScript::InstructionBlock& block)
+void Engine::EnginePrivate::executeBlock(const ofnx::files::Lst::InstructionBlock& block)
 {
-    for (const FvrScript::Instruction& instruction : block) {
+    for (const ofnx::files::Lst::Instruction& instruction : block) {
         if (instruction.name == "plugin") {
             executeBlock(instruction.subInstructions);
         } else if (instruction.name == "ifand" || instruction.name == "ifor") {
             // Check parameters
             bool exec = instruction.name == "ifand";
-            for (const FvrScript::InstructionParam& param : instruction.params) {
+            for (const ofnx::files::Lst::InstructionParam& param : instruction.params) {
                 if (!std::holds_alternative<std::string>(param)) {
                     std::cerr << "Invalid parameter type for " << instruction.name << std::endl;
                     continue;
@@ -431,7 +429,7 @@ void Engine::gotoWarp(const std::string& warpName)
     d_ptr->onWarpEnter(d_ptr->m_currentWarp);
 }
 
-FvrScript::InstructionParam Engine::getStateValue(const std::string& key)
+ofnx::files::Lst::InstructionParam Engine::getStateValue(const std::string& key)
 {
     std::string s = key;
     std::transform(s.begin(), s.end(), s.begin(),
@@ -440,7 +438,7 @@ FvrScript::InstructionParam Engine::getStateValue(const std::string& key)
     return d_ptr->m_stateValues[s];
 }
 
-void Engine::setStateValue(const std::string& key, const FvrScript::InstructionParam& value)
+void Engine::setStateValue(const std::string& key, const ofnx::files::Lst::InstructionParam& value)
 {
     std::string s = key;
     std::transform(s.begin(), s.end(), s.begin(),

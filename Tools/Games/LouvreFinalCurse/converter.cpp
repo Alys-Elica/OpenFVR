@@ -4,9 +4,8 @@
 #include <iostream>
 #include <string>
 
+#include <ofnx/files/lst.h>
 #include <ofnx/files/pak.h>
-
-#include <fvr_files/fvr_script.h>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -69,7 +68,7 @@ void saveScript(const std::vector<uint8_t>& data, const std::string& fileOut)
     fileTmp.write(reinterpret_cast<const char*>(data.data()), data.size());
     fileTmp.close();
 
-    FvrScript fvrScript;
+    ofnx::files::Lst fvrScript;
     if (!fvrScript.parseLst(tmpFileName)) {
         std::cerr << "Error parsing script: " << tmpFileName << std::endl;
         return;

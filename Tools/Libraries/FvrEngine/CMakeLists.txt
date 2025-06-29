@@ -31,8 +31,6 @@ add_library(${PROJECT_NAME} SHARED
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_compile_definitions(${PROJECT_NAME} PRIVATE LIBFVRENGINE_EXPORTS)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE LibFVR)
-
 # FFMPEG
 # find_package(FFMPEG REQUIRED)
 # target_include_directories(${PROJECT_NAME} PRIVATE ${FFMPEG_INCLUDE_DIRS})

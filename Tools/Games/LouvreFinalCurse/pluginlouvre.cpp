@@ -303,7 +303,7 @@ void printPortefSelectedObject(Engine& engine, int objectSlot)
 }
 
 /* Plugin */
-void plgPlayMovie(Engine& engine, std::vector<FvrScript::InstructionParam> args)
+void plgPlayMovie(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
 {
     if (args.size() != 1) {
         std::cerr << "plgPlayMovie: invalid number of arguments" << std::endl;
@@ -320,7 +320,7 @@ void plgPlayMovie(Engine& engine, std::vector<FvrScript::InstructionParam> args)
     engine.playMovie(movie);
 }
 
-void plgCmp(Engine& engine, std::vector<FvrScript::InstructionParam> args)
+void plgCmp(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
 {
     if (args.size() != 5) {
         std::cerr << "plgCmp: invalid number of arguments" << std::endl;
@@ -359,13 +359,13 @@ void plgCmp(Engine& engine, std::vector<FvrScript::InstructionParam> args)
     engine.setStateValue(notCond, result ? 0.0 : 1.0);
 }
 
-void plgKillTimer(Engine& engine, std::vector<FvrScript::InstructionParam> args)
+void plgKillTimer(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
 {
     // TODO: implement
     std::cout << "plgKillTimer: not implemented" << std::endl;
 }
 
-void plgCarteDestination(Engine& engine, std::vector<FvrScript::InstructionParam> args)
+void plgCarteDestination(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
 {
     if (args.size() != 2) {
         std::cerr << "plgCarteDestination: invalid number of arguments" << std::endl;
@@ -384,7 +384,7 @@ void plgCarteDestination(Engine& engine, std::vector<FvrScript::InstructionParam
     std::cout << "plgCarteDestination: not implemented: " << x << " " << y << std::endl;
 }
 
-void plgPauseTimer(Engine& engine, std::vector<FvrScript::InstructionParam> args)
+void plgPauseTimer(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
 {
     if (args.size() != 2) {
         std::cerr << "plgPauseTimer: invalid number of arguments" << std::endl;
@@ -403,7 +403,7 @@ void plgPauseTimer(Engine& engine, std::vector<FvrScript::InstructionParam> args
     std::cout << "plgPauseTimer: not implemented: " << timer << " " << value << std::endl;
 }
 
-void plgAdd(Engine& engine, std::vector<FvrScript::InstructionParam> args)
+void plgAdd(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
 {
     if (args.size() != 3) {
         std::cerr << "plgAdd: invalid number of arguments" << std::endl;
@@ -423,13 +423,13 @@ void plgAdd(Engine& engine, std::vector<FvrScript::InstructionParam> args)
     std::cout << "plgAdd: not implemented: " << object << " " << cond << " " << notCond << std::endl;
 }
 
-void plgInitCoffre(Engine& engine, std::vector<FvrScript::InstructionParam> args)
+void plgInitCoffre(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
 {
     // TODO: implement
     std::cout << "plgInitCoffre: not implemented" << std::endl;
 }
 
-void plgAffichePortef(Engine& engine, std::vector<FvrScript::InstructionParam> args)
+void plgAffichePortef(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
 {
     if (args.size() != 1) {
         std::cerr << "plgAffichePortef: invalid number of arguments" << std::endl;
@@ -454,20 +454,20 @@ void plgAffichePortef(Engine& engine, std::vector<FvrScript::InstructionParam> a
     }
 }
 
-void plgAfficheSelection(Engine& engine, std::vector<FvrScript::InstructionParam> args)
+void plgAfficheSelection(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
 {
     if (g_louvreData.selectedObjectSlot != -1) {
         printPortefSelectedObject(engine, g_louvreData.selectedObjectSlot);
     }
 }
 
-void plgAfficheCoffre(Engine& engine, std::vector<FvrScript::InstructionParam> args)
+void plgAfficheCoffre(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
 {
     // TODO: implement
     std::cout << "plgAfficheCoffre: not implemented" << std::endl;
 }
 
-void plgScroll(Engine& engine, std::vector<FvrScript::InstructionParam> args)
+void plgScroll(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
 {
     if (args.size() != 1) {
         std::cerr << "plgScroll: invalid number of arguments" << std::endl;
@@ -485,7 +485,7 @@ void plgScroll(Engine& engine, std::vector<FvrScript::InstructionParam> args)
     std::cout << "plgScroll: not implemented: " << value << std::endl;
 }
 
-void plgSelectPorteF(Engine& engine, std::vector<FvrScript::InstructionParam> args)
+void plgSelectPorteF(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
 {
     if (args.size() != 2) {
         std::cerr << "plgSelectPorteF: invalid number of arguments" << std::endl;
@@ -504,7 +504,7 @@ void plgSelectPorteF(Engine& engine, std::vector<FvrScript::InstructionParam> ar
     std::cout << "plgSelectPorteF: not implemented: " << value << " " << z << std::endl;
 }
 
-void plgPlayAnimBloc(Engine& engine, std::vector<FvrScript::InstructionParam> args)
+void plgPlayAnimBloc(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
 {
     if (args.size() != 4) {
         std::cerr << "plgPlayAnimBloc: invalid number of arguments" << std::endl;
@@ -525,7 +525,7 @@ void plgPlayAnimBloc(Engine& engine, std::vector<FvrScript::InstructionParam> ar
     engine.playAnim(name);
 }
 
-void plgUntilLoop(Engine& engine, std::vector<FvrScript::InstructionParam> args)
+void plgUntilLoop(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
 {
     if (args.size() != 2) {
         std::cerr << "plgUntilLoop: invalid number of arguments" << std::endl;
@@ -544,13 +544,13 @@ void plgUntilLoop(Engine& engine, std::vector<FvrScript::InstructionParam> args)
     std::cout << "plgUntilLoop: not implemented: " << y << " " << value << std::endl;
 }
 
-void plgMemoryRelease(Engine& engine, std::vector<FvrScript::InstructionParam> args)
+void plgMemoryRelease(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
 {
     // TODO: implement
     std::cout << "plgMemoryRelease: not implemented" << std::endl;
 }
 
-void plgSelectCoffre(Engine& engine, std::vector<FvrScript::InstructionParam> args)
+void plgSelectCoffre(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
 {
     if (args.size() != 2) {
         std::cerr << "plgSelectCoffre: invalid number of arguments" << std::endl;
@@ -569,7 +569,7 @@ void plgSelectCoffre(Engine& engine, std::vector<FvrScript::InstructionParam> ar
     std::cout << "plgSelectCoffre: not implemented: " << value << " " << z << std::endl;
 }
 
-void plgPlayAnimBlocNumber(Engine& engine, std::vector<FvrScript::InstructionParam> args)
+void plgPlayAnimBlocNumber(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
 {
     if (args.size() != 5) {
         std::cerr << "plgPlayAnimBlocNumber: invalid number of arguments" << std::endl;
@@ -591,7 +591,7 @@ void plgPlayAnimBlocNumber(Engine& engine, std::vector<FvrScript::InstructionPar
     std::cout << "plgPlayAnimBlocNumber: not implemented: " << value << " " << y << " " << z << " " << value1 << " " << value2 << std::endl;
 }
 
-void plgSub(Engine& engine, std::vector<FvrScript::InstructionParam> args)
+void plgSub(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
 {
     if (args.size() != 3) {
         std::cerr << "plgSub: invalid number of arguments" << std::endl;
@@ -611,7 +611,7 @@ void plgSub(Engine& engine, std::vector<FvrScript::InstructionParam> args)
     std::cout << "plgSub: not implemented: " << value << " " << y << " " << value << std::endl;
 }
 
-void plgWhileLoop(Engine& engine, std::vector<FvrScript::InstructionParam> args)
+void plgWhileLoop(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
 {
     if (args.size() != 1) {
         std::cerr << "plgWhileLoop: invalid number of arguments" << std::endl;
@@ -629,19 +629,19 @@ void plgWhileLoop(Engine& engine, std::vector<FvrScript::InstructionParam> args)
     std::cout << "plgWhileLoop: not implemented: " << value << std::endl;
 }
 
-void plgIsHere(Engine& engine, std::vector<FvrScript::InstructionParam> args)
+void plgIsHere(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
 {
     // TODO: implement
     std::cout << "plgIsHere: not implemented" << std::endl;
 }
 
-void plgDrawTextSelection(Engine& engine, std::vector<FvrScript::InstructionParam> args)
+void plgDrawTextSelection(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
 {
     // TODO: implement
     std::cout << "plgDrawTextSelection: not implemented" << std::endl;
 }
 
-void plgPorteFRollover(Engine& engine, std::vector<FvrScript::InstructionParam> args)
+void plgPorteFRollover(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
 {
     if (args.size() != 1) {
         std::cerr << "plgPorteFRollover: invalid number of arguments" << std::endl;
@@ -659,7 +659,7 @@ void plgPorteFRollover(Engine& engine, std::vector<FvrScript::InstructionParam> 
     std::cout << "plgPorteFRollover: not implemented: " << value << std::endl;
 }
 
-void plgSetMonde4(Engine& engine, std::vector<FvrScript::InstructionParam> args)
+void plgSetMonde4(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
 {
     if (args.size() != 1) {
         std::cerr << "plgSetMonde4: invalid number of arguments" << std::endl;
@@ -677,7 +677,7 @@ void plgSetMonde4(Engine& engine, std::vector<FvrScript::InstructionParam> args)
     std::cout << "plgSetMonde4: not implemented: " << value << std::endl;
 }
 
-void plgChangeCurseur(Engine& engine, std::vector<FvrScript::InstructionParam> args)
+void plgChangeCurseur(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
 {
     if (args.size() != 1) {
         std::cerr << "plgChangeCurseur: invalid number of arguments" << std::endl;
@@ -695,7 +695,7 @@ void plgChangeCurseur(Engine& engine, std::vector<FvrScript::InstructionParam> a
     std::cout << "plgChangeCurseur: not implemented: " << value << std::endl;
 }
 
-void plgLoadSaveContextRestored(Engine& engine, std::vector<FvrScript::InstructionParam> args)
+void plgLoadSaveContextRestored(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
 {
     if (args.size() != 2) {
         std::cerr << "plgLoadSaveContextRestored: invalid number of arguments" << std::endl;
@@ -714,13 +714,13 @@ void plgLoadSaveContextRestored(Engine& engine, std::vector<FvrScript::Instructi
     std::cout << "plgLoadSaveContextRestored: not implemented: " << reloading << " " << reloadDone << std::endl;
 }
 
-void plgLoadSaveCaptureContext(Engine& engine, std::vector<FvrScript::InstructionParam> args)
+void plgLoadSaveCaptureContext(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
 {
     // TODO: implement
     std::cout << "plgLoadSaveCaptureContext: not implemented" << std::endl;
 }
 
-void plgLoadSaveInitSlots(Engine& engine, std::vector<FvrScript::InstructionParam> args)
+void plgLoadSaveInitSlots(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
 {
     if (args.size() != 1) {
         std::cerr << "plgLoadSaveInitSlots: invalid number of arguments" << std::endl;
@@ -738,7 +738,7 @@ void plgLoadSaveInitSlots(Engine& engine, std::vector<FvrScript::InstructionPara
     std::cout << "plgLoadSaveInitSlots: not implemented: " << value << std::endl;
 }
 
-void plgLoadSaveSave(Engine& engine, std::vector<FvrScript::InstructionParam> args)
+void plgLoadSaveSave(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
 {
     if (args.size() != 1) {
         std::cerr << "plgLoadSaveSave: invalid number of arguments" << std::endl;
@@ -756,7 +756,7 @@ void plgLoadSaveSave(Engine& engine, std::vector<FvrScript::InstructionParam> ar
     std::cout << "plgLoadSaveSave: not implemented: " << value << std::endl;
 }
 
-void plgMultiCdSetNextScript(Engine& engine, std::vector<FvrScript::InstructionParam> args)
+void plgMultiCdSetNextScript(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
 {
     if (args.size() != 1) {
         std::cerr << "plgMultiCdSetNextScript: invalid number of arguments" << std::endl;
@@ -774,13 +774,13 @@ void plgMultiCdSetNextScript(Engine& engine, std::vector<FvrScript::InstructionP
     std::cout << "plgMultiCdSetNextScript: not implemented: " << value << std::endl;
 }
 
-void plgReset(Engine& engine, std::vector<FvrScript::InstructionParam> args)
+void plgReset(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
 {
     // TODO: implement
     std::cout << "plgReset: not implemented" << std::endl;
 }
 
-void plgAddObject(Engine& engine, std::vector<FvrScript::InstructionParam> args)
+void plgAddObject(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
 {
     if (args.size() != 3) {
         std::cerr << "plgAddObject: invalid number of arguments" << std::endl;
@@ -809,7 +809,7 @@ void plgAddObject(Engine& engine, std::vector<FvrScript::InstructionParam> args)
     engine.setStateValue(notCond, inserted ? 0.0 : 1.0);
 }
 
-void plgAddCoffreObject(Engine& engine, std::vector<FvrScript::InstructionParam> args)
+void plgAddCoffreObject(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
 {
     if (args.size() != 1) {
         std::cerr << "plgAddCoffreObject: invalid number of arguments" << std::endl;
@@ -827,7 +827,7 @@ void plgAddCoffreObject(Engine& engine, std::vector<FvrScript::InstructionParam>
     std::cout << "plgAddCoffreObject: not implemented: " << value << std::endl;
 }
 
-void plgIsPresent(Engine& engine, std::vector<FvrScript::InstructionParam> args)
+void plgIsPresent(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
 {
     if (args.size() != 3) {
         std::cerr << "plgIsPresent: invalid number of arguments" << std::endl;
@@ -855,7 +855,7 @@ void plgIsPresent(Engine& engine, std::vector<FvrScript::InstructionParam> args)
     engine.setStateValue(notCond, result ? 0.0 : 1.0);
 }
 
-void plgRemoveObject(Engine& engine, std::vector<FvrScript::InstructionParam> args)
+void plgRemoveObject(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
 {
     if (args.size() != 1) {
         std::cerr << "plgRemoveObject: invalid number of arguments" << std::endl;
@@ -876,7 +876,7 @@ void plgRemoveObject(Engine& engine, std::vector<FvrScript::InstructionParam> ar
     }
 }
 
-void plgStartTimer(Engine& engine, std::vector<FvrScript::InstructionParam> args)
+void plgStartTimer(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
 {
     if (args.size() != 1) {
         std::cerr << "plgStartTimer: invalid number of arguments" << std::endl;
@@ -894,7 +894,7 @@ void plgStartTimer(Engine& engine, std::vector<FvrScript::InstructionParam> args
     std::cout << "plgStartTimer: not implemented: " << value << std::endl;
 }
 
-void plgLoadSaveTestSlot(Engine& engine, std::vector<FvrScript::InstructionParam> args)
+void plgLoadSaveTestSlot(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
 {
     if (args.size() != 3) {
         std::cerr << "plgLoadSaveTestSlot: invalid number of arguments" << std::endl;
@@ -914,7 +914,7 @@ void plgLoadSaveTestSlot(Engine& engine, std::vector<FvrScript::InstructionParam
     std::cout << "plgLoadSaveTestSlot: not implemented: " << value << " " << cond << " " << notCond << std::endl;
 }
 
-void plgLoadSaveLoad(Engine& engine, std::vector<FvrScript::InstructionParam> args)
+void plgLoadSaveLoad(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
 {
     if (args.size() != 1) {
         std::cerr << "plgLoadSaveLoad: invalid number of arguments" << std::endl;
@@ -932,13 +932,13 @@ void plgLoadSaveLoad(Engine& engine, std::vector<FvrScript::InstructionParam> ar
     std::cout << "plgLoadSaveLoad: not implemented: " << value << std::endl;
 }
 
-void plgSaveCoffre(Engine& engine, std::vector<FvrScript::InstructionParam> args)
+void plgSaveCoffre(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
 {
     // TODO: implement
     std::cout << "plgSaveCoffre: not implemented" << std::endl;
 }
 
-void plgLoadSaveSetContextLabel(Engine& engine, std::vector<FvrScript::InstructionParam> args)
+void plgLoadSaveSetContextLabel(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
 {
     if (args.size() != 1) {
         std::cerr << "plgLoadSaveSetContextLabel: invalid number of arguments" << std::endl;
@@ -956,7 +956,7 @@ void plgLoadSaveSetContextLabel(Engine& engine, std::vector<FvrScript::Instructi
     std::cout << "plgLoadSaveSetContextLabel: not implemented: " << value << std::endl;
 }
 
-void plgLoadSaveDrawSlot(Engine& engine, std::vector<FvrScript::InstructionParam> args)
+void plgLoadSaveDrawSlot(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
 {
     if (args.size() != 4) {
         std::cerr << "plgLoadSaveDrawSlot: invalid number of arguments" << std::endl;
@@ -977,12 +977,12 @@ void plgLoadSaveDrawSlot(Engine& engine, std::vector<FvrScript::InstructionParam
     std::cout << "plgLoadSaveDrawSlot: not implemented: " << value1 << " " << value2 << " " << value3 << " " << value4 << std::endl;
 }
 
-void plgEnd(Engine& engine, std::vector<FvrScript::InstructionParam> args)
+void plgEnd(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
 {
     engine.end();
 }
 
-void plgInit2(Engine& engine, std::vector<FvrScript::InstructionParam> args)
+void plgInit2(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
 {
     if (args.size() != 1) {
         std::cerr << "plgInit2: invalid number of arguments" << std::endl;
@@ -1001,7 +1001,7 @@ void plgInit2(Engine& engine, std::vector<FvrScript::InstructionParam> args)
     engine.setStateValue(variable, 0.0);
 }
 
-void plgInit(Engine& engine, std::vector<FvrScript::InstructionParam> args)
+void plgInit(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
 {
     if (args.size() != 2) {
         std::cerr << "plgInit: invalid number of arguments" << std::endl;
@@ -1028,7 +1028,7 @@ void plgInit(Engine& engine, std::vector<FvrScript::InstructionParam> args)
     engine.setStateValue(variable, 0.0);
 }
 
-void plgLoadSaveEnterScript(Engine& engine, std::vector<FvrScript::InstructionParam> args)
+void plgLoadSaveEnterScript(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
 {
     if (args.size() != 2) {
         std::cerr << "plgLoadSaveEnterScript: invalid number of arguments" << std::endl;
@@ -1049,13 +1049,13 @@ void plgLoadSaveEnterScript(Engine& engine, std::vector<FvrScript::InstructionPa
     engine.setStateValue(notVar, 1.0); // Not reloading
 }
 
-void plgLoadCoffre(Engine& engine, std::vector<FvrScript::InstructionParam> args)
+void plgLoadCoffre(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
 {
     // TODO: implement
     std::cout << "plgLoadCoffre: not implemented" << std::endl;
 }
 
-void plgGetMonde4(Engine& engine, std::vector<FvrScript::InstructionParam> args)
+void plgGetMonde4(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
 {
     if (args.size() != 2) {
         std::cerr << "plgGetMonde4: invalid number of arguments" << std::endl;
@@ -1076,7 +1076,7 @@ void plgGetMonde4(Engine& engine, std::vector<FvrScript::InstructionParam> args)
     engine.setStateValue(notCond, 1.0);
 }
 
-void plgSelect(Engine& engine, std::vector<FvrScript::InstructionParam> args)
+void plgSelect(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
 {
     if (args.size() != 3) {
         std::cerr << "plgSelect: invalid number of arguments" << std::endl;
@@ -1103,7 +1103,7 @@ void plgSelect(Engine& engine, std::vector<FvrScript::InstructionParam> args)
     printPortefSelectedObject(engine, g_louvreData.selectedObjectSlot);
 }
 
-void plgDoAction(Engine& engine, std::vector<FvrScript::InstructionParam> args)
+void plgDoAction(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
 {
     if (args.size() != 2) {
         std::cerr << "plgDoAction: invalid number of arguments" << std::endl;
@@ -1152,7 +1152,7 @@ void plgDoAction(Engine& engine, std::vector<FvrScript::InstructionParam> args)
     }
 }
 
-void plgDiscocier(Engine& engine, std::vector<FvrScript::InstructionParam> args)
+void plgDiscocier(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
 {
     if (args.size() != 1) {
         std::cerr << "plgDiscocier: invalid number of arguments" << std::endl;

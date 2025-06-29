@@ -9,11 +9,11 @@
 #include <variant>
 #include <vector>
 
-#include <fvr_files/fvr_script.h>
+#include <ofnx/files/lst.h>
 
 class LIBFVRENGINE_EXPORT Engine {
 public:
-    using ScriptFunction = std::function<void(Engine& engine, std::vector<FvrScript::InstructionParam> args)>;
+    using ScriptFunction = std::function<void(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)>;
 
 public:
     Engine();
@@ -41,8 +41,8 @@ public:
 
     void gotoWarp(const std::string& warpName);
 
-    FvrScript::InstructionParam getStateValue(const std::string& key);
-    void setStateValue(const std::string& key, const FvrScript::InstructionParam& value);
+    ofnx::files::Lst::InstructionParam getStateValue(const std::string& key);
+    void setStateValue(const std::string& key, const ofnx::files::Lst::InstructionParam& value);
 
     void playAnim(const std::string& animName);
 
