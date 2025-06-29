@@ -180,22 +180,16 @@ void Engine::EnginePrivate::render()
     }
 
     // Update animations
-    bool updated = false;
     for (const std::string& animName : m_playingAnim) {
-        updated = true;
         m_fileVr.applyAnimationFrameRgb565(animName, m_vrImageData.data());
     }
 
     // Render
     if (isPanoramic()) {
-        if (updated) {
-            m_ofnxManager.renderer().updateVr(m_vrImageData.data());
-        }
+        m_ofnxManager.renderer().updateVr(m_vrImageData.data());
         m_ofnxManager.renderer().renderVr(m_yaw, m_pitch, m_roll, WINDOW_FOV);
     } else {
-        if (updated) {
-            m_ofnxManager.renderer().updateFrame(m_vrImageData.data());
-        }
+        m_ofnxManager.renderer().updateFrame(m_vrImageData.data());
         m_ofnxManager.renderer().renderFrame();
     }
 }
@@ -421,10 +415,8 @@ void Engine::gotoWarp(const std::string& warpName)
         }
 
         if (isPanoramic()) {
-            d_ptr->m_ofnxManager.renderer().updateVr(d_ptr->m_vrImageData.data());
             d_ptr->m_ofnxManager.renderer().setCursorSettings(true, true);
         } else {
-            d_ptr->m_ofnxManager.renderer().updateFrame(d_ptr->m_vrImageData.data());
             d_ptr->m_ofnxManager.renderer().setCursorSettings(true, false);
         }
 
