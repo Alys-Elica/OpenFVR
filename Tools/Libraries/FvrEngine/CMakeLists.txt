@@ -10,8 +10,6 @@ set(PROJECT_FILE_HEADERS
     base/miniaudio.h
 
     engine/audio.h
-    engine/input.h
-    engine/render.h
     engine/script.h
     
     libfvrengine_globals.h
@@ -20,8 +18,6 @@ set(PROJECT_FILE_HEADERS
 
 set(PROJECT_FILE_SOURCES
     engine/audio.cpp
-    engine/input.cpp
-    engine/render.cpp
     engine/script.cpp
     
     engine.cpp
@@ -36,16 +32,6 @@ target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_compile_definitions(${PROJECT_NAME} PRIVATE LIBFVRENGINE_EXPORTS)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE LibFVR)
-target_link_libraries(${PROJECT_NAME} PRIVATE FvrRenderer)
-
-# SDL2
-find_package(SDL2 REQUIRED)
-include_directories(${SDL2_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME} PRIVATE ${SDL2_LIBRARIES})
-
-# SDL2_image
-find_package(SDL2_image REQUIRED)
-target_link_libraries(${PROJECT_NAME} PRIVATE $<IF:$<TARGET_EXISTS:SDL2_image::SDL2_image>,SDL2_image::SDL2_image,SDL2_image::SDL2_image-static>)
 
 # FFMPEG
 # find_package(FFMPEG REQUIRED)
@@ -66,3 +52,7 @@ pkg_check_modules(LIBAV REQUIRED IMPORTED_TARGET
 target_link_libraries(${PROJECT_NAME} PRIVATE
     PkgConfig::LIBAV
 )
+
+# ofnx
+add_dependencies(${PROJECT_NAME} ofnx)
+target_link_libraries(${PROJECT_NAME} LINK_PUBLIC ofnx)

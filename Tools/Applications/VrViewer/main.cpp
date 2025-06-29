@@ -88,7 +88,7 @@ int main(int argc, char* argv[])
                 break;
 
             case ofnx::OfnxManager::Event::MouseMove: {
-                yawDeg -= event.xRel * FNXVR_MOUSE_SENSITIVITY;
+                yawDeg += event.xRel * FNXVR_MOUSE_SENSITIVITY;
                 pitchDeg -= event.yRel * FNXVR_MOUSE_SENSITIVITY;
 
                 if (yawDeg < 0.0f) {

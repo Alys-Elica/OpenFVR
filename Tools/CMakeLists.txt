@@ -12,5 +12,5 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/build/out/${CMAKE_BUILD_T
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/build/out/${CMAKE_BUILD_TYPE}/bin)
 
 add_subdirectory(Applications)
-# add_subdirectory(Games) # Temporarly disabled
+add_subdirectory(Games)
 add_subdirectory(Libraries)

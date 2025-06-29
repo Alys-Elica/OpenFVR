@@ -6,18 +6,16 @@
 #include <filesystem>
 #include <iostream>
 #include <map>
+#include <set>
 #include <thread>
 
-#include <SDL.h>
-#include <fvr_files/fvr_4xm.h>
 #include <fvr_files/fvr_script.h>
-#include <fvr_files/fvr_tst.h>
-#include <fvr_files/fvr_vr.h>
-#include <fvrrenderer.h>
+
+#include <ofnx/files/tst.h>
+#include <ofnx/files/vr.h>
+#include <ofnx/ofnxmanager.h>
 
 #include "engine/audio.h"
-#include "engine/input.h"
-#include "engine/render.h"
 #include "engine/script.h"
 
 extern "C" {
@@ -30,9 +28,10 @@ extern "C" {
 /* Constants */
 #define ENGINE_DATA_PATH "data/"
 #define ENGINE_FPS 30
+#define ENGINE_WIDTH 640
+#define ENGINE_HEIGHT 480
 #define WINDOW_FOV 1.0f
-#define PI 3.14159265359f
-#define MOUSE_SENSITIVITY 0.005f
+#define MOUSE_SENSITIVITY 0.1f
 
 /* Private */
 class Engine::EnginePrivate {
@@ -59,17 +58,16 @@ private:
 #endif
 
     // Engine objects
+    ofnx::OfnxManager m_ofnxManager;
     Audio m_audio;
-    Input m_input;
-    Render m_render;
 
     // Data
     FvrScript m_script;
     std::map<std::string, ScriptFunction> m_functions;
     std::string m_dataPath;
 
-    FvrVr m_fileVr;
-    FvrTst m_fileTst;
+    ofnx::files::Vr m_fileVr;
+    ofnx::files::Tst m_fileTst;
 
     bool m_isRunning = true;
 
@@ -77,24 +75,21 @@ private:
 
     std::map<std::string, FvrScript::InstructionParam> m_stateValues;
 
-    std::vector<uint16_t> m_frameBuffer;
-    FvrRenderer m_vrRenderer;
-    std::map<std::string, int> m_playingAnim;
-    std::map<std::string, FvrVr::Animation> m_animData;
+    std::vector<uint16_t> m_vrImageData;
+    std::set<std::string> m_playingAnim;
 
     std::map<int, std::string> m_keyWarp;
     std::map<int, std::string> m_warpZoneCursor; // TODO: better implementation
 
     // VR
-    float m_yaw = 4.71f; // 270°
-    float m_pitch = 1.57f; // 90°
-    float m_roll = 0.0f; // 0°
+    float m_yaw = 270.0f;
+    float m_pitch = 90.0f;
+    float m_roll = 0.0f;
 
     int m_pointedZone = -1;
 
     // Movie
     bool m_inMovieMode = false;
-    std::vector<uint16_t> m_frameBufferMovie;
 };
 
 bool Engine::EnginePrivate::loadScript(const std::string& scriptFile)
@@ -173,55 +168,35 @@ void Engine::EnginePrivate::executeBlock(const FvrScript::InstructionBlock& bloc
 
 bool Engine::EnginePrivate::isPanoramic() const
 {
-    return m_fileVr.getType() == FvrVr::Type::VR_STATIC_VR;
+    return m_fileVr.getType() == ofnx::files::Vr::Type::VR_STATIC_VR;
 }
 
 void Engine::EnginePrivate::render()
 {
     if (!m_inMovieMode) {
+        // Update cursor
+        if (m_pointedZone == -1) {
+            m_ofnxManager.renderer()
+                .setCursorSystem(ofnx::graphics::RendererOpenGL::CursorSystem::Default);
+        } else {
+            m_ofnxManager.renderer()
+                .setCursorSystem(ofnx::graphics::RendererOpenGL::CursorSystem::Pointer);
+        }
+
         // Update animations
-        for (auto& animIt : m_playingAnim) {
-            if (animIt.second < m_animData[animIt.first].frames.size() - 1) {
-                animIt.second++;
-            } else {
-                animIt.second = 0;
-            }
-
-            // Apply frame
-            const FvrVr::AnimationFrame& frame = m_animData.at(animIt.first).frames[animIt.second];
-            for (int idxBlock = 0; idxBlock < frame.offsetList.size(); idxBlock++) {
-                const uint32_t offset = frame.offsetList.at(idxBlock);
-                const uint8_t* blockData = frame.data.data() + idxBlock * 64 * 2;
-
-                for (int idxPixel = 0; idxPixel < 64; idxPixel++) {
-                    const uint8_t lsb = blockData[idxPixel * 2];
-                    const uint8_t msb = blockData[idxPixel * 2 + 1];
-
-                    const uint16_t pixel = (msb << 8) | lsb;
-
-                    if (isPanoramic()) {
-                        unsigned short* buffer = m_vrRenderer.cubemapBuffer();
-                        buffer[offset + m_fileVr.getWidth() * (idxPixel / 8) + (idxPixel % 8)] = pixel;
-                    } else {
-                        m_frameBuffer[offset + m_fileVr.getWidth() * (idxPixel / 8) + (idxPixel % 8)] = pixel;
-                    }
-                }
-            }
+        for (const std::string& animName : m_playingAnim) {
+            m_fileVr.applyAnimationFrameRgb565(animName, m_vrImageData.data());
         }
 
         // Render
         if (isPanoramic()) {
-            // Draw to surface
-            m_vrRenderer.render(
-                m_frameBuffer.data(),
-                m_yaw - 1.570795f, // Rotate 90 degrees
-                m_pitch,
-                m_roll,
-                WINDOW_FOV);
+            m_ofnxManager.renderer().updateVr(m_vrImageData.data());
+            m_ofnxManager.renderer().renderVr(m_yaw, m_pitch, m_roll, WINDOW_FOV);
+        } else {
+            m_ofnxManager.renderer().updateFrame(m_vrImageData.data());
+            m_ofnxManager.renderer().renderFrame();
         }
     }
-
-    m_render.render(*parent);
 }
 
 /* Public */
@@ -240,31 +215,21 @@ Engine::~Engine()
 
 bool Engine::init()
 {
-    SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
-
     // Init engine objects
+    if (!d_ptr->m_ofnxManager.init(ENGINE_WIDTH, ENGINE_HEIGHT)) {
+        std::cerr << "Failed to initialize ofnx manager" << std::endl;
+        return false;
+    }
+
     if (!d_ptr->m_audio.init()) {
         std::cerr << "Failed to initialize audio" << std::endl;
-        deinit();
-        return false;
-    }
-
-    if (!d_ptr->m_render.init()) {
-        std::cerr << "Failed to initialize render" << std::endl;
-        deinit();
-        return false;
-    }
-
-    if (!d_ptr->m_input.init()) {
-        std::cerr << "Failed to initialize input" << std::endl;
-        deinit();
+        d_ptr->m_ofnxManager.deinit();
         return false;
     }
 
     // Init data
     registerScriptFunctions(*this);
     d_ptr->m_dataPath = ENGINE_DATA_PATH;
-    d_ptr->m_vrRenderer.setResolution(d_ptr->m_render.getWidth(), d_ptr->m_render.getHeight());
     d_ptr->m_isInit = true;
 
     return true;
@@ -293,47 +258,47 @@ void Engine::loop()
             d_ptr->m_lastTime = currentTime;
 
             // Update
-            std::vector<Input::Event> events = d_ptr->m_input.update();
-            for (const Input::Event& event : events) {
+            std::vector<ofnx::OfnxManager::Event> events = d_ptr->m_ofnxManager.getEvents();
+            for (const ofnx::OfnxManager::Event& event : events) {
                 if (d_ptr->m_keyWarp.find(event.type) != d_ptr->m_keyWarp.end()) {
                     gotoWarp(d_ptr->m_keyWarp[event.type]);
                 }
 
                 switch (event.type) {
-                case Input::Event::Type::Quit:
+                case ofnx::OfnxManager::Event::Type::Quit:
                     d_ptr->m_isRunning = false;
                     break;
-                case Input::Event::Type::MouseMove:
+                case ofnx::OfnxManager::Event::Type::MouseMove:
                     if (isPanoramic()) {
                         d_ptr->m_yaw += event.xRel * MOUSE_SENSITIVITY;
                         d_ptr->m_pitch -= event.yRel * MOUSE_SENSITIVITY;
 
                         if (d_ptr->m_yaw < 0.0f) {
-                            d_ptr->m_yaw = 2.0f * PI;
-                        } else if (d_ptr->m_yaw > 2.0f * PI) {
+                            d_ptr->m_yaw = 360.0f;
+                        } else if (d_ptr->m_yaw > 360.0f) {
                             d_ptr->m_yaw = 0.0f;
                         }
 
                         if (d_ptr->m_pitch < 0.0f) {
                             d_ptr->m_pitch = 0.0f;
-                        } else if (d_ptr->m_pitch > 2.0f * PI) {
+                        } else if (d_ptr->m_pitch > 360.0f) {
                             d_ptr->m_pitch = 0.0f;
                         }
 
-                        d_ptr->m_pitch = std::clamp(d_ptr->m_pitch, 0.0f, PI);
+                        d_ptr->m_pitch = std::clamp(d_ptr->m_pitch, 0.0f, 180.0f);
 
-                        d_ptr->m_pointedZone = d_ptr->m_fileTst.checkAngleZone(d_ptr->m_yaw, d_ptr->m_pitch);
+                        d_ptr->m_pointedZone = d_ptr->m_fileTst.checkZoneVr(d_ptr->m_yaw, d_ptr->m_pitch);
                     } else {
-                        d_ptr->m_pointedZone = d_ptr->m_fileTst.checkStaticZone((float)event.x, (float)event.y);
+                        d_ptr->m_pointedZone = d_ptr->m_fileTst.checkZoneStatic((float)event.x, (float)event.y);
                     }
                     break;
-                case Input::Event::Type::MouseClickLeft:
+                case ofnx::OfnxManager::Event::Type::MouseClickLeft:
                     int zoneIndex;
 
                     if (isPanoramic()) {
-                        zoneIndex = d_ptr->m_fileTst.checkAngleZone(d_ptr->m_yaw, d_ptr->m_pitch);
+                        zoneIndex = d_ptr->m_fileTst.checkZoneVr(d_ptr->m_yaw, d_ptr->m_pitch);
                     } else {
-                        zoneIndex = d_ptr->m_fileTst.checkStaticZone((float)event.x, (float)event.y);
+                        zoneIndex = d_ptr->m_fileTst.checkZoneStatic((float)event.x, (float)event.y);
                     }
 
                     if (zoneIndex >= 0) {
@@ -357,15 +322,8 @@ void Engine::deinit()
         return;
     }
 
-    if (d_ptr->m_fileVr.isOpen()) {
-        d_ptr->m_fileVr.close();
-    }
-
+    d_ptr->m_ofnxManager.deinit();
     d_ptr->m_audio.deinit();
-    d_ptr->m_input.deinit();
-    d_ptr->m_render.deinit();
-
-    SDL_Quit();
 
     d_ptr->m_isInit = false;
 }
@@ -387,7 +345,7 @@ bool Engine::inMovieMode() const
 
 bool Engine::isPanoramic() const
 {
-    return d_ptr->m_fileVr.getType() == FvrVr::Type::VR_STATIC_VR;
+    return d_ptr->m_fileVr.getType() == ofnx::files::Vr::Type::VR_STATIC_VR;
 }
 
 bool Engine::isOnZone() const
@@ -402,7 +360,7 @@ int Engine::pointedZone() const
 
 std::vector<uint16_t>& Engine::getFrameBuffer()
 {
-    return inMovieMode() ? d_ptr->m_frameBufferMovie : d_ptr->m_frameBuffer;
+    return d_ptr->m_vrImageData;
 }
 
 void Engine::registerKeyWarp(int key, const std::string& warpName)
@@ -410,10 +368,10 @@ void Engine::registerKeyWarp(int key, const std::string& warpName)
     // TODO: implement missing keys
     switch (key) {
     case 0: // Escape
-        d_ptr->m_keyWarp.insert({ Input::Event::Type::MainMenu, warpName });
+        d_ptr->m_keyWarp.insert({ ofnx::OfnxManager::Event::Type::MainMenu, warpName });
         break;
     case 12: // Right-click
-        d_ptr->m_keyWarp.insert({ Input::Event::Type::MouseClickRight, warpName });
+        d_ptr->m_keyWarp.insert({ ofnx::OfnxManager::Event::Type::MouseClickRight, warpName });
         break;
     default:
         std::cerr << "Invalid key for warp" << std::endl;
@@ -457,22 +415,19 @@ void Engine::gotoWarp(const std::string& warpName)
     d_ptr->m_currentWarp = warpName;
     d_ptr->m_warpZoneCursor.clear();
 
-    if (d_ptr->m_fileVr.isOpen()) {
-        d_ptr->m_fileVr.close();
-    }
-
     const std::string warpVr = d_ptr->m_dataPath + "warp/" + warpName + ".vr";
-    if (d_ptr->m_fileVr.open(warpVr)) {
-        for (const std::string& anim : d_ptr->m_fileVr.getAnimationList()) {
-            d_ptr->m_animData.insert({ anim, FvrVr::Animation() });
-            d_ptr->m_fileVr.getAnimation(anim, d_ptr->m_animData[anim]);
+    if (d_ptr->m_fileVr.load(warpVr)) {
+        if (!d_ptr->m_fileVr.getDataRgb565(d_ptr->m_vrImageData)) {
+            std::cerr << "Failed to load VR image data" << std::endl;
+            return;
         }
 
         if (d_ptr->isPanoramic()) {
-            std::memcpy(d_ptr->m_vrRenderer.cubemapBuffer(), d_ptr->m_fileVr.getData().data(), d_ptr->m_fileVr.getData().size());
+            d_ptr->m_ofnxManager.renderer().updateVr(d_ptr->m_vrImageData.data());
+            d_ptr->m_ofnxManager.renderer().setCursorSettings(true, true);
         } else {
-            d_ptr->m_frameBuffer.resize(d_ptr->m_fileVr.getData().size() / 2);
-            std::memcpy(d_ptr->m_frameBuffer.data(), d_ptr->m_fileVr.getData().data(), d_ptr->m_fileVr.getData().size());
+            d_ptr->m_ofnxManager.renderer().updateFrame(d_ptr->m_vrImageData.data());
+            d_ptr->m_ofnxManager.renderer().setCursorSettings(true, false);
         }
 
         // Load zones if available
@@ -506,7 +461,7 @@ void Engine::setStateValue(const std::string& key, const FvrScript::InstructionP
 
 void Engine::playAnim(const std::string& animName)
 {
-    d_ptr->m_playingAnim.insert({ animName, 0 }); // Stores the current frame
+    d_ptr->m_playingAnim.insert(animName); // Stores the current frame
 }
 
 void Engine::playSound(const std::string& soundFile, uint8_t volume, bool loop)
@@ -524,7 +479,7 @@ void Engine::playMovie(const std::string& movieFile)
     // TODO: debug to skip movie playback, remove when done
     // return;
 
-    std::string fileName = d_ptr->m_dataPath + "video/" + movieFile;
+    /*std::string fileName = d_ptr->m_dataPath + "video/" + movieFile;
 
     // Init libavcodec
     AVFormatContext* formatContext = avformat_alloc_context();
@@ -741,5 +696,5 @@ void Engine::playMovie(const std::string& movieFile)
     }
     avformat_close_input(&formatContext);
 
-    d_ptr->m_inMovieMode = false;
+    d_ptr->m_inMovieMode = false;*/
 }
