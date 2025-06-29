@@ -345,7 +345,7 @@ bool Engine::inMovieMode() const
 
 bool Engine::isPanoramic() const
 {
-    return d_ptr->m_fileVr.getType() == ofnx::files::Vr::Type::VR_STATIC_VR;
+    return d_ptr->isPanoramic();
 }
 
 bool Engine::isOnZone() const
