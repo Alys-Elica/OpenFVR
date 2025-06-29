@@ -3,6 +3,7 @@ build/
 build_debug/
 build_release/
 buildOut/
+data/
 
 # C++ objects and libs
 *.slo
