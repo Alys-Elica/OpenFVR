@@ -7,7 +7,7 @@
 #include <string>
 #include <thread>
 
-#include <fvr_files/fvr_arnvit.h>
+#include <ofnx/files/arnvit.h>
 
 constexpr int INVENTORY_SIZE = 8;
 
@@ -235,7 +235,7 @@ struct LouvreData {
     int objectInventory[INVENTORY_SIZE] = { -1, -1, -1, -1, -1, -1, -1, -1 };
     int selectedObjectSlot = -1;
 
-    FvrArnVit arnVit;
+    ofnx::files::ArnVit arnVit;
 };
 
 LouvreData g_louvreData;
@@ -243,7 +243,7 @@ LouvreData g_louvreData;
 /* Helper functions */
 void drawImageToScreen(Engine& engine, const std::string& img, int x, int y)
 {
-    FvrArnVit::ArnVitFile file = g_louvreData.arnVit.getFile(img);
+    ofnx::files::ArnVit::ArnVitFile file = g_louvreData.arnVit.getFile(img);
     if (file.data.empty()) {
         std::cerr << "Unable to read image file: " << img << std::endl;
         return;

@@ -6,7 +6,6 @@
 
 #include <ofnx/files/pak.h>
 
-#include <fvr_files/fvr_arnvit.h>
 #include <fvr_files/fvr_script.h>
 
 #ifdef _WIN32

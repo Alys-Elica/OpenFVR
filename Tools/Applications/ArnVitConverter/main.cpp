@@ -2,7 +2,7 @@
 #include <fstream>
 #include <iostream>
 
-#include <fvr_files/fvr_arnvit.h>
+#include <ofnx/files/arnvit.h>
 
 int main(int argc, char* argv[])
 {
@@ -14,7 +14,7 @@ int main(int argc, char* argv[])
     std::string vitFileName = argv[1];
     std::string arnFileName = argv[2];
 
-    FvrArnVit arnVit;
+    ofnx::files::ArnVit arnVit;
     if (!arnVit.open(vitFileName, arnFileName)) {
         std::cerr << "Unable to open ARN/VIT files" << std::endl;
         return false;
