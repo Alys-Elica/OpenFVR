@@ -53,7 +53,7 @@ int main(int argc, char* argv[])
 
     // Init Ofnx manager
     ofnx::OfnxManager ofnx;
-    if (!ofnx.init(FNXVR_WINDOW_WIDTH, FNXVR_WINDOW_HEIGHT)) {
+    if (!ofnx.init(FNXVR_WINDOW_WIDTH, FNXVR_WINDOW_HEIGHT, vrFile.getType() == ofnx::files::Vr::Type::VR2_STATIC_VR)) {
         std::cerr << "Failed to init Ofnx manager" << std::endl;
         return 1;
     }

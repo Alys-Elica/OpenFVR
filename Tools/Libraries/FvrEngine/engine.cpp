@@ -209,7 +209,8 @@ Engine::~Engine()
 bool Engine::init()
 {
     // Init engine objects
-    if (!d_ptr->m_ofnxManager.init(ENGINE_WIDTH, ENGINE_HEIGHT)) {
+    // TODO: manage old/new VR version
+    if (!d_ptr->m_ofnxManager.init(ENGINE_WIDTH, ENGINE_HEIGHT, false)) {
         std::cerr << "Failed to initialize ofnx manager" << std::endl;
         return false;
     }
