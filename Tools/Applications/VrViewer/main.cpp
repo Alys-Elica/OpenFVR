@@ -60,7 +60,9 @@ int main(int argc, char* argv[])
 
     // Main loop
     bool isVr = true;
-    if (vrFile.getType() == ofnx::files::Vr::Type::VR_STATIC_VR) {
+    // TODO: VR2 files seems to have a different cube face structure
+    if (vrFile.getType() == ofnx::files::Vr::Type::VR_STATIC_VR
+        || vrFile.getType() == ofnx::files::Vr::Type::VR2_STATIC_VR) {
         ofnx.renderer().updateVr(imageData.data());
         ofnx.renderer().setCursorSettings(true, true);
         isVr = true;
