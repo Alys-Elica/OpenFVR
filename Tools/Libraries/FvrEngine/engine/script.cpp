@@ -234,8 +234,7 @@ void fvrSetCursorDefault(Engine& engine, std::vector<ofnx::files::Lst::Instructi
     double value = std::get<double>(args[0]);
     std::string cursor = std::get<std::string>(args[1]);
 
-    // TODO: implement
-    std::cout << "fvrSetCursorDefault: not implemented: " << value << " " << cursor << std::endl;
+    engine.setDefaultCursor(value, cursor);
 }
 
 void fvrFade(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)

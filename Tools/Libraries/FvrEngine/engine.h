@@ -44,6 +44,8 @@ public:
     ofnx::files::Lst::InstructionParam getStateValue(const std::string& key);
     void setStateValue(const std::string& key, const ofnx::files::Lst::InstructionParam& value);
 
+    void setDefaultCursor(const int index, const std::string& cursor);
+
     void playAnim(const std::string& animName);
 
     void playSound(const std::string& soundFile, uint8_t volume, bool loop = false);

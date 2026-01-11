@@ -77,6 +77,7 @@ private:
     std::set<std::string> m_playingAnim;
 
     std::map<int, std::string> m_keyWarp;
+    std::map<int, std::string> m_defaultCursor; // TODO: better implementation
     std::map<int, std::string> m_warpZoneCursor; // TODO: better implementation
 
     // VR
@@ -302,11 +303,20 @@ void Engine::loop()
                 if (d_ptr->m_warpZoneCursor.contains(d_ptr->m_pointedZone)) {
                     d_ptr->m_ofnxManager.renderer().setCursor(ENGINE_DATA_PATH "image/" + d_ptr->m_warpZoneCursor[d_ptr->m_pointedZone]);
                 } else {
-                    // TODO: get cursor from default
                     if (d_ptr->m_pointedZone == -1) {
-                        d_ptr->m_ofnxManager.renderer().setCursor(ENGINE_DATA_PATH "image/cursor1.gif");
+                        if (d_ptr->m_defaultCursor.contains(0)) {
+                            d_ptr->m_ofnxManager.renderer().setCursor(ENGINE_DATA_PATH "image/" + d_ptr->m_defaultCursor[0]);
+                        } else {
+                            d_ptr->m_ofnxManager.renderer()
+                                .setCursorSystem(ofnx::graphics::RendererOpenGL::CursorSystem::Default);
+                        }
                     } else {
-                        d_ptr->m_ofnxManager.renderer().setCursor(ENGINE_DATA_PATH "image/cursor2.gif");
+                        if (d_ptr->m_defaultCursor.contains(1)) {
+                            d_ptr->m_ofnxManager.renderer().setCursor(ENGINE_DATA_PATH "image/" + d_ptr->m_defaultCursor[1]);
+                        } else {
+                            d_ptr->m_ofnxManager.renderer()
+                                .setCursorSystem(ofnx::graphics::RendererOpenGL::CursorSystem::Default);
+                        }
                     }
                 }
             }
@@ -454,6 +464,11 @@ void Engine::setStateValue(const std::string& key, const ofnx::files::Lst::Instr
         [](unsigned char c) { return std::tolower(c); });
 
     d_ptr->m_stateValues[s] = value;
+}
+
+void Engine::setDefaultCursor(const int index, const std::string& cursor)
+{
+    d_ptr->m_defaultCursor[index] = cursor;
 }
 
 void Engine::playAnim(const std::string& animName)
@@ -701,7 +716,6 @@ void Engine::fade(int start, int end, int timer)
         // Linear interpolation
         currentFade = start + t * (end - start);
 
-        // TODO: apply fade
         for (uint16_t& pixel : d_ptr->m_vrImageData) {
             int r = (pixel >> 11) & 0x1F; // 5 bits
             int g = (pixel >> 5) & 0x3F; // 6 bits
