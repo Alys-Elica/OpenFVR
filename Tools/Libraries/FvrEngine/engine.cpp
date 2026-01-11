@@ -737,6 +737,8 @@ void Engine::whileLoop(int timer)
 
         elapsed += delta;
 
+        d_ptr->render();
+
         std::this_thread::sleep_for(frameDelay);
 
         // Update events
@@ -765,6 +767,8 @@ void Engine::untilLoop(const std::string& variable, const int value)
         lastTime = currentTime;
 
         start += delta;
+
+        d_ptr->render();
 
         std::this_thread::sleep_for(frameDelay);
 
