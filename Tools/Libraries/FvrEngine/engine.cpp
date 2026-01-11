@@ -668,3 +668,9 @@ void Engine::playMovie(const std::string& movieFile)
     }
     avformat_close_input(&formatContext);
 }
+
+void Engine::setAngle(const float pitch, const float yaw)
+{
+    d_ptr->m_pitch = pitch;
+    d_ptr->m_yaw = yaw;
+}

@@ -275,11 +275,19 @@ void fvrSetAngle(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam>
         return;
     }
 
-    double value1 = std::get<double>(args[0]);
-    double value2 = std::get<double>(args[1]);
+    int pitchInt = (int)std::get<double>(args[0]) & 0x1fff;
+    int yawInt = (int)std::get<double>(args[1]) & 0x1fff;
 
-    // TODO: implement
-    std::cout << "fvrSetAngle: not implemented: " << value1 << " " << value2 << std::endl;
+    if (0xfff < (uint)pitchInt) {
+        pitchInt = pitchInt - 0x2000;
+    }
+
+    float pitch = pitchInt * 360.0f / 8192.0f; // Convert from 0-8192 range to degree
+    float yaw = yawInt * 360.0f / 8192.0f; // Convert from 0-8192 range to degree
+
+    pitch += 90;
+
+    engine.setAngle(pitch, yaw);
 }
 
 void fvrHideCursor(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)

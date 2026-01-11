@@ -51,6 +51,8 @@ public:
 
     void playMovie(const std::string& movieFile);
 
+    void setAngle(const float pitch, const float yaw);
+
 private:
     class EnginePrivate;
     EnginePrivate* d_ptr;
