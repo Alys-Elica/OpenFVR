@@ -168,15 +168,6 @@ bool Engine::EnginePrivate::isPanoramic() const
 
 void Engine::EnginePrivate::render()
 {
-    // Update cursor
-    if (m_pointedZone == -1) {
-        m_ofnxManager.renderer()
-            .setCursorSystem(ofnx::graphics::RendererOpenGL::CursorSystem::Default);
-    } else {
-        m_ofnxManager.renderer()
-            .setCursorSystem(ofnx::graphics::RendererOpenGL::CursorSystem::Pointer);
-    }
-
     // Update animations
     for (const std::string& animName : m_playingAnim) {
         m_fileVr.applyAnimationFrameRgb565(animName, m_vrImageData.data());
@@ -248,6 +239,8 @@ void Engine::loop()
         auto currentTime = std::chrono::high_resolution_clock::now();
         auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - d_ptr->m_lastTime);
 
+        int pointedZone = d_ptr->m_pointedZone;
+
         if (elapsedTime >= frameDelay) {
             d_ptr->m_lastTime = currentTime;
 
@@ -281,9 +274,9 @@ void Engine::loop()
 
                         d_ptr->m_pitch = std::clamp(d_ptr->m_pitch, 0.0f, 180.0f);
 
-                        d_ptr->m_pointedZone = d_ptr->m_fileTst.checkZoneVr(d_ptr->m_yaw, d_ptr->m_pitch);
+                        pointedZone = d_ptr->m_fileTst.checkZoneVr(d_ptr->m_yaw, d_ptr->m_pitch);
                     } else {
-                        d_ptr->m_pointedZone = d_ptr->m_fileTst.checkZoneStatic((float)event.x, (float)event.y);
+                        pointedZone = d_ptr->m_fileTst.checkZoneStatic((float)event.x, (float)event.y);
                     }
                     break;
                 case ofnx::OfnxManager::Event::Type::MouseClickLeft:
@@ -300,6 +293,21 @@ void Engine::loop()
                     }
 
                     break;
+                }
+            }
+
+            if (pointedZone != d_ptr->m_pointedZone) {
+                d_ptr->m_pointedZone = pointedZone;
+
+                if (d_ptr->m_warpZoneCursor.contains(d_ptr->m_pointedZone)) {
+                    d_ptr->m_ofnxManager.renderer().setCursor(ENGINE_DATA_PATH "image/" + d_ptr->m_warpZoneCursor[d_ptr->m_pointedZone]);
+                } else {
+                    // TODO: get cursor from default
+                    if (d_ptr->m_pointedZone == -1) {
+                        d_ptr->m_ofnxManager.renderer().setCursor(ENGINE_DATA_PATH "image/cursor1.gif");
+                    } else {
+                        d_ptr->m_ofnxManager.renderer().setCursor(ENGINE_DATA_PATH "image/cursor2.gif");
+                    }
                 }
             }
 
