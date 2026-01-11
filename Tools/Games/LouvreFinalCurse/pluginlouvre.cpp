@@ -538,11 +538,10 @@ void plgUntilLoop(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam
         return;
     }
 
-    std::string y = std::get<std::string>(args[0]);
+    std::string variable = std::get<std::string>(args[0]);
     double value = std::get<double>(args[1]);
 
-    // TODO: implement
-    std::cout << "plgUntilLoop: not implemented: " << y << " " << value << std::endl;
+    engine.untilLoop(variable, value);
 }
 
 void plgMemoryRelease(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)

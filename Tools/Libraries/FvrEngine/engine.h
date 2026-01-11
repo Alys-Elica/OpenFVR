@@ -54,6 +54,7 @@ public:
     void setAngle(const float pitch, const float yaw);
     void fade(int start, int end, int timer);
     void whileLoop(int timer);
+    void untilLoop(const std::string& variable, const int value);
 
 private:
     class EnginePrivate;

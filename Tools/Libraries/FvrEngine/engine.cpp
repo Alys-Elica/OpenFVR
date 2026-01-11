@@ -726,7 +726,7 @@ void Engine::whileLoop(int timer)
     std::vector<uint16_t> imageDataBak = d_ptr->m_vrImageData;
 
     const std::chrono::milliseconds frameDelay(1000 / ENGINE_FPS);
-    double duration = timer; // total fade duration in seconds
+    double duration = timer; // Total fade duration in seconds
     double elapsed = 0.0;
 
     auto lastTime = std::chrono::high_resolution_clock::now();
@@ -736,7 +736,35 @@ void Engine::whileLoop(int timer)
         lastTime = currentTime;
 
         elapsed += delta;
-        double t = std::clamp(elapsed / duration, 0.0, 1.0);
+
+        std::this_thread::sleep_for(frameDelay);
+
+        // Update events
+        std::vector<ofnx::OfnxManager::Event> events = d_ptr->m_ofnxManager.getEvents();
+        for (const ofnx::OfnxManager::Event& event : events) {
+            switch (event.type) {
+            case ofnx::OfnxManager::Event::Type::MouseClickLeft:
+                return;
+            }
+        }
+    }
+}
+
+void Engine::untilLoop(const std::string& variable, const int value)
+{
+    std::vector<uint16_t> imageDataBak = d_ptr->m_vrImageData;
+
+    const std::chrono::milliseconds frameDelay(1000 / ENGINE_FPS);
+    double start = std::get<double>(this->getStateValue(variable));
+    double elapsed = 0.0;
+
+    auto lastTime = std::chrono::high_resolution_clock::now();
+    while (start < value) {
+        auto currentTime = std::chrono::high_resolution_clock::now();
+        double delta = std::chrono::duration<double>(currentTime - lastTime).count();
+        lastTime = currentTime;
+
+        start += delta;
 
         std::this_thread::sleep_for(frameDelay);
 
