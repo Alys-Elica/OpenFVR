@@ -234,6 +234,7 @@ std::map<int, ObjectData> g_objectMap = {
 struct LouvreData {
     int objectInventory[INVENTORY_SIZE] = { -1, -1, -1, -1, -1, -1, -1, -1 };
     int selectedObjectSlot = -1;
+    double isMonde4 = 0.0;
 
     ofnx::files::ArnVit arnVit;
 };
@@ -638,6 +639,9 @@ void plgIsHere(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> a
 void plgDrawTextSelection(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
 {
     // TODO: implement
+
+    // Draws text in box: x1=62, y1=405, x2=354, y2464
+
     std::cout << "plgDrawTextSelection: not implemented" << std::endl;
 }
 
@@ -673,8 +677,26 @@ void plgSetMonde4(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam
 
     double value = std::get<double>(args[0]);
 
-    // TODO: implement
-    std::cout << "plgSetMonde4: not implemented: " << value << std::endl;
+    g_louvreData.isMonde4 = value;
+}
+
+void plgGetMonde4(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
+{
+    if (args.size() != 2) {
+        std::cerr << "plgGetMonde4: invalid number of arguments" << std::endl;
+        return;
+    }
+
+    if (!std::holds_alternative<std::string>(args[0]) || !std::holds_alternative<std::string>(args[1])) {
+        std::cerr << "plgGetMonde4: invalid arguments" << std::endl;
+        return;
+    }
+
+    std::string cond = std::get<std::string>(args[0]);
+    std::string notCond = std::get<std::string>(args[1]);
+
+    engine.setStateValue(cond, g_louvreData.isMonde4);
+    engine.setStateValue(notCond, g_louvreData.isMonde4);
 }
 
 void plgChangeCurseur(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
@@ -995,9 +1017,6 @@ void plgInit2(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> ar
     }
 
     std::string variable = std::get<std::string>(args[0]);
-
-    // TODO: implement
-    std::cout << "plgInit2: not implemented: " << variable << std::endl;
     engine.setStateValue(variable, 0.0);
 }
 
@@ -1016,9 +1035,6 @@ void plgInit(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> arg
     double value = std::get<double>(args[0]);
     std::string variable = std::get<std::string>(args[1]);
 
-    // TODO: implement
-    std::cout << "plgInit: not implemented: " << value << " " << variable << std::endl;
-
     bool ret = g_louvreData.arnVit.open("data/bdataheader.vit", "data/bdata1.arn");
     if (!ret) {
         std::cerr << "Failed to open arnVit" << std::endl;
@@ -1026,6 +1042,9 @@ void plgInit(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> arg
     }
 
     engine.setStateValue(variable, 0.0);
+    if (value == 2) {
+        engine.setStateValue(variable, 1.0);
+    }
 }
 
 void plgLoadSaveEnterScript(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
@@ -1053,27 +1072,6 @@ void plgLoadCoffre(Engine& engine, std::vector<ofnx::files::Lst::InstructionPara
 {
     // TODO: implement
     std::cout << "plgLoadCoffre: not implemented" << std::endl;
-}
-
-void plgGetMonde4(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
-{
-    if (args.size() != 2) {
-        std::cerr << "plgGetMonde4: invalid number of arguments" << std::endl;
-        return;
-    }
-
-    if (!std::holds_alternative<std::string>(args[0]) || !std::holds_alternative<std::string>(args[1])) {
-        std::cerr << "plgGetMonde4: invalid arguments" << std::endl;
-        return;
-    }
-
-    std::string cond = std::get<std::string>(args[0]);
-    std::string notCond = std::get<std::string>(args[1]);
-
-    // TODO: implement
-    std::cout << "plgGetMonde4: not implemented: " << cond << " " << notCond << std::endl;
-    engine.setStateValue(cond, 0.0);
-    engine.setStateValue(notCond, 1.0);
 }
 
 void plgSelect(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
@@ -1192,6 +1190,7 @@ void registerPluginLouvre(Engine& engine)
     engine.registerScriptFunction("drawtextselection", &plgDrawTextSelection);
     engine.registerScriptFunction("portefrollover", &plgPorteFRollover);
     engine.registerScriptFunction("setmonde4", &plgSetMonde4);
+    engine.registerScriptFunction("getmonde4", &plgGetMonde4);
     engine.registerScriptFunction("changecurseur", &plgChangeCurseur);
     engine.registerScriptFunction("loadsave_context_restored", &plgLoadSaveContextRestored);
     engine.registerScriptFunction("loadsave_capture_context", &plgLoadSaveCaptureContext);
@@ -1214,7 +1213,6 @@ void registerPluginLouvre(Engine& engine)
     engine.registerScriptFunction("init", &plgInit);
     engine.registerScriptFunction("loadsave_enter_script", &plgLoadSaveEnterScript);
     engine.registerScriptFunction("loadcoffre", &plgLoadCoffre);
-    engine.registerScriptFunction("getmonde4", &plgGetMonde4);
     engine.registerScriptFunction("select", &plgSelect);
     engine.registerScriptFunction("doaction", &plgDoAction);
     engine.registerScriptFunction("discocier", &plgDiscocier);
