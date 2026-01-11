@@ -646,9 +646,6 @@ void Engine::playMovie(const std::string& movieFile)
         std::vector<ofnx::OfnxManager::Event> events = d_ptr->m_ofnxManager.getEvents();
         for (const ofnx::OfnxManager::Event& event : events) {
             switch (event.type) {
-            case ofnx::OfnxManager::Event::Type::Quit:
-                exit = true;
-                break;
             case ofnx::OfnxManager::Event::Type::MouseClickLeft:
                 exit = true;
                 break;
@@ -673,4 +670,83 @@ void Engine::setAngle(const float pitch, const float yaw)
 {
     d_ptr->m_pitch = pitch;
     d_ptr->m_yaw = yaw;
+}
+
+void Engine::fade(int start, int end, int timer)
+{
+    std::vector<uint16_t> imageDataBak = d_ptr->m_vrImageData;
+
+    const std::chrono::milliseconds frameDelay(1000 / ENGINE_FPS);
+    double duration = timer; // total fade duration in seconds
+    double elapsed = 0.0;
+    double currentFade = start;
+
+    auto lastTime = std::chrono::high_resolution_clock::now();
+    while (elapsed < duration) {
+        auto currentTime = std::chrono::high_resolution_clock::now();
+        double delta = std::chrono::duration<double>(currentTime - lastTime).count();
+        lastTime = currentTime;
+
+        elapsed += delta;
+        double t = std::clamp(elapsed / duration, 0.0, 1.0);
+
+        // Linear interpolation
+        currentFade = start + t * (end - start);
+
+        // TODO: apply fade
+        for (uint16_t& pixel : d_ptr->m_vrImageData) {
+            int r = (pixel >> 11) & 0x1F; // 5 bits
+            int g = (pixel >> 5) & 0x3F; // 6 bits
+            int b = pixel & 0x1F; // 5 bits
+
+            r = std::clamp(static_cast<int>(r + currentFade), 0, 255);
+            g = std::clamp(static_cast<int>(g + currentFade), 0, 255);
+            b = std::clamp(static_cast<int>(b + currentFade), 0, 255);
+
+            pixel = (r << 11) | (g << 5) | b;
+        }
+        d_ptr->render();
+        d_ptr->m_vrImageData = imageDataBak;
+
+        std::this_thread::sleep_for(frameDelay);
+
+        // Update events
+        std::vector<ofnx::OfnxManager::Event> events = d_ptr->m_ofnxManager.getEvents();
+        for (const ofnx::OfnxManager::Event& event : events) {
+            switch (event.type) {
+            case ofnx::OfnxManager::Event::Type::MouseClickLeft:
+                return;
+            }
+        }
+    }
+}
+
+void Engine::whileLoop(int timer)
+{
+    std::vector<uint16_t> imageDataBak = d_ptr->m_vrImageData;
+
+    const std::chrono::milliseconds frameDelay(1000 / ENGINE_FPS);
+    double duration = timer; // total fade duration in seconds
+    double elapsed = 0.0;
+
+    auto lastTime = std::chrono::high_resolution_clock::now();
+    while (elapsed < duration) {
+        auto currentTime = std::chrono::high_resolution_clock::now();
+        double delta = std::chrono::duration<double>(currentTime - lastTime).count();
+        lastTime = currentTime;
+
+        elapsed += delta;
+        double t = std::clamp(elapsed / duration, 0.0, 1.0);
+
+        std::this_thread::sleep_for(frameDelay);
+
+        // Update events
+        std::vector<ofnx::OfnxManager::Event> events = d_ptr->m_ofnxManager.getEvents();
+        for (const ofnx::OfnxManager::Event& event : events) {
+            switch (event.type) {
+            case ofnx::OfnxManager::Event::Type::MouseClickLeft:
+                return;
+            }
+        }
+    }
 }

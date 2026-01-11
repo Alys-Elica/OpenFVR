@@ -250,12 +250,11 @@ void fvrFade(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> arg
         return;
     }
 
-    double value1 = std::get<double>(args[0]);
-    double value2 = std::get<double>(args[1]);
-    double value3 = std::get<double>(args[2]);
+    double start = std::get<double>(args[0]);
+    double end = std::get<double>(args[1]);
+    double timer = std::get<double>(args[2]);
 
-    // TODO: implement
-    std::cout << "fvrFade: not implemented: " << value1 << " " << value2 << " " << value3 << std::endl;
+    engine.fade(start, end, timer);
 }
 
 void fvrEnd(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)

@@ -624,10 +624,9 @@ void plgWhileLoop(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam
         return;
     }
 
-    double value = std::get<double>(args[0]);
+    double timer = std::get<double>(args[0]);
 
-    // TODO: implement
-    std::cout << "plgWhileLoop: not implemented: " << value << std::endl;
+    engine.whileLoop(timer);
 }
 
 void plgIsHere(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)

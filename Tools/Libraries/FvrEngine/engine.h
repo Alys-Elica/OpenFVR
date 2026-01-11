@@ -52,6 +52,8 @@ public:
     void playMovie(const std::string& movieFile);
 
     void setAngle(const float pitch, const float yaw);
+    void fade(int start, int end, int timer);
+    void whileLoop(int timer);
 
 private:
     class EnginePrivate;
