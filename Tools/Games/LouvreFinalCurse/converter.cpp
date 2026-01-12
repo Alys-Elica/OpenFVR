@@ -105,9 +105,9 @@ int main(int argc, char* argv[])
     std::string pathIn = "input/";
     std::string pathOut = "data/";
 
-    std::string pathInstall = pathIn + "CD1/Install/";
-    std::string pathData1 = pathIn + "CD1/Data/";
-    std::string pathData2 = pathIn + "CD2/Data/";
+    std::string pathInstall = pathIn + "CD1/install/";
+    std::string pathData1 = pathIn + "CD1/data/";
+    std::string pathData2 = pathIn + "CD2/data/";
 
     std::string pathOutAudio = pathOut + "audio/";
     std::string pathOutImage = pathOut + "image/";
@@ -142,26 +142,17 @@ int main(int argc, char* argv[])
     copyVideo(pathData2, pathOutVideo);
 
     // ARN/VIT
-    copyFile(pathInstall + "BData1.arn", pathOut, ".arn");
-    copyFile(pathInstall + "BDataHeader.vit", pathOut, ".vit");
+    copyFile(pathInstall + "bdata1.arn", pathOut, ".arn");
+    copyFile(pathInstall + "bdataheader.vit", pathOut, ".vit");
 
     // Texts
-    copyFile(pathInstall + "Textes.txt", pathOut, ".txt");
+    copyFile(pathInstall + "textes.txt", pathOut, ".txt");
 
     // Scripts
-    std::vector<uint8_t> dataScript1 = readScript(pathData1 + "Script.pak");
-    // Patching script 1
-    dataScript1[375'198] = ';';
+    std::vector<uint8_t> dataScript1 = readScript(pathData1 + "script.pak");
     saveScript(dataScript1, pathOutScript + "script_1.lst");
 
-    std::vector<uint8_t> dataScript2 = readScript(pathData2 + "Script2.pak");
-    // Patching script 2
-    dataScript2[10'846] = '0';
-    dataScript2[423'083] = ';';
-    dataScript2[423'588] = ';';
-    dataScript2[454'934] = '\n';
-    dataScript2[513'709] = '\n';
-    dataScript2[671'233] = ';';
+    std::vector<uint8_t> dataScript2 = readScript(pathData2 + "script2.pak");
     saveScript(dataScript2, pathOutScript + "script_2.lst");
 
     // VR

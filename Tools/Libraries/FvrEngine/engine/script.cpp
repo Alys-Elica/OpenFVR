@@ -5,38 +5,28 @@
 
 #include "engine.h"
 
-void fvrGotoWarp(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
+void fvrGotoWarp(Engine& engine, std::vector<std::string> args)
 {
     if (args.size() != 1) {
         std::cerr << "fvrGotoWarp: invalid argument count" << std::endl;
         return;
     }
 
-    if (!std::holds_alternative<std::string>(args[0])) {
-        std::cerr << "fvrGotoWarp: invalid argument type" << std::endl;
-        return;
-    }
-
-    std::string warpId = std::get<std::string>(args[0]);
+    std::string warpId = args[0];
 
     engine.gotoWarp(warpId);
 }
 
-void fvrPlaySound(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
+void fvrPlaySound(Engine& engine, std::vector<std::string> args)
 {
     if (args.size() != 3) {
         std::cerr << "fvrPlaySound: invalid argument count" << std::endl;
         return;
     }
 
-    if (!std::holds_alternative<std::string>(args[0]) || !std::holds_alternative<double>(args[1]) || !std::holds_alternative<double>(args[2])) {
-        std::cerr << "fvrPlaySound: invalid argument type" << std::endl;
-        return;
-    }
-
-    std::string sound = std::get<std::string>(args[0]);
-    double volume = std::get<double>(args[1]);
-    double loop = std::get<double>(args[2]);
+    std::string sound = args[0];
+    double volume = std::stod(args[1]);
+    double loop = std::stod(args[2]);
 
     // To lowercase
     std::transform(sound.begin(), sound.end(), sound.begin(), ::tolower);
@@ -44,19 +34,14 @@ void fvrPlaySound(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam
     engine.playSound(sound, (int)volume, loop == -1);
 }
 
-void fvrStopSound(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
+void fvrStopSound(Engine& engine, std::vector<std::string> args)
 {
     if (args.size() != 1) {
         std::cerr << "fvrStopSound: invalid argument count" << std::endl;
         return;
     }
 
-    if (!std::holds_alternative<std::string>(args[0])) {
-        std::cerr << "fvrStopSound: invalid argument type" << std::endl;
-        return;
-    }
-
-    std::string sound = std::get<std::string>(args[0]);
+    std::string sound = args[0];
 
     // To lowercase
     std::transform(sound.begin(), sound.end(), sound.begin(), ::tolower);
@@ -64,107 +49,77 @@ void fvrStopSound(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam
     engine.stopSound(sound);
 }
 
-void fvrPlaySound3d(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
+void fvrPlaySound3d(Engine& engine, std::vector<std::string> args)
 {
     if (args.size() != 4) {
         std::cerr << "fvrPlaySound3d: invalid argument count" << std::endl;
         return;
     }
 
-    if (!std::holds_alternative<std::string>(args[0]) || !std::holds_alternative<double>(args[1]) || !std::holds_alternative<double>(args[2]) || !std::holds_alternative<double>(args[3])) {
-        std::cerr << "fvrPlaySound3d: invalid argument type" << std::endl;
-        return;
-    }
-
-    std::string sound = std::get<std::string>(args[0]);
-    double x = std::get<double>(args[1]);
-    double y = std::get<double>(args[2]);
-    double z = std::get<double>(args[3]);
+    std::string sound = args[0];
+    double x = std::stod(args[1]);
+    double y = std::stod(args[2]);
+    double z = std::stod(args[3]);
 
     // TODO: implement properly
     engine.playSound(sound, 100, false);
 }
 
-void fvrStopSound3d(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
+void fvrStopSound3d(Engine& engine, std::vector<std::string> args)
 {
     if (args.size() != 1) {
         std::cerr << "fvrStopSound3d: invalid argument count" << std::endl;
         return;
     }
 
-    if (!std::holds_alternative<std::string>(args[0])) {
-        std::cerr << "fvrStopSound3d: invalid argument type" << std::endl;
-        return;
-    }
-
-    std::string sound = std::get<std::string>(args[0]);
+    std::string sound = args[0];
 
     // TODO: implement properly
     engine.stopSound(sound);
 }
 
-void fvrPlayMusic(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
+void fvrPlayMusic(Engine& engine, std::vector<std::string> args)
 {
     if (args.size() != 1) {
         std::cerr << "fvrPlayMusic: invalid argument count" << std::endl;
         return;
     }
 
-    if (!std::holds_alternative<std::string>(args[0])) {
-        std::cerr << "fvrPlayMusic: invalid argument type" << std::endl;
-        return;
-    }
-
-    std::string music = std::get<std::string>(args[0]);
+    std::string music = args[0];
 
     // TODO: implement properly
     engine.playSound(music, 100, true);
 }
 
-void fvrStopMusic(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
+void fvrStopMusic(Engine& engine, std::vector<std::string> args)
 {
     if (args.size() != 1) {
         std::cerr << "fvrStopMusic: invalid argument count" << std::endl;
         return;
     }
 
-    if (!std::holds_alternative<std::string>(args[0])) {
-        std::cerr << "fvrStopMusic: invalid argument type" << std::endl;
-        return;
-    }
-
-    std::string music = std::get<std::string>(args[0]);
+    std::string music = args[0];
 
     engine.stopSound(music);
 }
 
-void fvrSet(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
+void fvrSet(Engine& engine, std::vector<std::string> args)
 {
     if (args.size() != 2) {
         std::cerr << "fvrSet: invalid argument count" << std::endl;
         return;
     }
 
-    if (!std::holds_alternative<std::string>(args[0]) || !std::holds_alternative<double>(args[1])) {
-        std::cerr << "fvrSet: invalid argument type" << std::endl;
-        return;
-    }
+    std::string flag = args[0];
+    double value = std::stod(args[1]);
 
-    std::string flag = std::get<std::string>(args[0]);
-    double value = std::get<double>(args[1]);
-
-    engine.setStateValue(flag, value);
+    engine.setStateValue(flag, std::to_string(value));
 }
 
-void fvrLockKey(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
+void fvrLockKey(Engine& engine, std::vector<std::string> args)
 {
     if (args.size() != 2) {
         std::cerr << "fvrLockKey: invalid argument count" << std::endl;
-        return;
-    }
-
-    if (!std::holds_alternative<double>(args[0]) || (!std::holds_alternative<double>(args[1]) && !std::holds_alternative<std::string>(args[1]))) {
-        std::cerr << "fvrLockKey: invalid argument type" << std::endl;
         return;
     }
 
@@ -172,15 +127,15 @@ void fvrLockKey(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> 
      * 0: Esc
      * 12: Right-click
      */
-    double key = std::get<double>(args[0]);
+    double key = std::stod(args[0]);
 
     // TODO: better way to handle this ?
     try {
-        if (std::get<double>(args[1]) == 0) {
+        if (std::stod(args[1]) == 0) {
             engine.unregisterKeyWarp((int)key);
         }
     } catch (const std::exception&) {
-        std::string warp = std::get<std::string>(args[1]);
+        std::string warp = args[1];
         // Remove trailing '.vr' from warp name
         // warp = warp.substr(0, warp.size() - 3);
 
@@ -191,26 +146,21 @@ void fvrLockKey(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> 
     }
 }
 
-void fvrResetLockKey(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
+void fvrResetLockKey(Engine& engine, std::vector<std::string> args)
 {
     engine.clearKeyWarps();
 }
 
-void fvrSetCursor(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
+void fvrSetCursor(Engine& engine, std::vector<std::string> args)
 {
     if (args.size() != 3) {
         std::cerr << "fvrSetCursor: invalid argument count" << std::endl;
         return;
     }
 
-    if (!std::holds_alternative<std::string>(args[0]) || !std::holds_alternative<std::string>(args[1]) || !std::holds_alternative<double>(args[2])) {
-        std::cerr << "fvrSetCursor: invalid argument type" << std::endl;
-        return;
-    }
-
-    std::string cursor = std::get<std::string>(args[0]);
-    std::string warp = std::get<std::string>(args[1]);
-    double zone = std::get<double>(args[2]);
+    std::string cursor = args[0];
+    std::string warp = args[1];
+    double zone = std::stod(args[2]);
 
     // To lowercase
     std::transform(cursor.begin(), cursor.end(), cursor.begin(), ::tolower);
@@ -219,62 +169,47 @@ void fvrSetCursor(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam
     engine.setWarpZoneCursor(warp, (int)zone, cursor);
 }
 
-void fvrSetCursorDefault(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
+void fvrSetCursorDefault(Engine& engine, std::vector<std::string> args)
 {
     if (args.size() != 2) {
         std::cerr << "fvrSetCursorDefault: invalid argument count" << std::endl;
         return;
     }
 
-    if (!std::holds_alternative<double>(args[0]) || !std::holds_alternative<std::string>(args[1])) {
-        std::cerr << "fvrSetCursorDefault: invalid argument type" << std::endl;
-        return;
-    }
-
-    double value = std::get<double>(args[0]);
-    std::string cursor = std::get<std::string>(args[1]);
+    double value = std::stod(args[0]);
+    std::string cursor = args[1];
 
     engine.setDefaultCursor(value, cursor);
 }
 
-void fvrFade(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
+void fvrFade(Engine& engine, std::vector<std::string> args)
 {
     if (args.size() != 3) {
         std::cerr << "fvrFade: invalid argument count" << std::endl;
         return;
     }
 
-    if (!std::holds_alternative<double>(args[0]) || !std::holds_alternative<double>(args[1]) || !std::holds_alternative<double>(args[2])) {
-        std::cerr << "fvrFade: invalid argument type" << std::endl;
-        return;
-    }
-
-    double start = std::get<double>(args[0]);
-    double end = std::get<double>(args[1]);
-    double timer = std::get<double>(args[2]);
+    double start = std::stod(args[0]);
+    double end = std::stod(args[1]);
+    double timer = std::stod(args[2]);
 
     engine.fade(start, end, timer);
 }
 
-void fvrEnd(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
+void fvrEnd(Engine& engine, std::vector<std::string> args)
 {
     engine.end();
 }
 
-void fvrSetAngle(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
+void fvrSetAngle(Engine& engine, std::vector<std::string> args)
 {
     if (args.size() != 2) {
         std::cerr << "fvrSetAngle: invalid argument count" << std::endl;
         return;
     }
 
-    if (!std::holds_alternative<double>(args[0]) || !std::holds_alternative<double>(args[1])) {
-        std::cerr << "fvrSetAngle: invalid argument type" << std::endl;
-        return;
-    }
-
-    int pitchInt = (int)std::get<double>(args[0]) & 0x1fff;
-    int yawInt = (int)std::get<double>(args[1]) & 0x1fff;
+    int pitchInt = (int)std::stod(args[0]) & 0x1fff;
+    int yawInt = (int)std::stod(args[1]) & 0x1fff;
 
     if (0xfff < (uint)pitchInt) {
         pitchInt = pitchInt - 0x2000;
@@ -288,111 +223,81 @@ void fvrSetAngle(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam>
     engine.setAngle(pitch, yaw);
 }
 
-void fvrHideCursor(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
+void fvrHideCursor(Engine& engine, std::vector<std::string> args)
 {
     if (args.size() != 2) {
         std::cerr << "fvrHideCursor: invalid argument count" << std::endl;
         return;
     }
 
-    if (!std::holds_alternative<std::string>(args[0]) || !std::holds_alternative<double>(args[1])) {
-        std::cerr << "fvrHideCursor: invalid argument type" << std::endl;
-        return;
-    }
-
-    std::string value1 = std::get<std::string>(args[0]);
-    double value2 = std::get<double>(args[1]);
+    std::string value1 = args[0];
+    double value2 = std::stod(args[1]);
 
     // TODO: implement
     std::cout << "fvrHideCursor: not implemented: " << value1 << " " << value2 << std::endl;
 }
 
-void fvrNot(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
+void fvrNot(Engine& engine, std::vector<std::string> args)
 {
     if (args.size() != 1) {
         std::cerr << "fvrNot: invalid argument count" << std::endl;
         return;
     }
 
-    if (!std::holds_alternative<std::string>(args[0])) {
-        std::cerr << "fvrNot: invalid argument type" << std::endl;
-        return;
-    }
-
-    std::string value = std::get<std::string>(args[0]);
-    double val = std::get<double>(engine.getStateValue(value));
-    engine.setStateValue(value, val == 0.0 ? 1.0 : 0.0);
+    std::string value = args[0];
+    double val = std::stod(engine.getStateValue(value));
+    engine.setStateValue(value, val == 0.0 ? "1.0" : "0.0");
 }
 
-void fvrAngleXMax(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
+void fvrAngleXMax(Engine& engine, std::vector<std::string> args)
 {
     if (args.size() != 1) {
         std::cerr << "fvrAngleXMax: invalid argument count" << std::endl;
         return;
     }
 
-    if (!std::holds_alternative<double>(args[0])) {
-        std::cerr << "fvrAngleXMax: invalid argument type" << std::endl;
-        return;
-    }
-
-    double value = std::get<double>(args[0]);
+    double value = std::stod(args[0]);
 
     // TODO: implement
     std::cout << "fvrAngleXMax: not implemented: " << value << std::endl;
 }
 
-void fvrAngleYMax(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
+void fvrAngleYMax(Engine& engine, std::vector<std::string> args)
 {
     if (args.size() != 1) {
         std::cerr << "fvrAngleYMax: invalid argument count" << std::endl;
         return;
     }
 
-    if (!std::holds_alternative<double>(args[0])) {
-        std::cerr << "fvrAngleYMax: invalid argument type" << std::endl;
-        return;
-    }
-
-    double value = std::get<double>(args[0]);
+    double value = std::stod(args[0]);
 
     // TODO: implement
     std::cout << "fvrAngleXMax: not implemented: " << value << std::endl;
 }
 
-void fvrSetZoom(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
+void fvrSetZoom(Engine& engine, std::vector<std::string> args)
 {
     if (args.size() != 1) {
         std::cerr << "fvrSetZoom: invalid argument count" << std::endl;
         return;
     }
 
-    if (!std::holds_alternative<double>(args[0])) {
-        std::cerr << "fvrSetZoom: invalid argument type" << std::endl;
-        return;
-    }
-
-    double value = std::get<double>(args[0]);
+    double value = std::stod(args[0]);
 
     // TODO: implement
     std::cout << "fvrSetZoom: not implemented: " << value << std::endl;
 }
 
-void fvrInterpolAngle(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)
+void fvrInterpolAngle(Engine& engine, std::vector<std::string> args)
 {
     if (args.size() != 3) {
         std::cerr << "fvrInterpolAngle: invalid argument count" << std::endl;
         return;
     }
 
-    if (!std::holds_alternative<double>(args[0]) || !std::holds_alternative<double>(args[1]) || !std::holds_alternative<double>(args[2])) {
-        std::cerr << "fvrInterpolAngle: invalid argument type" << std::endl;
-        return;
-    }
-
-    double value1 = std::get<double>(args[0]);
-    double value2 = std::get<double>(args[1]);
-    double value3 = std::get<double>(args[2]);
+    double value1 = std::stod(args[0]);
+    double value2 = std::stod(args[1]);
+    double value3 = std::stod(args[2]);
 
     // TODO: implement
     std::cout << "fvrInterpolAngle: not implemented: " << value1 << " " << value2 << " " << value3 << std::endl;

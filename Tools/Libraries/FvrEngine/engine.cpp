@@ -71,7 +71,7 @@ private:
 
     std::string m_currentWarp;
 
-    std::map<std::string, ofnx::files::Lst::InstructionParam> m_stateValues;
+    std::map<std::string, std::string> m_stateValues;
 
     std::vector<uint16_t> m_vrImageData;
     std::set<std::string> m_playingAnim;
@@ -94,70 +94,86 @@ bool Engine::EnginePrivate::loadScript(const std::string& scriptFile)
         std::cerr << "Failed to parse script file: " << scriptFile << std::endl;
         return false;
     }
+
+    // Init state values
+    m_stateValues.clear();
+    for (const std::string& variable : m_script.getVariables()) {
+        parent->setStateValue(variable, "0");
+    }
+
     return true;
 }
 
 void Engine::EnginePrivate::onWarpEnter(const std::string& warpName)
 {
-    ofnx::files::Lst::InstructionBlock& block = m_script.getInitBlock(warpName);
+    const ofnx::files::Lst::InstructionBlock& block = m_script.getInitBlock(warpName);
     executeBlock(block);
 }
 
 void Engine::EnginePrivate::onWarpZoneClick(const std::string& warpName, int zoneId)
 {
-    ofnx::files::Lst::InstructionBlock& block = m_script.getTestBlock(warpName, zoneId);
+    const ofnx::files::Lst::InstructionBlock& block = m_script.getTestBlock(warpName, zoneId);
     executeBlock(block);
 }
 
 void Engine::EnginePrivate::executeBlock(const ofnx::files::Lst::InstructionBlock& block)
 {
-    for (const ofnx::files::Lst::Instruction& instruction : block) {
-        if (instruction.name == "plugin") {
-            executeBlock(instruction.subInstructions);
-        } else if (instruction.name == "ifand" || instruction.name == "ifor") {
-            // Check parameters
-            bool exec = instruction.name == "ifand";
-            for (const ofnx::files::Lst::InstructionParam& param : instruction.params) {
-                if (!std::holds_alternative<std::string>(param)) {
-                    std::cerr << "Invalid parameter type for " << instruction.name << std::endl;
+    try {
+        for (const ofnx::files::Lst::Instruction& instruction : block) {
+            std::cout << "Script: " << instruction.name;
+            for (const std::string& param : instruction.params) {
+                std::cout << " - " << param;
+            }
+            std::cout << std::endl;
+
+            if (instruction.name == "plugin") {
+                executeBlock(instruction.subInstructions);
+            } else if (instruction.name == "ifand" || instruction.name == "ifor") {
+                // Check parameters
+                bool exec = instruction.name == "ifand";
+                for (const std::string& param : instruction.params) {
+                    double value = std::stod(parent->getStateValue(param));
+
+                    if (instruction.name == "ifand") {
+                        if (value == 0.0) {
+                            exec = false;
+                            break;
+                        }
+                    } else {
+                        if (value != 0.0) {
+                            exec = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (exec) {
+                    executeBlock(instruction.subInstructions);
+                }
+            } else if (instruction.name == "return") {
+                return;
+            } else if (instruction.name == "end") {
+                parent->end();
+            } else {
+                if (m_functions.find(instruction.name) == m_functions.end()) {
+                    std::cerr << "Function not found: " << instruction.name << std::endl;
                     continue;
                 }
 
-                std::string flag = std::get<std::string>(param);
-                double value = std::get<double>(parent->getStateValue(flag));
+                m_functions[instruction.name](*parent, instruction.params);
 
-                if (instruction.name == "ifand") {
-                    if (value == 0.0) {
-                        exec = false;
-                        break;
-                    }
-                } else {
-                    if (value != 0.0) {
-                        exec = true;
-                        break;
-                    }
+                if (instruction.name == "gotowarp") {
+                    // TODO: check if this is the best way to handle this
+                    return;
                 }
             }
+        }
+    } catch (const std::exception& e) {
+        std::cerr << "Error during script execution" << std::endl;
+        m_isRunning = false;
 
-            if (exec) {
-                executeBlock(instruction.subInstructions);
-            }
-        } else if (instruction.name == "return") {
-            return;
-        } else if (instruction.name == "end") {
-            parent->end();
-        } else {
-            if (m_functions.find(instruction.name) == m_functions.end()) {
-                std::cerr << "Function not found: " << instruction.name << std::endl;
-                continue;
-            }
-
-            m_functions[instruction.name](*parent, instruction.params);
-
-            if (instruction.name == "gotowarp") {
-                // TODO: check if this is the best way to handle this
-                return;
-            }
+        for (const auto& [key, val] : m_stateValues) {
+            std::cout << key << ": " << val << std::endl;
         }
     }
 }
@@ -234,7 +250,7 @@ void Engine::loop()
     int frameCount = 0;
     d_ptr->m_lastTime = std::chrono::high_resolution_clock::now();
 
-    gotoWarp("init");
+    gotoWarp("init.vr");
 
     while (d_ptr->m_isRunning) {
         auto currentTime = std::chrono::high_resolution_clock::now();
@@ -423,10 +439,9 @@ void Engine::gotoWarp(const std::string& warpName)
     d_ptr->m_playingAnim.clear();
     d_ptr->m_currentWarp = warpName;
     d_ptr->m_warpZoneCursor.clear();
-
     d_ptr->m_fileVr.clear();
 
-    const std::string warpVr = d_ptr->m_dataPath + "warp/" + warpName + ".vr";
+    const std::string warpVr = d_ptr->m_dataPath + "warp/" + d_ptr->m_currentWarp;
     if (d_ptr->m_fileVr.load(warpVr)) {
         if (!d_ptr->m_fileVr.getDataRgb565(d_ptr->m_vrImageData)) {
             std::cerr << "Failed to load VR image data" << std::endl;
@@ -440,7 +455,13 @@ void Engine::gotoWarp(const std::string& warpName)
         }
 
         // Load zones if available
-        const std::string warpTst = d_ptr->m_dataPath + "tst/" + warpName + ".tst";
+        // Remove '.vr' if it exists
+        std::string tmpWarpName = d_ptr->m_currentWarp;
+        if (tmpWarpName.find(".vr") != std::string::npos) {
+            tmpWarpName = tmpWarpName.substr(0, tmpWarpName.find(".vr"));
+        }
+
+        const std::string warpTst = d_ptr->m_dataPath + "tst/" + tmpWarpName + ".tst";
         if (!d_ptr->m_fileTst.loadFile(warpTst)) {
             // std::cerr << "Failed to load TST file" << std::endl;
             // return;
@@ -450,7 +471,7 @@ void Engine::gotoWarp(const std::string& warpName)
     d_ptr->onWarpEnter(d_ptr->m_currentWarp);
 }
 
-ofnx::files::Lst::InstructionParam Engine::getStateValue(const std::string& key)
+std::string Engine::getStateValue(const std::string& key)
 {
     std::string s = key;
     std::transform(s.begin(), s.end(), s.begin(),
@@ -459,7 +480,7 @@ ofnx::files::Lst::InstructionParam Engine::getStateValue(const std::string& key)
     return d_ptr->m_stateValues[s];
 }
 
-void Engine::setStateValue(const std::string& key, const ofnx::files::Lst::InstructionParam& value)
+void Engine::setStateValue(const std::string& key, const std::string& value)
 {
     std::string s = key;
     std::transform(s.begin(), s.end(), s.begin(),
@@ -781,7 +802,7 @@ void Engine::untilLoop(const std::string& variable, const int value)
     std::vector<uint16_t> imageDataBak = d_ptr->m_vrImageData;
 
     const std::chrono::milliseconds frameDelay(1000 / ENGINE_FPS);
-    double start = std::get<double>(this->getStateValue(variable));
+    double start = std::stod(this->getStateValue(variable));
     double elapsed = 0.0;
 
     auto lastTime = std::chrono::high_resolution_clock::now();

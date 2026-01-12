@@ -13,7 +13,7 @@
 
 class LIBFVRENGINE_EXPORT Engine {
 public:
-    using ScriptFunction = std::function<void(Engine& engine, std::vector<ofnx::files::Lst::InstructionParam> args)>;
+    using ScriptFunction = std::function<void(Engine& engine, std::vector<std::string> args)>;
 
 public:
     Engine();
@@ -41,8 +41,8 @@ public:
 
     void gotoWarp(const std::string& warpName);
 
-    ofnx::files::Lst::InstructionParam getStateValue(const std::string& key);
-    void setStateValue(const std::string& key, const ofnx::files::Lst::InstructionParam& value);
+    std::string getStateValue(const std::string& key);
+    void setStateValue(const std::string& key, const std::string& value);
 
     void setDefaultCursor(const int index, const std::string& cursor);
 
