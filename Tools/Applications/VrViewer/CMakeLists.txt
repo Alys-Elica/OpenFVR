@@ -16,6 +16,10 @@ if(WIN32)
     set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "/SUBSYSTEM:CONSOLE")
 endif()
 
+# SDL3
+find_package(SDL3 CONFIG REQUIRED)
+target_link_libraries(${PROJECT_NAME} PRIVATE SDL3::SDL3)
+
 # ofnx
 add_dependencies(${PROJECT_NAME} ofnx)
 target_link_libraries(${PROJECT_NAME} LINK_PUBLIC ofnx)

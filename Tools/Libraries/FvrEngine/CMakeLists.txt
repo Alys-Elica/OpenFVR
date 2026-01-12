@@ -13,6 +13,8 @@ add_library(${PROJECT_NAME} SHARED
 
     engine/audio.h
     engine/audio.cpp
+    engine/eventmanager.h
+    engine/eventmanager.cpp
     
     engine.h
     engine.cpp
@@ -40,6 +42,11 @@ pkg_check_modules(LIBAV REQUIRED IMPORTED_TARGET
 target_link_libraries(${PROJECT_NAME} PRIVATE
     PkgConfig::LIBAV
 )
+
+# SDL3
+find_package(SDL3 CONFIG REQUIRED)
+find_package(SDL3_image CONFIG REQUIRED)
+target_link_libraries(${PROJECT_NAME} PRIVATE SDL3::SDL3 SDL3_image::SDL3_image)
 
 # ofnx
 add_dependencies(${PROJECT_NAME} ofnx)

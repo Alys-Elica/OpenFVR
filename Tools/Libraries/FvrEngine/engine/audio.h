@@ -1,5 +1,5 @@
-#ifndef AUDIO_H
-#define AUDIO_H
+#ifndef ENGINE_AUDIO_H
+#define ENGINE_AUDIO_H
 
 #include <cstdint>
 #include <string>
@@ -24,4 +24,4 @@ private:
     AudioPrivate* d_ptr;
 };
 
-#endif // AUDIO_H
+#endif // ENGINE_AUDIO_H

@@ -3,9 +3,11 @@
 #include <iostream>
 #include <thread>
 
+#include <SDL3/SDL.h>
+
 #include <ofnx/files/tst.h>
 #include <ofnx/files/vr.h>
-#include <ofnx/ofnxmanager.h>
+#include <ofnx/graphics/rendereropengl.h>
 
 #define FNXVR_WINDOW_WIDTH 640
 #define FNXVR_WINDOW_HEIGHT 480
@@ -20,12 +22,87 @@ std::string removeExtension(const std::string& str)
     return str.substr(0, lastindex);
 }
 
+struct Event {
+    enum Type {
+        Quit,
+        MainMenu,
+        MouseClickLeft,
+        MouseClickRight,
+        MouseMove,
+        MouseWheel,
+    };
+
+    Type type;
+    float x = 0;
+    float y = 0;
+    float xRel = 0;
+    float yRel = 0;
+};
+
+std::vector<Event> getEvents()
+{
+    std::vector<Event> eventList;
+
+    SDL_Event event;
+    while (SDL_PollEvent(&event)) {
+        if (event.type == SDL_EVENT_QUIT) {
+            eventList.push_back({ Event::Quit });
+        } else if (event.type == SDL_EVENT_KEY_DOWN) {
+            if (event.key.key == SDLK_ESCAPE) {
+                eventList.push_back({ Event::Quit });
+            } else if (event.key.key == SDLK_RETURN) {
+                eventList.push_back({ Event::MainMenu });
+            }
+        } else if (event.type == SDL_EVENT_MOUSE_MOTION) {
+            eventList.push_back(Event { Event::MouseMove, event.motion.x, event.motion.y, event.motion.xrel, event.motion.yrel });
+        } else if (event.type == SDL_EVENT_MOUSE_BUTTON_DOWN) {
+            if (event.button.button == SDL_BUTTON_LEFT) {
+                eventList.push_back({ Event::MouseClickLeft, event.button.x, event.button.y });
+            } else if (event.button.button == SDL_BUTTON_RIGHT) {
+                eventList.push_back({ Event::MouseClickRight, event.button.x, event.button.y });
+            }
+        } else if (event.type == SDL_EVENT_MOUSE_WHEEL) {
+            eventList.push_back({ Event::MouseWheel, event.wheel.x, event.wheel.y });
+        }
+    }
+
+    return eventList;
+}
+
 int main(int argc, char* argv[])
 {
     if (argc < 2) {
         std::cout << "Usage: " << argv[0] << " <vr_file_vr>" << std::endl;
         return 1;
     }
+
+    // Init SDL3
+    if (!SDL_Init(SDL_INIT_VIDEO)) {
+        std::cerr << "SDL_Init failed - " << SDL_GetError() << std::endl;
+        return false;
+    }
+
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+
+    SDL_Window* window = SDL_CreateWindow("FnxVR", FNXVR_WINDOW_WIDTH, FNXVR_WINDOW_HEIGHT, SDL_WINDOW_OPENGL);
+    if (!window) {
+        std::cerr << "Failed to create SDL window: " << SDL_GetError() << std::endl;
+        return false;
+    }
+
+    SDL_GLContext glContext = SDL_GL_CreateContext(window);
+    if (!glContext) {
+        std::cerr << "Failed to create GL context: " << SDL_GetError() << std::endl;
+        SDL_DestroyWindow(window);
+        return false;
+    }
+
+    SDL_SetWindowRelativeMouseMode(window, true);
+
+    // Disable VSync
+    SDL_GL_SetSwapInterval(0);
 
     const std::string vrFileName(argv[1]);
 
@@ -52,23 +129,20 @@ int main(int argc, char* argv[])
     }
 
     // Init Ofnx manager
-    ofnx::OfnxManager ofnx;
-    if (!ofnx.init(FNXVR_WINDOW_WIDTH, FNXVR_WINDOW_HEIGHT, vrFile.getType() == ofnx::files::Vr::Type::VR2_STATIC_VR)) {
+    ofnx::graphics::RendererOpenGL renderer;
+    if (!renderer.init(FNXVR_WINDOW_WIDTH, FNXVR_WINDOW_HEIGHT, vrFile.getType() == ofnx::files::Vr::Type::VR2_STATIC_VR, (ofnx::graphics::RendererOpenGL::oglLoadFunc)SDL_GL_GetProcAddress)) {
         std::cerr << "Failed to init Ofnx manager" << std::endl;
         return 1;
     }
 
     // Main loop
     bool isVr = true;
-    // TODO: VR2 files seems to have a different cube face structure
     if (vrFile.getType() == ofnx::files::Vr::Type::VR_STATIC_VR
         || vrFile.getType() == ofnx::files::Vr::Type::VR2_STATIC_VR) {
-        ofnx.renderer().updateVr(imageData.data());
-        ofnx.renderer().setCursorSettings(true, true);
+        renderer.updateVr(imageData.data());
         isVr = true;
     } else {
-        ofnx.renderer().updateFrame(imageData.data());
-        ofnx.renderer().setCursorSettings(true, false);
+        renderer.updateFrame(imageData.data());
         isVr = false;
     }
 
@@ -83,13 +157,13 @@ int main(int argc, char* argv[])
         const std::chrono::time_point<std::chrono::steady_clock> start = std::chrono::steady_clock::now();
 
         // Handle events
-        for (ofnx::OfnxManager::Event event : ofnx.getEvents()) {
+        for (Event event : getEvents()) {
             switch (event.type) {
-            case ofnx::OfnxManager::Event::Quit:
+            case Event::Quit:
                 isRunning = false;
                 break;
 
-            case ofnx::OfnxManager::Event::MouseMove: {
+            case Event::MouseMove: {
                 yawDeg += event.xRel * FNXVR_MOUSE_SENSITIVITY;
                 pitchDeg -= event.yRel * FNXVR_MOUSE_SENSITIVITY;
 
@@ -116,20 +190,18 @@ int main(int argc, char* argv[])
                 }
 
                 if (tstZone == -1) {
-                    ofnx.renderer()
-                        .setCursorSystem(ofnx::graphics::RendererOpenGL::CursorSystem::Default);
+                    // renderer.setCursorSystem(ofnx::graphics::RendererOpenGL::CursorSystem::Default);
                 } else {
-                    ofnx.renderer()
-                        .setCursorSystem(ofnx::graphics::RendererOpenGL::CursorSystem::Pointer);
+                    // renderer.setCursorSystem(ofnx::graphics::RendererOpenGL::CursorSystem::Pointer);
                 }
             } break;
 
-            case ofnx::OfnxManager::Event::MouseWheel:
+            case Event::MouseWheel:
                 fov -= event.y * 0.1f;
                 fov = std::clamp(fov, 0.5f, 2.0f);
                 break;
 
-            case ofnx::OfnxManager::Event::MouseClickLeft:
+            case Event::MouseClickLeft:
                 break;
             }
         }
@@ -137,10 +209,10 @@ int main(int argc, char* argv[])
         // Render
         if (isVr) {
             // vrFile.applyAnimationFrameRgb565("torche", imageData.data());
-            ofnx.renderer().updateVr(imageData.data());
-            ofnx.renderer().renderVr(yawDeg, pitchDeg, rollDeg, fov);
+            renderer.updateVr(imageData.data());
+            renderer.renderVr(FNXVR_WINDOW_WIDTH, FNXVR_WINDOW_HEIGHT, yawDeg, pitchDeg, rollDeg, fov);
         } else {
-            ofnx.renderer().renderFrame();
+            renderer.renderFrame();
         }
 
         const std::chrono::time_point<std::chrono::steady_clock> end = std::chrono::steady_clock::now();
@@ -153,7 +225,11 @@ int main(int argc, char* argv[])
     }
 
     // Clean up
-    ofnx.deinit();
+    renderer.deinit();
+
+    SDL_GL_DestroyContext(glContext);
+    SDL_DestroyWindow(window);
+    SDL_Quit();
 
     return 0;
 }

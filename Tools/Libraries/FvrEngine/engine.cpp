@@ -9,11 +9,9 @@
 #include <set>
 #include <thread>
 
-#include <ofnx/files/tst.h>
-#include <ofnx/files/vr.h>
-#include <ofnx/ofnxmanager.h>
-
-#include "engine/audio.h"
+#include <SDL3/SDL.h>
+#include <SDL3/SDL_opengl.h>
+#include <SDL3_image/SDL_image.h>
 
 extern "C" {
 #include <libavcodec/avcodec.h>
@@ -21,6 +19,13 @@ extern "C" {
 #include <libavutil/imgutils.h>
 #include <libswscale/swscale.h>
 }
+
+#include <ofnx/files/tst.h>
+#include <ofnx/files/vr.h>
+#include <ofnx/graphics/rendereropengl.h>
+
+#include "engine/audio.h"
+#include "engine/eventmanager.h"
 
 /* Constants */
 #define ENGINE_DATA_PATH "data/"
@@ -334,6 +339,12 @@ class Engine::EnginePrivate {
     friend class Engine;
 
 public:
+    enum class CursorSystem {
+        Default,
+        Pointer,
+    };
+
+public:
     bool loadScript(const std::string& scriptFile);
     void registerScriptFunction(const std::string& name, const ScriptFunction& function);
 
@@ -346,6 +357,10 @@ public:
     bool isPanoramic() const;
     void render();
 
+    void setCursorSettings(bool visible, bool centerLocked);
+    void setCursorSystem(const CursorSystem& cursor);
+    void setCursor(const std::string& cursorFile);
+
 private:
     Engine* parent;
     bool m_isInit = false;
@@ -357,8 +372,15 @@ private:
 #endif
 
     // Engine objects
-    ofnx::OfnxManager m_ofnxManager;
+    ofnx::graphics::RendererOpenGL m_rendererOgl;
     Audio m_audio;
+    EventManager m_event;
+
+    SDL_Window* m_window = nullptr;
+    SDL_GLContext m_glContext;
+
+    CursorSystem m_cursorCurrent;
+    SDL_Cursor* m_cursor = nullptr;
 
     // Data
     ofnx::files::Lst m_script;
@@ -519,12 +541,93 @@ void Engine::EnginePrivate::render()
 
     // Render
     if (isPanoramic()) {
-        m_ofnxManager.renderer().updateVr(m_vrImageData.data());
-        m_ofnxManager.renderer().renderVr(m_yaw, m_pitch, m_roll, WINDOW_FOV);
+        int width;
+        int height;
+        SDL_GetWindowSize(m_window, &width, &height);
+        m_rendererOgl.updateVr(m_vrImageData.data());
+        m_rendererOgl.renderVr(width, height, m_yaw, m_pitch, m_roll, WINDOW_FOV);
+        SDL_GL_SwapWindow(m_window);
     } else {
-        m_ofnxManager.renderer().updateFrame(m_vrImageData.data());
-        m_ofnxManager.renderer().renderFrame();
+        m_rendererOgl.updateFrame(m_vrImageData.data());
+        m_rendererOgl.renderFrame();
+        SDL_GL_SwapWindow(m_window);
     }
+}
+
+void Engine::EnginePrivate::setCursorSettings(bool visible, bool centerLocked)
+{
+    if (centerLocked) {
+        int width;
+        int height;
+        SDL_GetWindowSize(m_window, &width, &height);
+        SDL_WarpMouseInWindow(m_window, width / 2, height / 2);
+    }
+
+    SDL_SetHint(SDL_HINT_MOUSE_RELATIVE_CURSOR_VISIBLE, visible ? "1" : "0");
+    SDL_SetHint(SDL_HINT_MOUSE_RELATIVE_MODE_CENTER, centerLocked ? "1" : "0");
+    SDL_SetWindowRelativeMouseMode(m_window, centerLocked);
+}
+
+void Engine::EnginePrivate::setCursorSystem(const CursorSystem& cursor)
+{
+    if (cursor == m_cursorCurrent) {
+        return;
+    }
+
+    if (m_cursor) {
+        SDL_DestroyCursor(m_cursor);
+    }
+
+    m_cursorCurrent = cursor;
+
+    switch (cursor) {
+    case CursorSystem::Pointer:
+        m_cursor = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_POINTER);
+        break;
+
+    default:
+        m_cursor = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_DEFAULT);
+        break;
+    }
+
+    SDL_SetCursor(m_cursor);
+}
+
+void Engine::EnginePrivate::setCursor(const std::string& cursorFile)
+{
+    SDL_Surface* cursorSurface = IMG_Load(cursorFile.c_str());
+    if (!cursorSurface) {
+        std::cerr << "Failed to load image: " << SDL_GetError() << std::endl;
+        return;
+    }
+
+    const SDL_PixelFormatDetails* formatDetails = SDL_GetPixelFormatDetails(cursorSurface->format);
+    if (!formatDetails) {
+        std::cerr << "Failed to get format details " << SDL_GetError() << std::endl;
+        SDL_DestroySurface(cursorSurface);
+        return;
+    }
+
+    Uint32 key = SDL_MapRGBA(formatDetails, NULL, 0, 0, 0, 0);
+    SDL_SetSurfaceColorKey(cursorSurface, true, key);
+
+    int hotX = cursorSurface->w / 2;
+    int hotY = cursorSurface->h / 2;
+    SDL_Cursor* cursor = SDL_CreateColorCursor(cursorSurface, hotX, hotY);
+
+    SDL_DestroySurface(cursorSurface);
+
+    if (!cursor) {
+        std::cerr << "Failed to create SDL cursor: " << SDL_GetError() << std::endl;
+        return;
+    }
+
+    if (m_cursor) {
+        SDL_DestroyCursor(m_cursor);
+    }
+    m_cursor = cursor;
+
+    SDL_SetCursor(m_cursor);
 }
 
 /* Public */
@@ -543,16 +646,57 @@ Engine::~Engine()
 
 bool Engine::init()
 {
+    // Init SDL3
+    if (!SDL_Init(SDL_INIT_VIDEO)) {
+        std::cerr << "SDL_Init failed - " << SDL_GetError() << std::endl;
+        return false;
+    }
+
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+
+    d_ptr->m_window = SDL_CreateWindow("FnxVR", ENGINE_WIDTH, ENGINE_HEIGHT, SDL_WINDOW_OPENGL);
+    if (!d_ptr->m_window) {
+        std::cerr << "Failed to create SDL window: " << SDL_GetError() << std::endl;
+        return false;
+    }
+
+    d_ptr->m_glContext = SDL_GL_CreateContext(d_ptr->m_window);
+    if (!d_ptr->m_glContext) {
+        std::cerr << "Failed to create GL context: " << SDL_GetError() << std::endl;
+        SDL_DestroyWindow(d_ptr->m_window);
+        return false;
+    }
+
+    SDL_SetWindowRelativeMouseMode(d_ptr->m_window, true);
+
+    // Disable VSync
+    SDL_GL_SetSwapInterval(0);
+
     // Init engine objects
     // TODO: manage old/new VR version
-    if (!d_ptr->m_ofnxManager.init(ENGINE_WIDTH, ENGINE_HEIGHT, false)) {
-        std::cerr << "Failed to initialize ofnx manager" << std::endl;
+    if (!d_ptr->m_rendererOgl.init(ENGINE_WIDTH, ENGINE_HEIGHT, false, (ofnx::graphics::RendererOpenGL::oglLoadFunc)SDL_GL_GetProcAddress)) {
+        std::cerr << "Failed to initialize renderer" << std::endl;
+        SDL_GL_DestroyContext(d_ptr->m_glContext);
+        SDL_DestroyWindow(d_ptr->m_window);
         return false;
     }
 
     if (!d_ptr->m_audio.init()) {
         std::cerr << "Failed to initialize audio" << std::endl;
-        d_ptr->m_ofnxManager.deinit();
+        d_ptr->m_rendererOgl.deinit();
+        SDL_GL_DestroyContext(d_ptr->m_glContext);
+        SDL_DestroyWindow(d_ptr->m_window);
+        return false;
+    }
+
+    if (!d_ptr->m_event.init()) {
+        std::cerr << "Failed to initialize audio" << std::endl;
+        d_ptr->m_audio.deinit();
+        d_ptr->m_rendererOgl.deinit();
+        SDL_GL_DestroyContext(d_ptr->m_glContext);
+        SDL_DestroyWindow(d_ptr->m_window);
         return false;
     }
 
@@ -610,17 +754,17 @@ void Engine::loop()
             d_ptr->m_lastTime = currentTime;
 
             // Update
-            std::vector<ofnx::OfnxManager::Event> events = d_ptr->m_ofnxManager.getEvents();
-            for (const ofnx::OfnxManager::Event& event : events) {
+            std::vector<EventManager::Event> events = d_ptr->m_event.getEvents();
+            for (const EventManager::Event& event : events) {
                 if (d_ptr->m_keyWarp.find(event.type) != d_ptr->m_keyWarp.end()) {
                     gotoWarp(d_ptr->m_keyWarp[event.type]);
                 }
 
                 switch (event.type) {
-                case ofnx::OfnxManager::Event::Type::Quit:
+                case EventManager::Event::Type::Quit:
                     d_ptr->m_isRunning = false;
                     break;
-                case ofnx::OfnxManager::Event::Type::MouseMove:
+                case EventManager::Event::Type::MouseMove:
                     if (isPanoramic()) {
                         d_ptr->m_yaw += event.xRel * MOUSE_SENSITIVITY;
                         d_ptr->m_pitch -= event.yRel * MOUSE_SENSITIVITY;
@@ -644,7 +788,7 @@ void Engine::loop()
                         pointedZone = d_ptr->m_fileTst.checkZoneStatic((float)event.x, (float)event.y);
                     }
                     break;
-                case ofnx::OfnxManager::Event::Type::MouseClickLeft:
+                case EventManager::Event::Type::MouseClickLeft:
                     int zoneIndex;
 
                     if (isPanoramic()) {
@@ -665,26 +809,24 @@ void Engine::loop()
                 d_ptr->m_pointedZone = pointedZone;
 
                 if (d_ptr->m_warpZoneCursor.contains(d_ptr->m_pointedZone)) {
-                    d_ptr->m_ofnxManager.renderer().setCursor(ENGINE_DATA_PATH "image/" + d_ptr->m_warpZoneCursor[d_ptr->m_pointedZone]);
+                    d_ptr->setCursor(ENGINE_DATA_PATH "image/" + d_ptr->m_warpZoneCursor[d_ptr->m_pointedZone]);
                 } else {
                     if (d_ptr->m_pointedZone == -1) {
                         if (d_ptr->m_defaultCursor.contains(0)) {
-                            d_ptr->m_ofnxManager.renderer().setCursor(ENGINE_DATA_PATH "image/" + d_ptr->m_defaultCursor[0]);
+                            d_ptr->setCursor(ENGINE_DATA_PATH "image/" + d_ptr->m_defaultCursor[0]);
                         } else {
-                            d_ptr->m_ofnxManager.renderer()
-                                .setCursorSystem(ofnx::graphics::RendererOpenGL::CursorSystem::Default);
+                            d_ptr->setCursorSystem(EnginePrivate::CursorSystem::Default);
                         }
                     } else {
                         if (d_ptr->m_defaultCursor.contains(1)) {
-                            d_ptr->m_ofnxManager.renderer().setCursor(ENGINE_DATA_PATH "image/" + d_ptr->m_defaultCursor[1]);
+                            d_ptr->setCursor(ENGINE_DATA_PATH "image/" + d_ptr->m_defaultCursor[1]);
                         } else {
-                            d_ptr->m_ofnxManager.renderer()
-                                .setCursorSystem(ofnx::graphics::RendererOpenGL::CursorSystem::Default);
+                            d_ptr->setCursorSystem(EnginePrivate::CursorSystem::Default);
                         }
                     }
                 }
 
-                d_ptr->m_ofnxManager.renderer().setTitle("Pointed zone: " + std::to_string(d_ptr->m_pointedZone));
+                SDL_SetWindowTitle(d_ptr->m_window, std::string("Pointed zone: " + std::to_string(d_ptr->m_pointedZone)).c_str());
             }
 
             d_ptr->render();
@@ -700,8 +842,18 @@ void Engine::deinit()
         return;
     }
 
-    d_ptr->m_ofnxManager.deinit();
     d_ptr->m_audio.deinit();
+    d_ptr->m_event.deinit();
+    d_ptr->m_rendererOgl.deinit();
+
+    if (d_ptr->m_cursor) {
+        SDL_DestroyCursor(d_ptr->m_cursor);
+        d_ptr->m_cursor = nullptr;
+    }
+
+    SDL_GL_DestroyContext(d_ptr->m_glContext);
+    SDL_DestroyWindow(d_ptr->m_window);
+    SDL_Quit();
 
     d_ptr->m_isInit = false;
 }
@@ -741,10 +893,10 @@ void Engine::registerKeyWarp(int key, const std::string& warpName)
     // TODO: implement missing keys
     switch (key) {
     case 0: // Escape
-        d_ptr->m_keyWarp.insert({ ofnx::OfnxManager::Event::Type::MainMenu, warpName });
+        d_ptr->m_keyWarp.insert({ EventManager::Event::Type::MainMenu, warpName });
         break;
     case 12: // Right-click
-        d_ptr->m_keyWarp.insert({ ofnx::OfnxManager::Event::Type::MouseClickRight, warpName });
+        d_ptr->m_keyWarp.insert({ EventManager::Event::Type::MouseClickRight, warpName });
         break;
     default:
         std::cerr << "Invalid key for warp" << std::endl;
@@ -797,9 +949,9 @@ void Engine::gotoWarp(const std::string& warpName)
         }
 
         if (isPanoramic()) {
-            d_ptr->m_ofnxManager.renderer().setCursorSettings(true, true);
+            d_ptr->setCursorSettings(true, true);
         } else {
-            d_ptr->m_ofnxManager.renderer().setCursorSettings(true, false);
+            d_ptr->setCursorSettings(true, false);
         }
 
         // Load zones if available
@@ -1017,8 +1169,9 @@ void Engine::playMovie(const std::string& movieFile)
 
             std::vector<uint16_t> frameData(frame->width * frame->height);
             std::memcpy(frameData.data(), pFrameRGB565->data[0], frameData.size() * 2);
-            d_ptr->m_ofnxManager.renderer().updateFrame(frameData.data());
-            d_ptr->m_ofnxManager.renderer().renderFrame();
+            d_ptr->m_rendererOgl.updateFrame(frameData.data());
+            d_ptr->m_rendererOgl.renderFrame();
+            SDL_GL_SwapWindow(d_ptr->m_window);
 
             // Cleanup
             sws_freeContext(swsCtx);
@@ -1037,10 +1190,10 @@ void Engine::playMovie(const std::string& movieFile)
 
         // Event
         bool exit = false;
-        std::vector<ofnx::OfnxManager::Event> events = d_ptr->m_ofnxManager.getEvents();
-        for (const ofnx::OfnxManager::Event& event : events) {
+        std::vector<EventManager::Event> events = d_ptr->m_event.getEvents();
+        for (const EventManager::Event& event : events) {
             switch (event.type) {
-            case ofnx::OfnxManager::Event::Type::MouseClickLeft:
+            case EventManager::Event::Type::MouseClickLeft:
                 exit = true;
                 break;
             }
@@ -1104,10 +1257,10 @@ void Engine::fade(int start, int end, int timer)
         std::this_thread::sleep_for(frameDelay);
 
         // Update events
-        std::vector<ofnx::OfnxManager::Event> events = d_ptr->m_ofnxManager.getEvents();
-        for (const ofnx::OfnxManager::Event& event : events) {
+        std::vector<EventManager::Event> events = d_ptr->m_event.getEvents();
+        for (const EventManager::Event& event : events) {
             switch (event.type) {
-            case ofnx::OfnxManager::Event::Type::MouseClickLeft:
+            case EventManager::Event::Type::MouseClickLeft:
                 return;
             }
         }
@@ -1135,10 +1288,10 @@ void Engine::whileLoop(int timer)
         std::this_thread::sleep_for(frameDelay);
 
         // Update events
-        std::vector<ofnx::OfnxManager::Event> events = d_ptr->m_ofnxManager.getEvents();
-        for (const ofnx::OfnxManager::Event& event : events) {
+        std::vector<EventManager::Event> events = d_ptr->m_event.getEvents();
+        for (const EventManager::Event& event : events) {
             switch (event.type) {
-            case ofnx::OfnxManager::Event::Type::MouseClickLeft:
+            case EventManager::Event::Type::MouseClickLeft:
                 return;
             }
         }
@@ -1166,10 +1319,10 @@ void Engine::untilLoop(const std::string& variable, const int value)
         std::this_thread::sleep_for(frameDelay);
 
         // Update events
-        std::vector<ofnx::OfnxManager::Event> events = d_ptr->m_ofnxManager.getEvents();
-        for (const ofnx::OfnxManager::Event& event : events) {
+        std::vector<EventManager::Event> events = d_ptr->m_event.getEvents();
+        for (const EventManager::Event& event : events) {
             switch (event.type) {
-            case ofnx::OfnxManager::Event::Type::MouseClickLeft:
+            case EventManager::Event::Type::MouseClickLeft:
                 return;
             }
         }
