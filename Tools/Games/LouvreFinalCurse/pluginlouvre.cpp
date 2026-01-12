@@ -519,8 +519,8 @@ void plgPlayAnimBloc(Engine& engine, std::vector<ofnx::files::Lst::InstructionPa
 
     std::string name = std::get<std::string>(args[0]);
     std::string var = std::get<std::string>(args[1]);
-    double tmp1 = std::get<double>(args[2]);
-    double tmp2 = std::get<double>(args[3]);
+    double frameCount = std::get<double>(args[2]);
+    double speed = std::get<double>(args[3]);
 
     // TODO: implement correctly
     engine.playAnim(name);
