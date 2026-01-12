@@ -1019,13 +1019,13 @@ void Engine::playMovie(const std::string& movieFile)
     // Init libavcodec
     AVFormatContext* formatContext = avformat_alloc_context();
     if (avformat_open_input(&formatContext, fileName.c_str(), NULL, NULL) != 0) {
-        std::cout << "Unable to open file" << std::endl;
+        std::cerr << "Unable to open file" << std::endl;
         SDL_ShowCursor();
         return;
     }
 
     if (avformat_find_stream_info(formatContext, NULL) < 0) {
-        std::cout << "Unable to find stream info" << std::endl;
+        std::cerr << "Unable to find stream info" << std::endl;
         avformat_close_input(&formatContext);
         SDL_ShowCursor();
         return;
@@ -1041,7 +1041,7 @@ void Engine::playMovie(const std::string& movieFile)
     }
 
     if (videoStreamIndex == -1) {
-        std::cout << "Unable to find video stream" << std::endl;
+        std::cerr << "Unable to find video stream" << std::endl;
         avformat_close_input(&formatContext);
         SDL_ShowCursor();
         return;
@@ -1050,7 +1050,7 @@ void Engine::playMovie(const std::string& movieFile)
     AVCodecParameters* localCodecParametersVideo = formatContext->streams[videoStreamIndex]->codecpar;
     const AVCodec* localCodecVideo = avcodec_find_decoder(localCodecParametersVideo->codec_id);
     if (localCodecVideo == NULL) {
-        std::cout << "Unable to find codec" << std::endl;
+        std::cerr << "Unable to find codec" << std::endl;
         avformat_close_input(&formatContext);
         SDL_ShowCursor();
         return;
@@ -1058,7 +1058,7 @@ void Engine::playMovie(const std::string& movieFile)
 
     AVCodecContext* codecContextVideo = avcodec_alloc_context3(localCodecVideo);
     if (avcodec_parameters_to_context(codecContextVideo, localCodecParametersVideo) < 0) {
-        std::cout << "Unable to copy codec parameters" << std::endl;
+        std::cerr << "Unable to copy codec parameters" << std::endl;
         avformat_close_input(&formatContext);
         avcodec_free_context(&codecContextVideo);
         SDL_ShowCursor();
@@ -1066,7 +1066,7 @@ void Engine::playMovie(const std::string& movieFile)
     }
 
     if (avcodec_open2(codecContextVideo, localCodecVideo, NULL) < 0) {
-        std::cout << "Unable to open codec" << std::endl;
+        std::cerr << "Unable to open codec" << std::endl;
         avformat_close_input(&formatContext);
         avcodec_free_context(&codecContextVideo);
         SDL_ShowCursor();
@@ -1088,12 +1088,11 @@ void Engine::playMovie(const std::string& movieFile)
     AVCodec* localCodecAudio = NULL;
     AVCodecContext* codecContextAudio = NULL;
     if (audioSreamIndex >= 0) {
-        std::cout << "Audio stream found" << std::endl;
         localCodecParametersAudio = formatContext->streams[audioSreamIndex]->codecpar;
         // TODO: supposed to be const
         localCodecAudio = (AVCodec*)avcodec_find_decoder(localCodecParametersAudio->codec_id);
         if (localCodecAudio == NULL) {
-            std::cout << "Unable to find codec" << std::endl;
+            std::cerr << "Unable to find codec" << std::endl;
             avformat_close_input(&formatContext);
             avcodec_free_context(&codecContextVideo);
             SDL_ShowCursor();
@@ -1102,7 +1101,7 @@ void Engine::playMovie(const std::string& movieFile)
 
         codecContextAudio = avcodec_alloc_context3(localCodecAudio);
         if (avcodec_parameters_to_context(codecContextAudio, localCodecParametersAudio) < 0) {
-            std::cout << "Unable to copy codec parameters" << std::endl;
+            std::cerr << "Unable to copy codec parameters" << std::endl;
             avformat_close_input(&formatContext);
             avcodec_free_context(&codecContextVideo);
             avcodec_free_context(&codecContextAudio);
@@ -1111,7 +1110,7 @@ void Engine::playMovie(const std::string& movieFile)
         }
 
         if (avcodec_open2(codecContextAudio, localCodecAudio, NULL) < 0) {
-            std::cout << "Unable to open codec" << std::endl;
+            std::cerr << "Unable to open codec" << std::endl;
             avformat_close_input(&formatContext);
             avcodec_free_context(&codecContextVideo);
             avcodec_free_context(&codecContextAudio);
@@ -1157,7 +1156,6 @@ void Engine::playMovie(const std::string& movieFile)
     // Render video
     double frameRate = av_q2d(formatContext->streams[videoStreamIndex]->r_frame_rate);
     double waitTimeMs = 1000.0 / (double)frameRate;
-    std::cout << "Frame rate: " << frameRate << std::endl;
     std::chrono::steady_clock::time_point start = std::chrono::steady_clock::now();
     while (av_read_frame(formatContext, packet) >= 0) {
         if (packet->stream_index == audioSreamIndex) {
