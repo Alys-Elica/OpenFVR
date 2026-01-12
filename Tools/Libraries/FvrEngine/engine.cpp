@@ -1131,6 +1131,7 @@ void Engine::playMovie(const std::string& movieFile)
             std::cerr << "SDL audio error: " << SDL_GetError() << std::endl;
             avformat_close_input(&formatContext);
             avcodec_free_context(&codecContextVideo);
+            avcodec_free_context(&codecContextAudio);
             SDL_ShowCursor();
             return;
         }
@@ -1141,6 +1142,7 @@ void Engine::playMovie(const std::string& movieFile)
             std::cerr << "SDL audio error: " << SDL_GetError() << std::endl;
             avformat_close_input(&formatContext);
             avcodec_free_context(&codecContextVideo);
+            avcodec_free_context(&codecContextAudio);
             SDL_DestroyAudioStream(streamAudio);
             SDL_ShowCursor();
             return;
@@ -1203,7 +1205,10 @@ void Engine::playMovie(const std::string& movieFile)
                 std::cerr << "Failed to create swscale context" << std::endl;
                 avformat_close_input(&formatContext);
                 avcodec_free_context(&codecContextVideo);
-                SDL_DestroyAudioStream(streamAudio);
+                if (audioSreamIndex != 0) {
+                    avcodec_free_context(&codecContextAudio);
+                    SDL_DestroyAudioStream(streamAudio);
+                }
                 SDL_ShowCursor();
                 return;
             }
@@ -1256,7 +1261,8 @@ void Engine::playMovie(const std::string& movieFile)
     av_frame_free(&frame);
     av_packet_free(&packet);
     avcodec_free_context(&codecContextVideo);
-    if (audioSreamIndex != NULL) {
+    if (audioSreamIndex != 0) {
+        avcodec_free_context(&codecContextAudio);
         SDL_BindAudioStream(deviceId, streamAudio);
         SDL_DestroyAudioStream(streamAudio);
         SDL_CloseAudioDevice(deviceId);
