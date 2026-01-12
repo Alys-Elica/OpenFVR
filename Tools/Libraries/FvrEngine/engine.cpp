@@ -319,6 +319,8 @@ void Engine::loop()
                         }
                     }
                 }
+
+                d_ptr->m_ofnxManager.renderer().setTitle("Pointed zone: " + std::to_string(d_ptr->m_pointedZone));
             }
 
             d_ptr->render();
