@@ -647,7 +647,7 @@ Engine::~Engine()
 bool Engine::init()
 {
     // Init SDL3
-    if (!SDL_Init(SDL_INIT_VIDEO)) {
+    if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO)) {
         std::cerr << "SDL_Init failed - " << SDL_GetError() << std::endl;
         return false;
     }
@@ -1011,18 +1011,23 @@ void Engine::stopSound(const std::string& soundFile)
 
 void Engine::playMovie(const std::string& movieFile)
 {
+    // TODO: cleanup this mess
     std::string fileName = d_ptr->m_dataPath + "video/" + movieFile;
+
+    SDL_HideCursor();
 
     // Init libavcodec
     AVFormatContext* formatContext = avformat_alloc_context();
     if (avformat_open_input(&formatContext, fileName.c_str(), NULL, NULL) != 0) {
         std::cout << "Unable to open file" << std::endl;
+        SDL_ShowCursor();
         return;
     }
 
     if (avformat_find_stream_info(formatContext, NULL) < 0) {
-        avformat_close_input(&formatContext);
         std::cout << "Unable to find stream info" << std::endl;
+        avformat_close_input(&formatContext);
+        SDL_ShowCursor();
         return;
     }
 
@@ -1036,31 +1041,35 @@ void Engine::playMovie(const std::string& movieFile)
     }
 
     if (videoStreamIndex == -1) {
-        avformat_close_input(&formatContext);
         std::cout << "Unable to find video stream" << std::endl;
+        avformat_close_input(&formatContext);
+        SDL_ShowCursor();
         return;
     }
 
     AVCodecParameters* localCodecParametersVideo = formatContext->streams[videoStreamIndex]->codecpar;
     const AVCodec* localCodecVideo = avcodec_find_decoder(localCodecParametersVideo->codec_id);
     if (localCodecVideo == NULL) {
-        avformat_close_input(&formatContext);
         std::cout << "Unable to find codec" << std::endl;
+        avformat_close_input(&formatContext);
+        SDL_ShowCursor();
         return;
     }
 
     AVCodecContext* codecContextVideo = avcodec_alloc_context3(localCodecVideo);
     if (avcodec_parameters_to_context(codecContextVideo, localCodecParametersVideo) < 0) {
-        avformat_close_input(&formatContext);
-        avcodec_close(codecContextVideo);
         std::cout << "Unable to copy codec parameters" << std::endl;
+        avformat_close_input(&formatContext);
+        avcodec_free_context(&codecContextVideo);
+        SDL_ShowCursor();
         return;
     }
 
     if (avcodec_open2(codecContextVideo, localCodecVideo, NULL) < 0) {
-        avformat_close_input(&formatContext);
-        avcodec_close(codecContextVideo);
         std::cout << "Unable to open codec" << std::endl;
+        avformat_close_input(&formatContext);
+        avcodec_free_context(&codecContextVideo);
+        SDL_ShowCursor();
         return;
     }
 
@@ -1073,37 +1082,70 @@ void Engine::playMovie(const std::string& movieFile)
         }
     }
 
+    SDL_AudioDeviceID deviceId = 0;
+    SDL_AudioStream* streamAudio = nullptr;
     AVCodecParameters* localCodecParametersAudio = NULL;
     AVCodec* localCodecAudio = NULL;
     AVCodecContext* codecContextAudio = NULL;
     if (audioSreamIndex >= 0) {
         std::cout << "Audio stream found" << std::endl;
-
         localCodecParametersAudio = formatContext->streams[audioSreamIndex]->codecpar;
         // TODO: supposed to be const
         localCodecAudio = (AVCodec*)avcodec_find_decoder(localCodecParametersAudio->codec_id);
         if (localCodecAudio == NULL) {
-            avformat_close_input(&formatContext);
             std::cout << "Unable to find codec" << std::endl;
+            avformat_close_input(&formatContext);
+            avcodec_free_context(&codecContextVideo);
+            SDL_ShowCursor();
             return;
         }
 
         codecContextAudio = avcodec_alloc_context3(localCodecAudio);
         if (avcodec_parameters_to_context(codecContextAudio, localCodecParametersAudio) < 0) {
-            avformat_close_input(&formatContext);
-            avcodec_close(codecContextVideo);
-            avcodec_close(codecContextAudio);
             std::cout << "Unable to copy codec parameters" << std::endl;
+            avformat_close_input(&formatContext);
+            avcodec_free_context(&codecContextVideo);
+            avcodec_free_context(&codecContextAudio);
+            SDL_ShowCursor();
             return;
         }
 
         if (avcodec_open2(codecContextAudio, localCodecAudio, NULL) < 0) {
-            avformat_close_input(&formatContext);
-            avcodec_close(codecContextVideo);
-            avcodec_close(codecContextAudio);
             std::cout << "Unable to open codec" << std::endl;
+            avformat_close_input(&formatContext);
+            avcodec_free_context(&codecContextVideo);
+            avcodec_free_context(&codecContextAudio);
+            SDL_ShowCursor();
             return;
         }
+
+        SDL_AudioSpec spec;
+        SDL_zero(spec);
+        spec.freq = codecContextAudio->sample_rate;
+        spec.format = SDL_AUDIO_S16;
+        spec.channels = codecContextAudio->ch_layout.nb_channels;
+
+        SDL_AudioSpec dst = spec;
+        streamAudio = SDL_CreateAudioStream(&spec, &dst);
+        if (!streamAudio) {
+            std::cerr << "SDL audio error: " << SDL_GetError() << std::endl;
+            avformat_close_input(&formatContext);
+            avcodec_free_context(&codecContextVideo);
+            SDL_ShowCursor();
+            return;
+        }
+
+        // Ouvrir le périphérique audio
+        deviceId = SDL_OpenAudioDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &spec);
+        if (deviceId == 0) {
+            std::cerr << "SDL audio error: " << SDL_GetError() << std::endl;
+            avformat_close_input(&formatContext);
+            avcodec_free_context(&codecContextVideo);
+            SDL_DestroyAudioStream(streamAudio);
+            SDL_ShowCursor();
+            return;
+        }
+        SDL_BindAudioStream(deviceId, streamAudio);
     }
 
     // Decoding
@@ -1129,7 +1171,10 @@ void Engine::playMovie(const std::string& movieFile)
 
                 // Play audio
                 if (frame->nb_samples > 0) {
-                    // TODO: implement
+                    SDL_PutAudioStreamData(
+                        streamAudio,
+                        frame->data[0],
+                        frame->nb_samples * frame->ch_layout.nb_channels * sizeof(int16_t));
                 }
             }
         }
@@ -1156,6 +1201,10 @@ void Engine::playMovie(const std::string& movieFile)
 
             if (!swsCtx) {
                 std::cerr << "Failed to create swscale context" << std::endl;
+                avformat_close_input(&formatContext);
+                avcodec_free_context(&codecContextVideo);
+                SDL_DestroyAudioStream(streamAudio);
+                SDL_ShowCursor();
                 return;
             }
 
@@ -1206,11 +1255,15 @@ void Engine::playMovie(const std::string& movieFile)
 
     av_frame_free(&frame);
     av_packet_free(&packet);
-    avcodec_close(codecContextVideo);
+    avcodec_free_context(&codecContextVideo);
     if (audioSreamIndex != NULL) {
-        // TODO: implement
+        SDL_BindAudioStream(deviceId, streamAudio);
+        SDL_DestroyAudioStream(streamAudio);
+        SDL_CloseAudioDevice(deviceId);
     }
     avformat_close_input(&formatContext);
+
+    SDL_ShowCursor();
 }
 
 void Engine::setAngle(const float pitch, const float yaw)
