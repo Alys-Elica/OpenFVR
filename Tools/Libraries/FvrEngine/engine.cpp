@@ -14,7 +14,6 @@
 #include <ofnx/ofnxmanager.h>
 
 #include "engine/audio.h"
-#include "engine/script.h"
 
 extern "C" {
 #include <libavcodec/avcodec.h>
@@ -31,16 +30,318 @@ extern "C" {
 #define WINDOW_FOV 1.0f
 #define MOUSE_SENSITIVITY 0.1f
 
+/* Script functions */
+void fvrGotoWarp(Engine& engine, std::vector<std::string> args)
+{
+    if (args.size() != 1) {
+        std::cerr << "fvrGotoWarp: invalid argument count" << std::endl;
+        return;
+    }
+
+    std::string warpId = args[0];
+
+    engine.gotoWarp(warpId);
+}
+
+void fvrPlaySound(Engine& engine, std::vector<std::string> args)
+{
+    if (args.size() != 3) {
+        std::cerr << "fvrPlaySound: invalid argument count" << std::endl;
+        return;
+    }
+
+    std::string sound = args[0];
+    double volume = std::stod(args[1]);
+    double loop = std::stod(args[2]);
+
+    // To lowercase
+    std::transform(sound.begin(), sound.end(), sound.begin(), ::tolower);
+
+    engine.playSound(sound, (int)volume, loop == -1);
+}
+
+void fvrStopSound(Engine& engine, std::vector<std::string> args)
+{
+    if (args.size() != 1) {
+        std::cerr << "fvrStopSound: invalid argument count" << std::endl;
+        return;
+    }
+
+    std::string sound = args[0];
+
+    // To lowercase
+    std::transform(sound.begin(), sound.end(), sound.begin(), ::tolower);
+
+    engine.stopSound(sound);
+}
+
+void fvrPlaySound3d(Engine& engine, std::vector<std::string> args)
+{
+    if (args.size() != 4) {
+        std::cerr << "fvrPlaySound3d: invalid argument count" << std::endl;
+        return;
+    }
+
+    std::string sound = args[0];
+    double x = std::stod(args[1]);
+    double y = std::stod(args[2]);
+    double z = std::stod(args[3]);
+
+    // TODO: implement properly
+    engine.playSound(sound, 100, false);
+}
+
+void fvrStopSound3d(Engine& engine, std::vector<std::string> args)
+{
+    if (args.size() != 1) {
+        std::cerr << "fvrStopSound3d: invalid argument count" << std::endl;
+        return;
+    }
+
+    std::string sound = args[0];
+
+    // TODO: implement properly
+    engine.stopSound(sound);
+}
+
+void fvrPlayMusic(Engine& engine, std::vector<std::string> args)
+{
+    if (args.size() != 1) {
+        std::cerr << "fvrPlayMusic: invalid argument count" << std::endl;
+        return;
+    }
+
+    std::string music = args[0];
+
+    // TODO: implement properly
+    engine.playSound(music, 100, true);
+}
+
+void fvrStopMusic(Engine& engine, std::vector<std::string> args)
+{
+    if (args.size() != 1) {
+        std::cerr << "fvrStopMusic: invalid argument count" << std::endl;
+        return;
+    }
+
+    std::string music = args[0];
+
+    engine.stopSound(music);
+}
+
+void fvrSet(Engine& engine, std::vector<std::string> args)
+{
+    if (args.size() != 2) {
+        std::cerr << "fvrSet: invalid argument count" << std::endl;
+        return;
+    }
+
+    std::string flag = args[0];
+    double value = std::stod(args[1]);
+
+    engine.setStateValue(flag, std::to_string(value));
+}
+
+void fvrLockKey(Engine& engine, std::vector<std::string> args)
+{
+    if (args.size() != 2) {
+        std::cerr << "fvrLockKey: invalid argument count" << std::endl;
+        return;
+    }
+
+    /*
+     * 0: Esc
+     * 12: Right-click
+     */
+    double key = std::stod(args[0]);
+
+    // TODO: better way to handle this ?
+    try {
+        if (std::stod(args[1]) == 0) {
+            engine.unregisterKeyWarp((int)key);
+        }
+    } catch (const std::exception&) {
+        std::string warp = args[1];
+        // Remove trailing '.vr' from warp name
+        // warp = warp.substr(0, warp.size() - 3);
+
+        // To lowercase
+        std::transform(warp.begin(), warp.end(), warp.begin(), ::tolower);
+
+        engine.registerKeyWarp((int)key, warp);
+    }
+}
+
+void fvrResetLockKey(Engine& engine, std::vector<std::string> args)
+{
+    engine.clearKeyWarps();
+}
+
+void fvrSetCursor(Engine& engine, std::vector<std::string> args)
+{
+    if (args.size() != 3) {
+        std::cerr << "fvrSetCursor: invalid argument count" << std::endl;
+        return;
+    }
+
+    std::string cursor = args[0];
+    std::string warp = args[1];
+    double zone = std::stod(args[2]);
+
+    // To lowercase
+    std::transform(cursor.begin(), cursor.end(), cursor.begin(), ::tolower);
+    std::transform(warp.begin(), warp.end(), warp.begin(), ::tolower);
+
+    engine.setWarpZoneCursor(warp, (int)zone, cursor);
+}
+
+void fvrSetCursorDefault(Engine& engine, std::vector<std::string> args)
+{
+    if (args.size() != 2) {
+        std::cerr << "fvrSetCursorDefault: invalid argument count" << std::endl;
+        return;
+    }
+
+    double value = std::stod(args[0]);
+    std::string cursor = args[1];
+
+    engine.setDefaultCursor(value, cursor);
+}
+
+void fvrFade(Engine& engine, std::vector<std::string> args)
+{
+    if (args.size() != 3) {
+        std::cerr << "fvrFade: invalid argument count" << std::endl;
+        return;
+    }
+
+    double start = std::stod(args[0]);
+    double end = std::stod(args[1]);
+    double timer = std::stod(args[2]);
+
+    engine.fade(start, end, timer);
+}
+
+void fvrEnd(Engine& engine, std::vector<std::string> args)
+{
+    engine.end();
+}
+
+void fvrSetAngle(Engine& engine, std::vector<std::string> args)
+{
+    if (args.size() != 2) {
+        std::cerr << "fvrSetAngle: invalid argument count" << std::endl;
+        return;
+    }
+
+    int pitchInt = (int)std::stod(args[0]) & 0x1fff;
+    int yawInt = (int)std::stod(args[1]) & 0x1fff;
+
+    if (0xfff < (uint)pitchInt) {
+        pitchInt = pitchInt - 0x2000;
+    }
+
+    float pitch = pitchInt * 360.0f / 8192.0f; // Convert from 0-8192 range to degree
+    float yaw = yawInt * 360.0f / 8192.0f; // Convert from 0-8192 range to degree
+
+    pitch += 90;
+
+    engine.setAngle(pitch, yaw);
+}
+
+void fvrHideCursor(Engine& engine, std::vector<std::string> args)
+{
+    if (args.size() != 2) {
+        std::cerr << "fvrHideCursor: invalid argument count" << std::endl;
+        return;
+    }
+
+    std::string value1 = args[0];
+    double value2 = std::stod(args[1]);
+
+    // TODO: implement
+    std::cout << "fvrHideCursor: not implemented: " << value1 << " " << value2 << std::endl;
+}
+
+void fvrNot(Engine& engine, std::vector<std::string> args)
+{
+    if (args.size() != 1) {
+        std::cerr << "fvrNot: invalid argument count" << std::endl;
+        return;
+    }
+
+    std::string value = args[0];
+    double val = std::stod(engine.getStateValue(value));
+    engine.setStateValue(value, val == 0.0 ? "1.0" : "0.0");
+}
+
+void fvrAngleXMax(Engine& engine, std::vector<std::string> args)
+{
+    if (args.size() != 1) {
+        std::cerr << "fvrAngleXMax: invalid argument count" << std::endl;
+        return;
+    }
+
+    double value = std::stod(args[0]);
+
+    // TODO: implement
+    std::cout << "fvrAngleXMax: not implemented: " << value << std::endl;
+}
+
+void fvrAngleYMax(Engine& engine, std::vector<std::string> args)
+{
+    if (args.size() != 1) {
+        std::cerr << "fvrAngleYMax: invalid argument count" << std::endl;
+        return;
+    }
+
+    double value = std::stod(args[0]);
+
+    // TODO: implement
+    std::cout << "fvrAngleXMax: not implemented: " << value << std::endl;
+}
+
+void fvrSetZoom(Engine& engine, std::vector<std::string> args)
+{
+    if (args.size() != 1) {
+        std::cerr << "fvrSetZoom: invalid argument count" << std::endl;
+        return;
+    }
+
+    double value = std::stod(args[0]);
+
+    // TODO: implement
+    std::cout << "fvrSetZoom: not implemented: " << value << std::endl;
+}
+
+void fvrInterpolAngle(Engine& engine, std::vector<std::string> args)
+{
+    if (args.size() != 3) {
+        std::cerr << "fvrInterpolAngle: invalid argument count" << std::endl;
+        return;
+    }
+
+    double value1 = std::stod(args[0]);
+    double value2 = std::stod(args[1]);
+    double value3 = std::stod(args[2]);
+
+    // TODO: implement
+    std::cout << "fvrInterpolAngle: not implemented: " << value1 << " " << value2 << " " << value3 << std::endl;
+}
+
 /* Private */
 class Engine::EnginePrivate {
     friend class Engine;
 
 public:
     bool loadScript(const std::string& scriptFile);
+    void registerScriptFunction(const std::string& name, const ScriptFunction& function);
+
     void onWarpEnter(const std::string& warpName);
     void onWarpZoneClick(const std::string& warpName, int zoneId);
 
     void executeBlock(const ofnx::files::Lst::InstructionBlock& block);
+    void executeBlockPlugin(const ofnx::files::Lst::InstructionBlock& block);
 
     bool isPanoramic() const;
     void render();
@@ -62,6 +363,7 @@ private:
     // Data
     ofnx::files::Lst m_script;
     std::map<std::string, ScriptFunction> m_functions;
+    std::map<std::string, ScriptFunction> m_functionsPlugin;
     std::string m_dataPath;
 
     ofnx::files::Vr m_fileVr;
@@ -104,6 +406,16 @@ bool Engine::EnginePrivate::loadScript(const std::string& scriptFile)
     return true;
 }
 
+void Engine::EnginePrivate::registerScriptFunction(const std::string& name, const ScriptFunction& function)
+{
+    if (m_functions.find(name) != m_functions.end()) {
+        std::cerr << "Function already registered: " << name << std::endl;
+        return;
+    }
+
+    m_functions[name] = function;
+}
+
 void Engine::EnginePrivate::onWarpEnter(const std::string& warpName)
 {
     const ofnx::files::Lst::InstructionBlock& block = m_script.getInitBlock(warpName);
@@ -120,14 +432,8 @@ void Engine::EnginePrivate::executeBlock(const ofnx::files::Lst::InstructionBloc
 {
     try {
         for (const ofnx::files::Lst::Instruction& instruction : block) {
-            std::cout << "Script: " << instruction.name;
-            for (const std::string& param : instruction.params) {
-                std::cout << " - " << param;
-            }
-            std::cout << std::endl;
-
             if (instruction.name == "plugin") {
-                executeBlock(instruction.subInstructions);
+                executeBlockPlugin(instruction.subInstructions);
             } else if (instruction.name == "ifand" || instruction.name == "ifor") {
                 // Check parameters
                 bool exec = instruction.name == "ifand";
@@ -167,6 +473,27 @@ void Engine::EnginePrivate::executeBlock(const ofnx::files::Lst::InstructionBloc
                     return;
                 }
             }
+        }
+    } catch (const std::exception& e) {
+        std::cerr << "Error during script execution" << std::endl;
+        m_isRunning = false;
+
+        for (const auto& [key, val] : m_stateValues) {
+            std::cout << key << ": " << val << std::endl;
+        }
+    }
+}
+
+void Engine::EnginePrivate::executeBlockPlugin(const ofnx::files::Lst::InstructionBlock& block)
+{
+    try {
+        for (const ofnx::files::Lst::Instruction& instruction : block) {
+            if (m_functionsPlugin.find(instruction.name) == m_functionsPlugin.end()) {
+                std::cerr << "Function not found: " << instruction.name << std::endl;
+                continue;
+            }
+
+            m_functionsPlugin[instruction.name](*parent, instruction.params);
         }
     } catch (const std::exception& e) {
         std::cerr << "Error during script execution" << std::endl;
@@ -230,9 +557,30 @@ bool Engine::init()
     }
 
     // Init data
-    registerScriptFunctions(*this);
     d_ptr->m_dataPath = ENGINE_DATA_PATH;
     d_ptr->m_isInit = true;
+
+    d_ptr->registerScriptFunction("gotowarp", &fvrGotoWarp);
+    d_ptr->registerScriptFunction("playsound", &fvrPlaySound);
+    d_ptr->registerScriptFunction("stopsound", &fvrStopSound);
+    d_ptr->registerScriptFunction("playsound3d", &fvrPlaySound3d);
+    d_ptr->registerScriptFunction("stopsound3d", &fvrStopSound3d);
+    d_ptr->registerScriptFunction("playmusique", &fvrPlayMusic);
+    d_ptr->registerScriptFunction("stopmusique", &fvrStopMusic);
+    d_ptr->registerScriptFunction("set", &fvrSet);
+    d_ptr->registerScriptFunction("lockkey", &fvrLockKey);
+    d_ptr->registerScriptFunction("resetlockkey", &fvrResetLockKey);
+    d_ptr->registerScriptFunction("setcursor", &fvrSetCursor);
+    d_ptr->registerScriptFunction("setcursordefault", &fvrSetCursorDefault);
+    d_ptr->registerScriptFunction("fade", &fvrFade);
+    d_ptr->registerScriptFunction("end", &fvrEnd);
+    d_ptr->registerScriptFunction("setangle", &fvrSetAngle);
+    d_ptr->registerScriptFunction("hidecursor", &fvrHideCursor);
+    d_ptr->registerScriptFunction("not", &fvrNot);
+    d_ptr->registerScriptFunction("anglexmax", &fvrAngleXMax);
+    d_ptr->registerScriptFunction("angleymax", &fvrAngleYMax);
+    d_ptr->registerScriptFunction("setzoom", &fvrSetZoom);
+    d_ptr->registerScriptFunction("interpolangle", &fvrInterpolAngle);
 
     return true;
 }
@@ -358,14 +706,14 @@ void Engine::deinit()
     d_ptr->m_isInit = false;
 }
 
-void Engine::registerScriptFunction(const std::string& name, const ScriptFunction& function)
+void Engine::registerScriptPluginFunction(const std::string& name, const ScriptFunction& function)
 {
-    if (d_ptr->m_functions.find(name) != d_ptr->m_functions.end()) {
+    if (d_ptr->m_functionsPlugin.find(name) != d_ptr->m_functionsPlugin.end()) {
         std::cerr << "Function already registered: " << name << std::endl;
         return;
     }
 
-    d_ptr->m_functions[name] = function;
+    d_ptr->m_functionsPlugin[name] = function;
 }
 
 bool Engine::isPanoramic() const

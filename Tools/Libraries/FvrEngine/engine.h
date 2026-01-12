@@ -23,7 +23,7 @@ public:
     void loop();
     void deinit();
 
-    void registerScriptFunction(const std::string& name, const ScriptFunction& function);
+    void registerScriptPluginFunction(const std::string& name, const ScriptFunction& function);
 
     bool isPanoramic() const;
     bool isOnZone() const;

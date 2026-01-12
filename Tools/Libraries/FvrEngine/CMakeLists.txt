@@ -6,26 +6,16 @@ project(${PROJECT_NAME} VERSION 0.1.0 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 
-set(PROJECT_FILE_HEADERS
+add_library(${PROJECT_NAME} SHARED
+    libfvrengine_globals.h
+
     base/miniaudio.h
 
     engine/audio.h
-    engine/script.h
-    
-    libfvrengine_globals.h
-    engine.h
-)
-
-set(PROJECT_FILE_SOURCES
     engine/audio.cpp
-    engine/script.cpp
     
+    engine.h
     engine.cpp
-)
-
-add_library(${PROJECT_NAME} SHARED
-    ${PROJECT_FILE_HEADERS}
-    ${PROJECT_FILE_SOURCES}
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
