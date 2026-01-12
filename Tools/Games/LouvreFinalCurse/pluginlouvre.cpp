@@ -10,6 +10,7 @@
 #include <ofnx/files/arnvit.h>
 
 constexpr int INVENTORY_SIZE = 8;
+constexpr int CHEST_SIZE = 128;
 
 // Inventory action button images
 constexpr std::string INV_ACTION_BUTTON_USE_DISABLED = "Bout0001.bmp";
@@ -232,8 +233,11 @@ std::map<int, ObjectData> g_objectMap = {
 };
 
 struct LouvreData {
-    int objectInventory[INVENTORY_SIZE] = { -1, -1, -1, -1, -1, -1, -1, -1 };
+    int objectInventory[INVENTORY_SIZE] = { -1 };
     int selectedObjectSlot = -1;
+
+    int objectChest[CHEST_SIZE] = { -1 };
+
     std::string isMonde4 = "0.0";
 
     ofnx::files::ArnVit arnVit;
@@ -685,8 +689,12 @@ void plgMultiCdSetNextScript(Engine& engine, std::vector<std::string> args)
 
 void plgReset(Engine& engine, std::vector<std::string> args)
 {
-    // TODO: implement
-    std::cout << "plgReset: not implemented" << std::endl;
+    for (int i = 0; i < CHEST_SIZE; ++i) {
+        g_louvreData.objectChest[i] = 0;
+    }
+    for (int i = 0; i < 13; ++i) {
+        engine.setStateValue("pos" + std::to_string(i), "0");
+    }
 }
 
 void plgAddObject(Engine& engine, std::vector<std::string> args)
