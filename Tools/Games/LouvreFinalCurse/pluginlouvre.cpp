@@ -328,9 +328,6 @@ void plgCmp(Engine& engine, std::vector<std::string> args)
     std::string var = args[2];
     std::string op = args[3];
     double value = std::stod(args[4]);
-
-    std::cout << cond << " - " << notCond << " - " << var << " - " << op << " - " << value << " - " << engine.getStateValue(var) << std::endl;
-
     bool result = false;
     if (op == "==") {
         result = std::stod(engine.getStateValue(var)) == value;
