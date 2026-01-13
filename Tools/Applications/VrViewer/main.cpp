@@ -8,6 +8,7 @@
 #include <ofnx/files/tst.h>
 #include <ofnx/files/vr.h>
 #include <ofnx/graphics/rendereropengl.h>
+#include <ofnx/tools/log.h>
 
 #define FNXVR_WINDOW_WIDTH 640
 #define FNXVR_WINDOW_HEIGHT 480
@@ -72,13 +73,13 @@ std::vector<Event> getEvents()
 int main(int argc, char* argv[])
 {
     if (argc < 2) {
-        std::cout << "Usage: " << argv[0] << " <vr_file_vr>" << std::endl;
+        LOG_CRITICAL("Usage: {} <vr_file_vr>", argv[0]);
         return 1;
     }
 
     // Init SDL3
     if (!SDL_Init(SDL_INIT_VIDEO)) {
-        std::cerr << "SDL_Init failed - " << SDL_GetError() << std::endl;
+        LOG_CRITICAL("SDL initialisation failed: {}", SDL_GetError());
         return false;
     }
 
@@ -88,13 +89,13 @@ int main(int argc, char* argv[])
 
     SDL_Window* window = SDL_CreateWindow("FnxVR", FNXVR_WINDOW_WIDTH, FNXVR_WINDOW_HEIGHT, SDL_WINDOW_OPENGL);
     if (!window) {
-        std::cerr << "Failed to create SDL window: " << SDL_GetError() << std::endl;
+        LOG_CRITICAL("Failed to create SDL window: {}", SDL_GetError());
         return false;
     }
 
     SDL_GLContext glContext = SDL_GL_CreateContext(window);
     if (!glContext) {
-        std::cerr << "Failed to create GL context: " << SDL_GetError() << std::endl;
+        LOG_CRITICAL("Failed to create GL context: {}", SDL_GetError());
         SDL_DestroyWindow(window);
         return false;
     }
@@ -106,18 +107,18 @@ int main(int argc, char* argv[])
 
     const std::string vrFileName(argv[1]);
 
-    std::cout << "Opening VR file " << vrFileName << std::endl;
+    LOG_INFO("Opening VR file {}", vrFileName);
 
     // Load VR file VR
     ofnx::files::Vr vrFile;
     if (!vrFile.load(vrFileName)) {
-        std::cerr << "VR failed to load" << std::endl;
+        LOG_CRITICAL("VR failed to load");
         return 1;
     }
 
     std::vector<uint16_t> imageData;
     if (!vrFile.getDataRgb565(imageData)) {
-        std::cerr << "Failed to load VR image data" << std::endl;
+        LOG_CRITICAL("Failed to load VR image data");
         return 1;
     }
 
@@ -125,13 +126,13 @@ int main(int argc, char* argv[])
     std::string tstFileName = removeExtension(vrFileName) + ".tst";
     ofnx::files::Tst tstFile;
     if (tstFile.loadFile(tstFileName)) {
-        std::cout << "Corresponding TST file found" << std::endl;
+        LOG_CRITICAL("Corresponding TST file found");
     }
 
     // Init Ofnx manager
     ofnx::graphics::RendererOpenGL renderer;
     if (!renderer.init(FNXVR_WINDOW_WIDTH, FNXVR_WINDOW_HEIGHT, vrFile.getType() == ofnx::files::Vr::Type::VR2_STATIC_VR, (ofnx::graphics::RendererOpenGL::oglLoadFunc)SDL_GL_GetProcAddress)) {
-        std::cerr << "Failed to init Ofnx manager" << std::endl;
+        LOG_CRITICAL("Failed to init Ofnx manager");
         return 1;
     }
 

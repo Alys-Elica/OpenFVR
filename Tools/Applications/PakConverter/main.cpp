@@ -2,11 +2,12 @@
 #include <iostream>
 
 #include <ofnx/files/pak.h>
+#include <ofnx/tools/log.h>
 
 int main(int argc, char* argv[])
 {
     if (argc < 2) {
-        std::cerr << "Usage: " << argv[0] << " <pak file> [pak file] ..." << std::endl;
+        LOG_CRITICAL("Usage: {} <pak_file> [pak_file] ...", argv[0]);
         return false;
     }
 
@@ -15,7 +16,7 @@ int main(int argc, char* argv[])
 
         ofnx::files::Pak pak;
         if (!pak.open(pakFileName)) {
-            std::cerr << "Unable to open file " << pakFileName << std::endl;
+            LOG_CRITICAL("Unable to open file {}", pakFileName);
             continue;
         }
 

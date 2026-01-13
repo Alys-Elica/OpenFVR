@@ -3,11 +3,12 @@
 #include <iostream>
 
 #include <ofnx/files/arnvit.h>
+#include <ofnx/tools/log.h>
 
 int main(int argc, char* argv[])
 {
     if (argc < 3) {
-        std::cerr << "Usage: " << argv[0] << " <vit file> <arn file>" << std::endl;
+        LOG_CRITICAL("Usage: {} <vit_file> <arn_file>", argv[0]);
         return false;
     }
 
@@ -16,7 +17,7 @@ int main(int argc, char* argv[])
 
     ofnx::files::ArnVit arnVit;
     if (!arnVit.open(vitFileName, arnFileName)) {
-        std::cerr << "Unable to open ARN/VIT files" << std::endl;
+        LOG_CRITICAL("Unable to open ARN/VIT files");
         return false;
     }
 

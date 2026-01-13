@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include <engine.h>
+#include <ofnx/tools/log.h>
 
 #include "pluginlouvre.h"
 
@@ -8,7 +9,7 @@ int main(int argc, char* argv[])
 {
     Engine engine;
     if (!engine.init()) {
-        std::cerr << "Failed to initialize engine" << std::endl;
+        LOG_CRITICAL("Failed to initialize engine");
         return 1;
     }
 

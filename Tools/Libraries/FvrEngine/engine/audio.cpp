@@ -8,6 +8,8 @@
 #define MINIAUDIO_IMPLEMENTATION
 #include <base/miniaudio.h>
 
+#include <ofnx/tools/log.h>
+
 #define AUDIO_DIR "data/audio/"
 
 /* Private */
@@ -37,7 +39,7 @@ bool Audio::init()
 {
     ma_result result = ma_engine_init(nullptr, &d_ptr->m_engine);
     if (result != MA_SUCCESS) {
-        std::cerr << "Failed to initialize audio engine" << std::endl;
+        LOG_CRITICAL("Failed to initialize audio engine");
         return false;
     }
 
@@ -84,7 +86,7 @@ void Audio::playSound(const std::string& soundFile, uint8_t volume, bool loop)
         nullptr,
         sound);
     if (result != MA_SUCCESS) {
-        std::cerr << "Failed to load sound: " << soundFile << std::endl;
+        LOG_CRITICAL("Failed to load sound: {}", soundFile);
         delete sound;
         return;
     }
@@ -98,7 +100,7 @@ void Audio::playSound(const std::string& soundFile, uint8_t volume, bool loop)
 
     result = ma_sound_start(sound);
     if (result != MA_SUCCESS) {
-        std::cerr << "Failed to play sound: " << soundFile << std::endl;
+        LOG_CRITICAL("Failed to play sound: {}", soundFile);
         ma_sound_uninit(sound);
         delete sound;
     }

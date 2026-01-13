@@ -6,6 +6,7 @@
 
 #include <ofnx/files/lst.h>
 #include <ofnx/files/pak.h>
+#include <ofnx/tools/log.h>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -26,7 +27,6 @@ void copyFile(const std::string& path, const std::string& pathOut, const std::st
         try {
             std::filesystem::copy(path, pathOut + name);
         } catch (const std::exception&) {
-            // std::cerr << e.what() << '\n';
         }
     }
 }
@@ -49,12 +49,12 @@ std::vector<uint8_t> readScript(const std::string& fileIn)
 {
     ofnx::files::Pak fvrPak;
     if (!fvrPak.open(fileIn)) {
-        std::cerr << "Error opening PAK file: " << fileIn << std::endl;
+        LOG_CRITICAL("Error opening PAK file: {}", fileIn);
         return {};
     }
 
     if (fvrPak.fileCount() != 1) {
-        std::cerr << "No file in PAK file: " << fileIn << std::endl;
+        LOG_CRITICAL("No file in PAK file: {}", fileIn);
         return {};
     }
 
@@ -70,12 +70,12 @@ void saveScript(const std::vector<uint8_t>& data, const std::string& fileOut)
 
     ofnx::files::Lst fvrScript;
     if (!fvrScript.parseLst(tmpFileName)) {
-        std::cerr << "Error parsing script: " << tmpFileName << std::endl;
+        LOG_CRITICAL("Error parsing script: {}", tmpFileName);
         return;
     }
 
     if (!fvrScript.saveLst(fileOut)) {
-        std::cerr << "Error saving script: " << fileOut << std::endl;
+        LOG_CRITICAL("Error saving script: {}", fileOut);
         return;
     }
 
@@ -94,7 +94,6 @@ void copyVideo(const std::string& path, const std::string& pathOut)
             try {
                 std::filesystem::copy(path, pathOut + name + ".4xm");
             } catch (const std::exception&) {
-                // std::cerr << e.what() << '\n';
             }
         }
     }
