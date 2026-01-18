@@ -73,13 +73,13 @@ std::vector<Event> getEvents()
 int main(int argc, char* argv[])
 {
     if (argc < 2) {
-        LOG_CRITICAL("Usage: {} <vr_file_vr>", argv[0]);
+        LOG_ERROR("Usage: {} <vr_file_vr>", argv[0]);
         return 1;
     }
 
     // Init SDL3
     if (!SDL_Init(SDL_INIT_VIDEO)) {
-        LOG_CRITICAL("SDL initialisation failed: {}", SDL_GetError());
+        LOG_ERROR("SDL initialisation failed: {}", SDL_GetError());
         return false;
     }
 
@@ -89,13 +89,13 @@ int main(int argc, char* argv[])
 
     SDL_Window* window = SDL_CreateWindow("FnxVR", FNXVR_WINDOW_WIDTH, FNXVR_WINDOW_HEIGHT, SDL_WINDOW_OPENGL);
     if (!window) {
-        LOG_CRITICAL("Failed to create SDL window: {}", SDL_GetError());
+        LOG_ERROR("Failed to create SDL window: {}", SDL_GetError());
         return false;
     }
 
     SDL_GLContext glContext = SDL_GL_CreateContext(window);
     if (!glContext) {
-        LOG_CRITICAL("Failed to create GL context: {}", SDL_GetError());
+        LOG_ERROR("Failed to create GL context: {}", SDL_GetError());
         SDL_DestroyWindow(window);
         return false;
     }
@@ -112,13 +112,13 @@ int main(int argc, char* argv[])
     // Load VR file VR
     ofnx::files::Vr vrFile;
     if (!vrFile.load(vrFileName)) {
-        LOG_CRITICAL("VR failed to load");
+        LOG_ERROR("VR failed to load");
         return 1;
     }
 
     std::vector<uint16_t> imageData;
     if (!vrFile.getDataRgb565(imageData)) {
-        LOG_CRITICAL("Failed to load VR image data");
+        LOG_ERROR("Failed to load VR image data");
         return 1;
     }
 
@@ -126,13 +126,13 @@ int main(int argc, char* argv[])
     std::string tstFileName = removeExtension(vrFileName) + ".tst";
     ofnx::files::Tst tstFile;
     if (tstFile.loadFile(tstFileName)) {
-        LOG_CRITICAL("Corresponding TST file found");
+        LOG_ERROR("Corresponding TST file found");
     }
 
     // Init Ofnx manager
     ofnx::graphics::RendererOpenGL renderer;
     if (!renderer.init(FNXVR_WINDOW_WIDTH, FNXVR_WINDOW_HEIGHT, vrFile.getType() == ofnx::files::Vr::Type::VR2_STATIC_VR, (ofnx::graphics::RendererOpenGL::oglLoadFunc)SDL_GL_GetProcAddress)) {
-        LOG_CRITICAL("Failed to init Ofnx manager");
+        LOG_ERROR("Failed to init Ofnx manager");
         return 1;
     }
 

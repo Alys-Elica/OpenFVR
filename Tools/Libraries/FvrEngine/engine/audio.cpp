@@ -39,7 +39,7 @@ bool Audio::init()
 {
     ma_result result = ma_engine_init(nullptr, &d_ptr->m_engine);
     if (result != MA_SUCCESS) {
-        LOG_CRITICAL("Failed to initialize audio engine");
+        LOG_ERROR("Failed to initialize audio engine");
         return false;
     }
 
@@ -86,7 +86,7 @@ void Audio::playSound(const std::string& soundFile, uint8_t volume, bool loop)
         nullptr,
         sound);
     if (result != MA_SUCCESS) {
-        LOG_CRITICAL("Failed to load sound: {}", soundFile);
+        LOG_ERROR("Failed to load sound: {}", soundFile);
         delete sound;
         return;
     }
@@ -100,7 +100,7 @@ void Audio::playSound(const std::string& soundFile, uint8_t volume, bool loop)
 
     result = ma_sound_start(sound);
     if (result != MA_SUCCESS) {
-        LOG_CRITICAL("Failed to play sound: {}", soundFile);
+        LOG_ERROR("Failed to play sound: {}", soundFile);
         ma_sound_uninit(sound);
         delete sound;
     }

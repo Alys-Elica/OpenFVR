@@ -251,7 +251,7 @@ void drawImageToScreen(Engine& engine, const std::string& img, int x, int y)
 {
     ofnx::files::ArnVit::ArnVitFile file = g_louvreData.arnVit.getFile(img);
     if (file.data.empty()) {
-        LOG_CRITICAL("Unable to read image file: {}", img);
+        LOG_ERROR("Unable to read image file: {}", img);
         return;
     }
 
@@ -312,7 +312,7 @@ void printPortefSelectedObject(Engine& engine, int objectSlot)
 void plgPlayMovie(Engine& engine, std::vector<std::string> args)
 {
     if (args.size() != 1) {
-        LOG_CRITICAL("Invalid number of arguments");
+        LOG_ERROR("Invalid number of arguments");
         return;
     }
 
@@ -324,7 +324,7 @@ void plgPlayMovie(Engine& engine, std::vector<std::string> args)
 void plgCmp(Engine& engine, std::vector<std::string> args)
 {
     if (args.size() != 5) {
-        LOG_CRITICAL("Invalid number of arguments");
+        LOG_ERROR("Invalid number of arguments");
         return;
     }
 
@@ -347,7 +347,7 @@ void plgCmp(Engine& engine, std::vector<std::string> args)
     } else if (op == ">=") {
         result = std::stod(engine.getStateValue(var)) >= value;
     } else {
-        LOG_CRITICAL("Invalid operator: {}", op);
+        LOG_ERROR("Invalid operator: {}", op);
     }
 
     engine.setStateValue(cond, result ? "1.0" : "0.0");
@@ -357,13 +357,13 @@ void plgCmp(Engine& engine, std::vector<std::string> args)
 void plgKillTimer(Engine& engine, std::vector<std::string> args)
 {
     // TODO: implement
-    LOG_CRITICAL("Not implemented");
+    LOG_ERROR("Not implemented");
 }
 
 void plgCarteDestination(Engine& engine, std::vector<std::string> args)
 {
     if (args.size() != 2) {
-        LOG_CRITICAL("Invalid number of arguments");
+        LOG_ERROR("Invalid number of arguments");
         return;
     }
 
@@ -371,13 +371,13 @@ void plgCarteDestination(Engine& engine, std::vector<std::string> args)
     std::string y = args[1];
 
     // TODO: implement
-    LOG_CRITICAL("Not implemented");
+    LOG_ERROR("Not implemented");
 }
 
 void plgPauseTimer(Engine& engine, std::vector<std::string> args)
 {
     if (args.size() != 2) {
-        LOG_CRITICAL("Invalid number of arguments");
+        LOG_ERROR("Invalid number of arguments");
         return;
     }
 
@@ -385,13 +385,13 @@ void plgPauseTimer(Engine& engine, std::vector<std::string> args)
     double value = std::stod(args[1]);
 
     // TODO: implement
-    LOG_CRITICAL("Not implemented");
+    LOG_ERROR("Not implemented");
 }
 
 void plgAdd(Engine& engine, std::vector<std::string> args)
 {
     if (args.size() != 3) {
-        LOG_CRITICAL("Invalid number of arguments");
+        LOG_ERROR("Invalid number of arguments");
         return;
     }
 
@@ -400,19 +400,19 @@ void plgAdd(Engine& engine, std::vector<std::string> args)
     std::string notCond = args[2];
 
     // TODO: implement
-    LOG_CRITICAL("Not implemented");
+    LOG_ERROR("Not implemented");
 }
 
 void plgInitCoffre(Engine& engine, std::vector<std::string> args)
 {
     // TODO: implement
-    LOG_CRITICAL("Not implemented");
+    LOG_ERROR("Not implemented");
 }
 
 void plgAffichePortef(Engine& engine, std::vector<std::string> args)
 {
     if (args.size() != 1) {
-        LOG_CRITICAL("Invalid number of arguments");
+        LOG_ERROR("Invalid number of arguments");
         return;
     }
 
@@ -439,26 +439,26 @@ void plgAfficheSelection(Engine& engine, std::vector<std::string> args)
 void plgAfficheCoffre(Engine& engine, std::vector<std::string> args)
 {
     // TODO: implement
-    LOG_CRITICAL("Not implemented");
+    LOG_ERROR("Not implemented");
 }
 
 void plgScroll(Engine& engine, std::vector<std::string> args)
 {
     if (args.size() != 1) {
-        LOG_CRITICAL("Invalid number of arguments");
+        LOG_ERROR("Invalid number of arguments");
         return;
     }
 
     double value = std::stod(args[0]);
 
     // TODO: implement
-    LOG_CRITICAL("Not implemented");
+    LOG_ERROR("Not implemented");
 }
 
 void plgSelectPorteF(Engine& engine, std::vector<std::string> args)
 {
     if (args.size() != 2) {
-        LOG_CRITICAL("Invalid number of arguments");
+        LOG_ERROR("Invalid number of arguments");
         return;
     }
 
@@ -466,13 +466,13 @@ void plgSelectPorteF(Engine& engine, std::vector<std::string> args)
     std::string z = args[1];
 
     // TODO: implement
-    LOG_CRITICAL("Not implemented");
+    LOG_ERROR("Not implemented");
 }
 
 void plgPlayAnimBloc(Engine& engine, std::vector<std::string> args)
 {
     if (args.size() != 4) {
-        LOG_CRITICAL("Invalid number of arguments");
+        LOG_ERROR("Invalid number of arguments");
         return;
     }
 
@@ -488,7 +488,7 @@ void plgPlayAnimBloc(Engine& engine, std::vector<std::string> args)
 void plgUntilLoop(Engine& engine, std::vector<std::string> args)
 {
     if (args.size() != 2) {
-        LOG_CRITICAL("Invalid number of arguments");
+        LOG_ERROR("Invalid number of arguments");
         return;
     }
 
@@ -501,13 +501,13 @@ void plgUntilLoop(Engine& engine, std::vector<std::string> args)
 void plgMemoryRelease(Engine& engine, std::vector<std::string> args)
 {
     // TODO: implement
-    LOG_CRITICAL("Not implemented");
+    LOG_ERROR("Not implemented");
 }
 
 void plgSelectCoffre(Engine& engine, std::vector<std::string> args)
 {
     if (args.size() != 2) {
-        LOG_CRITICAL("Invalid number of arguments");
+        LOG_ERROR("Invalid number of arguments");
         return;
     }
 
@@ -515,13 +515,13 @@ void plgSelectCoffre(Engine& engine, std::vector<std::string> args)
     std::string z = args[1];
 
     // TODO: implement
-    LOG_CRITICAL("Not implemented");
+    LOG_ERROR("Not implemented");
 }
 
 void plgPlayAnimBlocNumber(Engine& engine, std::vector<std::string> args)
 {
     if (args.size() != 5) {
-        LOG_CRITICAL("Invalid number of arguments");
+        LOG_ERROR("Invalid number of arguments");
         return;
     }
 
@@ -532,13 +532,13 @@ void plgPlayAnimBlocNumber(Engine& engine, std::vector<std::string> args)
     double value2 = std::stod(args[4]);
 
     // TODO: implement
-    LOG_CRITICAL("Not implemented");
+    LOG_ERROR("Not implemented");
 }
 
 void plgSub(Engine& engine, std::vector<std::string> args)
 {
     if (args.size() != 3) {
-        LOG_CRITICAL("Invalid number of arguments");
+        LOG_ERROR("Invalid number of arguments");
         return;
     }
 
@@ -547,13 +547,13 @@ void plgSub(Engine& engine, std::vector<std::string> args)
     double value2 = std::stod(args[2]);
 
     // TODO: implement
-    LOG_CRITICAL("Not implemented");
+    LOG_ERROR("Not implemented");
 }
 
 void plgWhileLoop(Engine& engine, std::vector<std::string> args)
 {
     if (args.size() != 1) {
-        LOG_CRITICAL("Invalid number of arguments");
+        LOG_ERROR("Invalid number of arguments");
         return;
     }
 
@@ -565,7 +565,7 @@ void plgWhileLoop(Engine& engine, std::vector<std::string> args)
 void plgIsHere(Engine& engine, std::vector<std::string> args)
 {
     // TODO: implement
-    LOG_CRITICAL("Not implemented");
+    LOG_ERROR("Not implemented");
 }
 
 void plgDrawTextSelection(Engine& engine, std::vector<std::string> args)
@@ -574,26 +574,26 @@ void plgDrawTextSelection(Engine& engine, std::vector<std::string> args)
 
     // Draws text in box: x1=62, y1=405, x2=354, y2464
 
-    LOG_CRITICAL("Not implemented");
+    LOG_ERROR("Not implemented");
 }
 
 void plgPorteFRollover(Engine& engine, std::vector<std::string> args)
 {
     if (args.size() != 1) {
-        LOG_CRITICAL("Invalid number of arguments");
+        LOG_ERROR("Invalid number of arguments");
         return;
     }
 
     double value = std::stod(args[0]);
 
     // TODO: implement
-    LOG_CRITICAL("Not implemented");
+    LOG_ERROR("Not implemented");
 }
 
 void plgSetMonde4(Engine& engine, std::vector<std::string> args)
 {
     if (args.size() != 1) {
-        LOG_CRITICAL("Invalid number of arguments");
+        LOG_ERROR("Invalid number of arguments");
         return;
     }
 
@@ -605,7 +605,7 @@ void plgSetMonde4(Engine& engine, std::vector<std::string> args)
 void plgGetMonde4(Engine& engine, std::vector<std::string> args)
 {
     if (args.size() != 2) {
-        LOG_CRITICAL("Invalid number of arguments");
+        LOG_ERROR("Invalid number of arguments");
         return;
     }
 
@@ -619,20 +619,20 @@ void plgGetMonde4(Engine& engine, std::vector<std::string> args)
 void plgChangeCurseur(Engine& engine, std::vector<std::string> args)
 {
     if (args.size() != 1) {
-        LOG_CRITICAL("Invalid number of arguments");
+        LOG_ERROR("Invalid number of arguments");
         return;
     }
 
     double value = std::stod(args[0]);
 
     // TODO: implement
-    LOG_CRITICAL("Not implemented");
+    LOG_ERROR("Not implemented");
 }
 
 void plgLoadSaveContextRestored(Engine& engine, std::vector<std::string> args)
 {
     if (args.size() != 2) {
-        LOG_CRITICAL("Invalid number of arguments");
+        LOG_ERROR("Invalid number of arguments");
         return;
     }
 
@@ -640,52 +640,52 @@ void plgLoadSaveContextRestored(Engine& engine, std::vector<std::string> args)
     std::string reloadDone = args[1];
 
     // TODO: implement
-    LOG_CRITICAL("Not implemented");
+    LOG_ERROR("Not implemented");
 }
 
 void plgLoadSaveCaptureContext(Engine& engine, std::vector<std::string> args)
 {
     // TODO: implement
-    LOG_CRITICAL("Not implemented");
+    LOG_ERROR("Not implemented");
 }
 
 void plgLoadSaveInitSlots(Engine& engine, std::vector<std::string> args)
 {
     if (args.size() != 1) {
-        LOG_CRITICAL("Invalid number of arguments");
+        LOG_ERROR("Invalid number of arguments");
         return;
     }
 
     double value = std::stod(args[0]);
 
     // TODO: implement
-    LOG_CRITICAL("Not implemented");
+    LOG_ERROR("Not implemented");
 }
 
 void plgLoadSaveSave(Engine& engine, std::vector<std::string> args)
 {
     if (args.size() != 1) {
-        LOG_CRITICAL("Invalid number of arguments");
+        LOG_ERROR("Invalid number of arguments");
         return;
     }
 
     double value = std::stod(args[0]);
 
     // TODO: implement
-    LOG_CRITICAL("Not implemented");
+    LOG_ERROR("Not implemented");
 }
 
 void plgMultiCdSetNextScript(Engine& engine, std::vector<std::string> args)
 {
     if (args.size() != 1) {
-        LOG_CRITICAL("Invalid number of arguments");
+        LOG_ERROR("Invalid number of arguments");
         return;
     }
 
     std::string value = args[0];
 
     // TODO: implement
-    LOG_CRITICAL("Not implemented");
+    LOG_ERROR("Not implemented");
 }
 
 void plgReset(Engine& engine, std::vector<std::string> args)
@@ -701,7 +701,7 @@ void plgReset(Engine& engine, std::vector<std::string> args)
 void plgAddObject(Engine& engine, std::vector<std::string> args)
 {
     if (args.size() != 3) {
-        LOG_CRITICAL("Invalid number of arguments");
+        LOG_ERROR("Invalid number of arguments");
         return;
     }
 
@@ -725,20 +725,20 @@ void plgAddObject(Engine& engine, std::vector<std::string> args)
 void plgAddCoffreObject(Engine& engine, std::vector<std::string> args)
 {
     if (args.size() != 1) {
-        LOG_CRITICAL("Invalid number of arguments");
+        LOG_ERROR("Invalid number of arguments");
         return;
     }
 
     double value = std::stod(args[0]);
 
     // TODO: implement
-    LOG_CRITICAL("Not implemented");
+    LOG_ERROR("Not implemented");
 }
 
 void plgIsPresent(Engine& engine, std::vector<std::string> args)
 {
     if (args.size() != 3) {
-        LOG_CRITICAL("Invalid number of arguments");
+        LOG_ERROR("Invalid number of arguments");
         return;
     }
 
@@ -761,7 +761,7 @@ void plgIsPresent(Engine& engine, std::vector<std::string> args)
 void plgRemoveObject(Engine& engine, std::vector<std::string> args)
 {
     if (args.size() != 1) {
-        LOG_CRITICAL("Invalid number of arguments");
+        LOG_ERROR("Invalid number of arguments");
         return;
     }
 
@@ -777,20 +777,20 @@ void plgRemoveObject(Engine& engine, std::vector<std::string> args)
 void plgStartTimer(Engine& engine, std::vector<std::string> args)
 {
     if (args.size() != 1) {
-        LOG_CRITICAL("Invalid number of arguments");
+        LOG_ERROR("Invalid number of arguments");
         return;
     }
 
     double value = std::stod(args[0]);
 
     // TODO: implement
-    LOG_CRITICAL("Not implemented");
+    LOG_ERROR("Not implemented");
 }
 
 void plgLoadSaveTestSlot(Engine& engine, std::vector<std::string> args)
 {
     if (args.size() != 3) {
-        LOG_CRITICAL("Invalid number of arguments");
+        LOG_ERROR("Invalid number of arguments");
         return;
     }
 
@@ -799,45 +799,45 @@ void plgLoadSaveTestSlot(Engine& engine, std::vector<std::string> args)
     std::string notCond = args[2];
 
     // TODO: implement
-    LOG_CRITICAL("Not implemented");
+    LOG_ERROR("Not implemented");
 }
 
 void plgLoadSaveLoad(Engine& engine, std::vector<std::string> args)
 {
     if (args.size() != 1) {
-        LOG_CRITICAL("Invalid number of arguments");
+        LOG_ERROR("Invalid number of arguments");
         return;
     }
 
     double value = std::stod(args[0]);
 
     // TODO: implement
-    LOG_CRITICAL("Not implemented");
+    LOG_ERROR("Not implemented");
 }
 
 void plgSaveCoffre(Engine& engine, std::vector<std::string> args)
 {
     // TODO: implement
-    LOG_CRITICAL("Not implemented");
+    LOG_ERROR("Not implemented");
 }
 
 void plgLoadSaveSetContextLabel(Engine& engine, std::vector<std::string> args)
 {
     if (args.size() != 1) {
-        LOG_CRITICAL("Invalid number of arguments");
+        LOG_ERROR("Invalid number of arguments");
         return;
     }
 
     std::string value = args[0];
 
     // TODO: implement
-    LOG_CRITICAL("Not implemented");
+    LOG_ERROR("Not implemented");
 }
 
 void plgLoadSaveDrawSlot(Engine& engine, std::vector<std::string> args)
 {
     if (args.size() != 4) {
-        LOG_CRITICAL("Invalid number of arguments");
+        LOG_ERROR("Invalid number of arguments");
         return;
     }
 
@@ -847,7 +847,7 @@ void plgLoadSaveDrawSlot(Engine& engine, std::vector<std::string> args)
     double value4 = std::stod(args[3]);
 
     // TODO: implement
-    LOG_CRITICAL("Not implemented");
+    LOG_ERROR("Not implemented");
 }
 
 void plgEnd(Engine& engine, std::vector<std::string> args)
@@ -858,7 +858,7 @@ void plgEnd(Engine& engine, std::vector<std::string> args)
 void plgInit2(Engine& engine, std::vector<std::string> args)
 {
     if (args.size() != 1) {
-        LOG_CRITICAL("Invalid number of arguments");
+        LOG_ERROR("Invalid number of arguments");
         return;
     }
 
@@ -869,7 +869,7 @@ void plgInit2(Engine& engine, std::vector<std::string> args)
 void plgInit(Engine& engine, std::vector<std::string> args)
 {
     if (args.size() != 2) {
-        LOG_CRITICAL("Invalid number of arguments");
+        LOG_ERROR("Invalid number of arguments");
         return;
     }
 
@@ -878,7 +878,7 @@ void plgInit(Engine& engine, std::vector<std::string> args)
 
     bool ret = g_louvreData.arnVit.open("data/bdataheader.vit", "data/bdata1.arn");
     if (!ret) {
-        LOG_CRITICAL("Failed to open ARN/VIT");
+        LOG_ERROR("Failed to open ARN/VIT");
         return;
     }
 
@@ -891,7 +891,7 @@ void plgInit(Engine& engine, std::vector<std::string> args)
 void plgLoadSaveEnterScript(Engine& engine, std::vector<std::string> args)
 {
     if (args.size() != 2) {
-        LOG_CRITICAL("Invalid number of arguments");
+        LOG_ERROR("Invalid number of arguments");
         return;
     }
 
@@ -902,19 +902,19 @@ void plgLoadSaveEnterScript(Engine& engine, std::vector<std::string> args)
     engine.setStateValue(var, "0.0"); // Reloading
     engine.setStateValue(notVar, "1.0"); // Not reloading
 
-    LOG_CRITICAL("Not implemented");
+    LOG_ERROR("Not implemented");
 }
 
 void plgLoadCoffre(Engine& engine, std::vector<std::string> args)
 {
     // TODO: implement
-    LOG_CRITICAL("Not implemented");
+    LOG_ERROR("Not implemented");
 }
 
 void plgSelect(Engine& engine, std::vector<std::string> args)
 {
     if (args.size() != 3) {
-        LOG_CRITICAL("Invalid number of arguments");
+        LOG_ERROR("Invalid number of arguments");
         return;
     }
 
@@ -924,7 +924,7 @@ void plgSelect(Engine& engine, std::vector<std::string> args)
 
     int objectId = g_louvreData.objectInventory[(int)value - 1];
     if (objectId == -1) {
-        LOG_CRITICAL("Invalid object id");
+        LOG_ERROR("Invalid object id");
         return;
     }
 
@@ -936,7 +936,7 @@ void plgSelect(Engine& engine, std::vector<std::string> args)
 void plgDoAction(Engine& engine, std::vector<std::string> args)
 {
     if (args.size() != 2) {
-        LOG_CRITICAL("Invalid number of arguments");
+        LOG_ERROR("Invalid number of arguments");
         return;
     }
 
@@ -947,7 +947,7 @@ void plgDoAction(Engine& engine, std::vector<std::string> args)
     case 1: {
         // Take
         if (g_louvreData.selectedObjectSlot == -1) {
-            LOG_CRITICAL("No object selected");
+            LOG_ERROR("No object selected");
             return;
         }
 
@@ -955,7 +955,7 @@ void plgDoAction(Engine& engine, std::vector<std::string> args)
         if (g_objectMap[objectId].canUse) {
             engine.setStateValue("inventaire", std::to_string((double)objectId));
         } else {
-            LOG_CRITICAL("Object cannot be used");
+            LOG_ERROR("Object cannot be used");
         }
         break;
     }
@@ -972,7 +972,7 @@ void plgDoAction(Engine& engine, std::vector<std::string> args)
         // TODO: implement
         break;
     default:
-        LOG_CRITICAL("Invalid action");
+        LOG_ERROR("Invalid action");
         break;
     }
 }
@@ -980,14 +980,14 @@ void plgDoAction(Engine& engine, std::vector<std::string> args)
 void plgDiscocier(Engine& engine, std::vector<std::string> args)
 {
     if (args.size() != 1) {
-        LOG_CRITICAL("Invalid number of arguments");
+        LOG_ERROR("Invalid number of arguments");
         return;
     }
 
     std::string z = args[0];
 
     // TODO: implement
-    LOG_CRITICAL("Not implemented");
+    LOG_ERROR("Not implemented");
 }
 
 void registerPluginLouvre(Engine& engine)

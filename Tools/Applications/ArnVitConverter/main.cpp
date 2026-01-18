@@ -8,7 +8,7 @@
 int main(int argc, char* argv[])
 {
     if (argc < 3) {
-        LOG_CRITICAL("Usage: {} <vit_file> <arn_file>", argv[0]);
+        LOG_ERROR("Usage: {} <vit_file> <arn_file>", argv[0]);
         return false;
     }
 
@@ -17,7 +17,7 @@ int main(int argc, char* argv[])
 
     ofnx::files::ArnVit arnVit;
     if (!arnVit.open(vitFileName, arnFileName)) {
-        LOG_CRITICAL("Unable to open ARN/VIT files");
+        LOG_ERROR("Unable to open ARN/VIT files");
         return false;
     }
 

@@ -7,7 +7,7 @@
 int main(int argc, char* argv[])
 {
     if (argc < 2) {
-        LOG_CRITICAL("Usage: {} <pak_file> [pak_file] ...", argv[0]);
+        LOG_ERROR("Usage: {} <pak_file> [pak_file] ...", argv[0]);
         return false;
     }
 
@@ -16,7 +16,7 @@ int main(int argc, char* argv[])
 
         ofnx::files::Pak pak;
         if (!pak.open(pakFileName)) {
-            LOG_CRITICAL("Unable to open file {}", pakFileName);
+            LOG_ERROR("Unable to open file {}", pakFileName);
             continue;
         }
 

@@ -40,7 +40,7 @@ extern "C" {
 void fvrGotoWarp(Engine& engine, std::vector<std::string> args)
 {
     if (args.size() != 1) {
-        LOG_CRITICAL("Invalid number of arguments");
+        LOG_ERROR("Invalid number of arguments");
         return;
     }
 
@@ -52,7 +52,7 @@ void fvrGotoWarp(Engine& engine, std::vector<std::string> args)
 void fvrPlaySound(Engine& engine, std::vector<std::string> args)
 {
     if (args.size() != 3) {
-        LOG_CRITICAL("Invalid number of arguments");
+        LOG_ERROR("Invalid number of arguments");
         return;
     }
 
@@ -69,7 +69,7 @@ void fvrPlaySound(Engine& engine, std::vector<std::string> args)
 void fvrStopSound(Engine& engine, std::vector<std::string> args)
 {
     if (args.size() != 1) {
-        LOG_CRITICAL("Invalid number of arguments");
+        LOG_ERROR("Invalid number of arguments");
         return;
     }
 
@@ -84,7 +84,7 @@ void fvrStopSound(Engine& engine, std::vector<std::string> args)
 void fvrPlaySound3d(Engine& engine, std::vector<std::string> args)
 {
     if (args.size() != 4) {
-        LOG_CRITICAL("Invalid number of arguments");
+        LOG_ERROR("Invalid number of arguments");
         return;
     }
 
@@ -100,7 +100,7 @@ void fvrPlaySound3d(Engine& engine, std::vector<std::string> args)
 void fvrStopSound3d(Engine& engine, std::vector<std::string> args)
 {
     if (args.size() != 1) {
-        LOG_CRITICAL("Invalid number of arguments");
+        LOG_ERROR("Invalid number of arguments");
         return;
     }
 
@@ -113,7 +113,7 @@ void fvrStopSound3d(Engine& engine, std::vector<std::string> args)
 void fvrPlayMusic(Engine& engine, std::vector<std::string> args)
 {
     if (args.size() != 1) {
-        LOG_CRITICAL("Invalid number of arguments");
+        LOG_ERROR("Invalid number of arguments");
         return;
     }
 
@@ -126,7 +126,7 @@ void fvrPlayMusic(Engine& engine, std::vector<std::string> args)
 void fvrStopMusic(Engine& engine, std::vector<std::string> args)
 {
     if (args.size() != 1) {
-        LOG_CRITICAL("Invalid number of arguments");
+        LOG_ERROR("Invalid number of arguments");
         return;
     }
 
@@ -138,7 +138,7 @@ void fvrStopMusic(Engine& engine, std::vector<std::string> args)
 void fvrSet(Engine& engine, std::vector<std::string> args)
 {
     if (args.size() != 2) {
-        LOG_CRITICAL("Invalid number of arguments");
+        LOG_ERROR("Invalid number of arguments");
         return;
     }
 
@@ -151,7 +151,7 @@ void fvrSet(Engine& engine, std::vector<std::string> args)
 void fvrLockKey(Engine& engine, std::vector<std::string> args)
 {
     if (args.size() != 2) {
-        LOG_CRITICAL("Invalid number of arguments");
+        LOG_ERROR("Invalid number of arguments");
         return;
     }
 
@@ -186,7 +186,7 @@ void fvrResetLockKey(Engine& engine, std::vector<std::string> args)
 void fvrSetCursor(Engine& engine, std::vector<std::string> args)
 {
     if (args.size() != 3) {
-        LOG_CRITICAL("Invalid number of arguments");
+        LOG_ERROR("Invalid number of arguments");
         return;
     }
 
@@ -204,7 +204,7 @@ void fvrSetCursor(Engine& engine, std::vector<std::string> args)
 void fvrSetCursorDefault(Engine& engine, std::vector<std::string> args)
 {
     if (args.size() != 2) {
-        LOG_CRITICAL("Invalid number of arguments");
+        LOG_ERROR("Invalid number of arguments");
         return;
     }
 
@@ -217,7 +217,7 @@ void fvrSetCursorDefault(Engine& engine, std::vector<std::string> args)
 void fvrFade(Engine& engine, std::vector<std::string> args)
 {
     if (args.size() != 3) {
-        LOG_CRITICAL("Invalid number of arguments");
+        LOG_ERROR("Invalid number of arguments");
         return;
     }
 
@@ -236,7 +236,7 @@ void fvrEnd(Engine& engine, std::vector<std::string> args)
 void fvrSetAngle(Engine& engine, std::vector<std::string> args)
 {
     if (args.size() != 2) {
-        LOG_CRITICAL("Invalid number of arguments");
+        LOG_ERROR("Invalid number of arguments");
         return;
     }
 
@@ -258,7 +258,7 @@ void fvrSetAngle(Engine& engine, std::vector<std::string> args)
 void fvrHideCursor(Engine& engine, std::vector<std::string> args)
 {
     if (args.size() != 2) {
-        LOG_CRITICAL("Invalid number of arguments");
+        LOG_ERROR("Invalid number of arguments");
         return;
     }
 
@@ -266,13 +266,13 @@ void fvrHideCursor(Engine& engine, std::vector<std::string> args)
     double value2 = std::stod(args[1]);
 
     // TODO: implement
-    LOG_CRITICAL("Not implemented");
+    LOG_ERROR("Not implemented");
 }
 
 void fvrNot(Engine& engine, std::vector<std::string> args)
 {
     if (args.size() != 1) {
-        LOG_CRITICAL("Invalid number of arguments");
+        LOG_ERROR("Invalid number of arguments");
         return;
     }
 
@@ -284,46 +284,46 @@ void fvrNot(Engine& engine, std::vector<std::string> args)
 void fvrAngleXMax(Engine& engine, std::vector<std::string> args)
 {
     if (args.size() != 1) {
-        LOG_CRITICAL("Invalid number of arguments");
+        LOG_ERROR("Invalid number of arguments");
         return;
     }
 
     double value = std::stod(args[0]);
 
     // TODO: implement
-    LOG_CRITICAL("Not implemented");
+    LOG_ERROR("Not implemented");
 }
 
 void fvrAngleYMax(Engine& engine, std::vector<std::string> args)
 {
     if (args.size() != 1) {
-        LOG_CRITICAL("Invalid number of arguments");
+        LOG_ERROR("Invalid number of arguments");
         return;
     }
 
     double value = std::stod(args[0]);
 
     // TODO: implement
-    LOG_CRITICAL("Not implemented");
+    LOG_ERROR("Not implemented");
 }
 
 void fvrSetZoom(Engine& engine, std::vector<std::string> args)
 {
     if (args.size() != 1) {
-        LOG_CRITICAL("Invalid number of arguments");
+        LOG_ERROR("Invalid number of arguments");
         return;
     }
 
     double value = std::stod(args[0]);
 
     // TODO: implement
-    LOG_CRITICAL("Not implemented");
+    LOG_ERROR("Not implemented");
 }
 
 void fvrInterpolAngle(Engine& engine, std::vector<std::string> args)
 {
     if (args.size() != 3) {
-        LOG_CRITICAL("Invalid number of arguments");
+        LOG_ERROR("Invalid number of arguments");
         return;
     }
 
@@ -332,7 +332,7 @@ void fvrInterpolAngle(Engine& engine, std::vector<std::string> args)
     double value3 = std::stod(args[2]);
 
     // TODO: implement
-    LOG_CRITICAL("Not implemented");
+    LOG_ERROR("Not implemented");
 }
 
 /* Private */
@@ -416,7 +416,7 @@ private:
 bool Engine::EnginePrivate::loadScript(const std::string& scriptFile)
 {
     if (!m_script.parseLst(scriptFile)) {
-        LOG_CRITICAL("Failed to parse script file: {}", scriptFile);
+        LOG_ERROR("Failed to parse script file: {}", scriptFile);
         return false;
     }
 
@@ -432,7 +432,7 @@ bool Engine::EnginePrivate::loadScript(const std::string& scriptFile)
 void Engine::EnginePrivate::registerScriptFunction(const std::string& name, const ScriptFunction& function)
 {
     if (m_functions.find(name) != m_functions.end()) {
-        LOG_CRITICAL("Script function already registered: {}", name);
+        LOG_ERROR("Script function already registered: {}", name);
         return;
     }
 
@@ -485,7 +485,7 @@ void Engine::EnginePrivate::executeBlock(const ofnx::files::Lst::InstructionBloc
                 parent->end();
             } else {
                 if (m_functions.find(instruction.name) == m_functions.end()) {
-                    LOG_CRITICAL("Script function not found: {}", instruction.name);
+                    LOG_ERROR("Script function not found: {}", instruction.name);
                     continue;
                 }
 
@@ -498,7 +498,7 @@ void Engine::EnginePrivate::executeBlock(const ofnx::files::Lst::InstructionBloc
             }
         }
     } catch (const std::exception& e) {
-        LOG_CRITICAL("Error during script execution");
+        LOG_ERROR("Error during script execution");
         m_isRunning = false;
     }
 }
@@ -508,14 +508,14 @@ void Engine::EnginePrivate::executeBlockPlugin(const ofnx::files::Lst::Instructi
     try {
         for (const ofnx::files::Lst::Instruction& instruction : block) {
             if (m_functionsPlugin.find(instruction.name) == m_functionsPlugin.end()) {
-                LOG_CRITICAL("Script plugin function not found: {}", instruction.name);
+                LOG_ERROR("Script plugin function not found: {}", instruction.name);
                 continue;
             }
 
             m_functionsPlugin[instruction.name](*parent, instruction.params);
         }
     } catch (const std::exception& e) {
-        LOG_CRITICAL("Error during script execution");
+        LOG_ERROR("Error during script execution");
         m_isRunning = false;
     }
 }
@@ -590,13 +590,13 @@ void Engine::EnginePrivate::setCursor(const std::string& cursorFile)
 {
     SDL_Surface* cursorSurface = IMG_Load(cursorFile.c_str());
     if (!cursorSurface) {
-        LOG_CRITICAL("Failed to load image: {}", SDL_GetError());
+        LOG_ERROR("Failed to load image: {}", SDL_GetError());
         return;
     }
 
     const SDL_PixelFormatDetails* formatDetails = SDL_GetPixelFormatDetails(cursorSurface->format);
     if (!formatDetails) {
-        LOG_CRITICAL("Failed to get format details: {}", SDL_GetError());
+        LOG_ERROR("Failed to get format details: {}", SDL_GetError());
         SDL_DestroySurface(cursorSurface);
         return;
     }
@@ -611,7 +611,7 @@ void Engine::EnginePrivate::setCursor(const std::string& cursorFile)
     SDL_DestroySurface(cursorSurface);
 
     if (!cursor) {
-        LOG_CRITICAL("Failed to create SDL cursor: {}", SDL_GetError());
+        LOG_ERROR("Failed to create SDL cursor: {}", SDL_GetError());
         return;
     }
 
@@ -641,7 +641,7 @@ bool Engine::init()
 {
     // Init SDL3
     if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO)) {
-        LOG_CRITICAL("SDL initialisation failed: {}", SDL_GetError());
+        LOG_ERROR("SDL initialisation failed: {}", SDL_GetError());
         return false;
     }
 
@@ -651,13 +651,13 @@ bool Engine::init()
 
     d_ptr->m_window = SDL_CreateWindow("FnxVR", ENGINE_WIDTH, ENGINE_HEIGHT, SDL_WINDOW_OPENGL);
     if (!d_ptr->m_window) {
-        LOG_CRITICAL("Failed to create SDL window: {}", SDL_GetError());
+        LOG_ERROR("Failed to create SDL window: {}", SDL_GetError());
         return false;
     }
 
     d_ptr->m_glContext = SDL_GL_CreateContext(d_ptr->m_window);
     if (!d_ptr->m_glContext) {
-        LOG_CRITICAL("Failed to create GL context: {}", SDL_GetError());
+        LOG_ERROR("Failed to create GL context: {}", SDL_GetError());
         SDL_DestroyWindow(d_ptr->m_window);
         return false;
     }
@@ -670,14 +670,14 @@ bool Engine::init()
     // Init engine objects
     // TODO: manage old/new VR version
     if (!d_ptr->m_rendererOgl.init(ENGINE_WIDTH, ENGINE_HEIGHT, false, (ofnx::graphics::RendererOpenGL::oglLoadFunc)SDL_GL_GetProcAddress)) {
-        LOG_CRITICAL("Failed to initialize renderer: {}", SDL_GetError());
+        LOG_ERROR("Failed to initialize renderer: {}", SDL_GetError());
         SDL_GL_DestroyContext(d_ptr->m_glContext);
         SDL_DestroyWindow(d_ptr->m_window);
         return false;
     }
 
     if (!d_ptr->m_audio.init()) {
-        LOG_CRITICAL("Failed to initialize audio");
+        LOG_ERROR("Failed to initialize audio");
         d_ptr->m_rendererOgl.deinit();
         SDL_GL_DestroyContext(d_ptr->m_glContext);
         SDL_DestroyWindow(d_ptr->m_window);
@@ -685,7 +685,7 @@ bool Engine::init()
     }
 
     if (!d_ptr->m_event.init()) {
-        LOG_CRITICAL("Failed to initialize event manager");
+        LOG_ERROR("Failed to initialize event manager");
         d_ptr->m_audio.deinit();
         d_ptr->m_rendererOgl.deinit();
         SDL_GL_DestroyContext(d_ptr->m_glContext);
@@ -726,7 +726,7 @@ void Engine::loop()
 {
     // Load initial script
     if (!d_ptr->loadScript(d_ptr->m_dataPath + "script/script_1.lst")) {
-        LOG_CRITICAL("Failed to load initial script");
+        LOG_ERROR("Failed to load initial script");
         return;
     }
 
@@ -854,7 +854,7 @@ void Engine::deinit()
 void Engine::registerScriptPluginFunction(const std::string& name, const ScriptFunction& function)
 {
     if (d_ptr->m_functionsPlugin.find(name) != d_ptr->m_functionsPlugin.end()) {
-        LOG_CRITICAL("Script plugin function already registered: {}", name);
+        LOG_ERROR("Script plugin function already registered: {}", name);
         return;
     }
 
@@ -892,7 +892,7 @@ void Engine::registerKeyWarp(int key, const std::string& warpName)
         d_ptr->m_keyWarp.insert({ EventManager::Event::Type::MouseClickRight, warpName });
         break;
     default:
-        LOG_CRITICAL("Invalid key for warp");
+        LOG_ERROR("Invalid key for warp");
         break;
     }
 }
@@ -937,7 +937,7 @@ void Engine::gotoWarp(const std::string& warpName)
     const std::string warpVr = d_ptr->m_dataPath + "warp/" + d_ptr->m_currentWarp;
     if (d_ptr->m_fileVr.load(warpVr)) {
         if (!d_ptr->m_fileVr.getDataRgb565(d_ptr->m_vrImageData)) {
-            LOG_CRITICAL("Failed to load VR image data");
+            LOG_ERROR("Failed to load VR image data");
             return;
         }
 
@@ -1010,13 +1010,13 @@ void Engine::playMovie(const std::string& movieFile)
     // Init libavcodec
     AVFormatContext* formatContext = avformat_alloc_context();
     if (avformat_open_input(&formatContext, fileName.c_str(), NULL, NULL) != 0) {
-        LOG_CRITICAL("Unable to open movie file");
+        LOG_ERROR("Unable to open movie file");
         SDL_ShowCursor();
         return;
     }
 
     if (avformat_find_stream_info(formatContext, NULL) < 0) {
-        LOG_CRITICAL("Unable to fine movie stream info");
+        LOG_ERROR("Unable to fine movie stream info");
         avformat_close_input(&formatContext);
         SDL_ShowCursor();
         return;
@@ -1032,7 +1032,7 @@ void Engine::playMovie(const std::string& movieFile)
     }
 
     if (videoStreamIndex == -1) {
-        LOG_CRITICAL("Unable to fins movie video stream");
+        LOG_ERROR("Unable to fins movie video stream");
         avformat_close_input(&formatContext);
         SDL_ShowCursor();
         return;
@@ -1041,7 +1041,7 @@ void Engine::playMovie(const std::string& movieFile)
     AVCodecParameters* localCodecParametersVideo = formatContext->streams[videoStreamIndex]->codecpar;
     const AVCodec* localCodecVideo = avcodec_find_decoder(localCodecParametersVideo->codec_id);
     if (localCodecVideo == NULL) {
-        LOG_CRITICAL("Unable to find movie codec");
+        LOG_ERROR("Unable to find movie codec");
         avformat_close_input(&formatContext);
         SDL_ShowCursor();
         return;
@@ -1049,7 +1049,7 @@ void Engine::playMovie(const std::string& movieFile)
 
     AVCodecContext* codecContextVideo = avcodec_alloc_context3(localCodecVideo);
     if (avcodec_parameters_to_context(codecContextVideo, localCodecParametersVideo) < 0) {
-        LOG_CRITICAL("Unable to copy codec parameters");
+        LOG_ERROR("Unable to copy codec parameters");
         avformat_close_input(&formatContext);
         avcodec_free_context(&codecContextVideo);
         SDL_ShowCursor();
@@ -1057,7 +1057,7 @@ void Engine::playMovie(const std::string& movieFile)
     }
 
     if (avcodec_open2(codecContextVideo, localCodecVideo, NULL) < 0) {
-        LOG_CRITICAL("Unable to open codec");
+        LOG_ERROR("Unable to open codec");
         avformat_close_input(&formatContext);
         avcodec_free_context(&codecContextVideo);
         SDL_ShowCursor();
@@ -1083,7 +1083,7 @@ void Engine::playMovie(const std::string& movieFile)
         // TODO: supposed to be const
         localCodecAudio = (AVCodec*)avcodec_find_decoder(localCodecParametersAudio->codec_id);
         if (localCodecAudio == NULL) {
-            LOG_CRITICAL("Unable to find codec");
+            LOG_ERROR("Unable to find codec");
             avformat_close_input(&formatContext);
             avcodec_free_context(&codecContextVideo);
             SDL_ShowCursor();
@@ -1092,7 +1092,7 @@ void Engine::playMovie(const std::string& movieFile)
 
         codecContextAudio = avcodec_alloc_context3(localCodecAudio);
         if (avcodec_parameters_to_context(codecContextAudio, localCodecParametersAudio) < 0) {
-            LOG_CRITICAL("Unable to copy codec parameters");
+            LOG_ERROR("Unable to copy codec parameters");
             avformat_close_input(&formatContext);
             avcodec_free_context(&codecContextVideo);
             avcodec_free_context(&codecContextAudio);
@@ -1101,7 +1101,7 @@ void Engine::playMovie(const std::string& movieFile)
         }
 
         if (avcodec_open2(codecContextAudio, localCodecAudio, NULL) < 0) {
-            LOG_CRITICAL("Unable to open codec");
+            LOG_ERROR("Unable to open codec");
             avformat_close_input(&formatContext);
             avcodec_free_context(&codecContextVideo);
             avcodec_free_context(&codecContextAudio);
@@ -1118,7 +1118,7 @@ void Engine::playMovie(const std::string& movieFile)
         SDL_AudioSpec dst = spec;
         streamAudio = SDL_CreateAudioStream(&spec, &dst);
         if (!streamAudio) {
-            LOG_CRITICAL("Failed to create SDL audio stream: {}", SDL_GetError());
+            LOG_ERROR("Failed to create SDL audio stream: {}", SDL_GetError());
             avformat_close_input(&formatContext);
             avcodec_free_context(&codecContextVideo);
             avcodec_free_context(&codecContextAudio);
@@ -1129,7 +1129,7 @@ void Engine::playMovie(const std::string& movieFile)
         // Ouvrir le périphérique audio
         deviceId = SDL_OpenAudioDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &spec);
         if (deviceId == 0) {
-            LOG_CRITICAL("Failed to open SDL audio device: {}", SDL_GetError());
+            LOG_ERROR("Failed to open SDL audio device: {}", SDL_GetError());
             avformat_close_input(&formatContext);
             avcodec_free_context(&codecContextVideo);
             avcodec_free_context(&codecContextAudio);
@@ -1181,7 +1181,7 @@ void Engine::playMovie(const std::string& movieFile)
             }
 
             if (frame->width != 640 || frame->height != 480) {
-                LOG_CRITICAL("Invalid frame size");
+                LOG_ERROR("Invalid frame size");
                 continue;
             }
 
@@ -1191,7 +1191,7 @@ void Engine::playMovie(const std::string& movieFile)
                 SWS_BILINEAR, NULL, NULL, NULL);
 
             if (!swsCtx) {
-                LOG_CRITICAL("Failed to create swscale context");
+                LOG_ERROR("Failed to create swscale context");
                 avformat_close_input(&formatContext);
                 avcodec_free_context(&codecContextVideo);
                 if (audioSreamIndex != 0) {

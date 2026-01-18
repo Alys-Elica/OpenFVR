@@ -4,7 +4,7 @@ set(PROJECT_NAME FvrEngine)
 
 project(${PROJECT_NAME} VERSION 0.1.0 LANGUAGES C CXX)
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 
 add_library(${PROJECT_NAME} SHARED
     libfvrengine_globals.h

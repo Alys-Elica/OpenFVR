@@ -4,7 +4,7 @@ set(PROJECT_NAME LouvreFinalCurse)
 
 project(${PROJECT_NAME} VERSION 0.1.0 LANGUAGES C CXX)
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 
 set(PROJECT_FILE_HEADERS
     pluginlouvre.h

@@ -49,12 +49,12 @@ std::vector<uint8_t> readScript(const std::string& fileIn)
 {
     ofnx::files::Pak fvrPak;
     if (!fvrPak.open(fileIn)) {
-        LOG_CRITICAL("Error opening PAK file: {}", fileIn);
+        LOG_ERROR("Error opening PAK file: {}", fileIn);
         return {};
     }
 
     if (fvrPak.fileCount() != 1) {
-        LOG_CRITICAL("No file in PAK file: {}", fileIn);
+        LOG_ERROR("No file in PAK file: {}", fileIn);
         return {};
     }
 
@@ -70,12 +70,12 @@ void saveScript(const std::vector<uint8_t>& data, const std::string& fileOut)
 
     ofnx::files::Lst fvrScript;
     if (!fvrScript.parseLst(tmpFileName)) {
-        LOG_CRITICAL("Error parsing script: {}", tmpFileName);
+        LOG_ERROR("Error parsing script: {}", tmpFileName);
         return;
     }
 
     if (!fvrScript.saveLst(fileOut)) {
-        LOG_CRITICAL("Error saving script: {}", fileOut);
+        LOG_ERROR("Error saving script: {}", fileOut);
         return;
     }
 
