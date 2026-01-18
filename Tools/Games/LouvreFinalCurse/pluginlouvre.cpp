@@ -234,7 +234,7 @@ std::map<int, ObjectData> g_objectMap = {
 };
 
 struct LouvreData {
-    int objectInventory[INVENTORY_SIZE] = { -1 };
+    int objectInventory[INVENTORY_SIZE] = { -1, -1, -1, -1, -1, -1, -1, -1 };
     int selectedObjectSlot = -1;
 
     int objectChest[CHEST_SIZE] = { -1 };
