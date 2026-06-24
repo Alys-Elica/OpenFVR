@@ -1,6 +1,6 @@
-[submodule "Tools/Libraries/ofnx/"]
-	path = Tools/Libraries/ofnx/
-	url = git@github.com:Alys-Elica/OpenPhoenix.git
 [submodule "Tools/Libraries/ofnx"]
 	path = Tools/Libraries/ofnx
 	url = git@github.com:Alys-Elica/OpenPhoenix.git
+[submodule "Tools/Libraries/SDL"]
+	path = Tools/Libraries/SDL
+	url = git@github.com:libsdl-org/SDL.git
